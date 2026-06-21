@@ -1,0 +1,29 @@
+{
+  "name": "flight-radar-dash",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal FlightRadar24 area dashboard",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "node api/server.js",
+    "dev:web": "npm run dev --prefix web",
+    "build": "npm run build --prefix web",
+    "poll": "node scripts/poll-snapshots.js",
+    "test": "node --test tests/*.test.js",
+    "netlify:build": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "netlify-cli": "^26.1.0"
+  }
+}
