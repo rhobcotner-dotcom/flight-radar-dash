@@ -8,6 +8,8 @@ interface Props {
   onReady?: () => void;
 }
 
+const PREVIEW_LOAD_TIMEOUT_MS = 12000;
+
 export function CameraPreviewVideo({ src, className = 'camera-preview-video', onError, onReady }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const onErrorRef = useRef(onError);
@@ -21,26 +23,52 @@ export function CameraPreviewVideo({ src, className = 'camera-preview-video', on
     const video = videoRef.current;
     if (!video || !src) return;
 
-    const fail = () => onErrorRef.current?.();
+    let settled = false;
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      onErrorRef.current?.();
+    };
     const markReady = () => {
+      if (settled) return;
+      settled = true;
       setReady(true);
       onReadyRef.current?.();
     };
 
+    const loadTimer = window.setTimeout(fail, PREVIEW_LOAD_TIMEOUT_MS);
+
+    const clearLoadTimer = () => {
+      window.clearTimeout(loadTimer);
+    };
+
+    const onPlaying = () => {
+      clearLoadTimer();
+      markReady();
+    };
+
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = src;
-      video.onerror = fail;
-      video.onloadeddata = markReady;
-      void video.play().catch(fail);
+      video.onerror = () => {
+        clearLoadTimer();
+        fail();
+      };
+      video.onplaying = onPlaying;
+      void video.play().catch(() => {
+        clearLoadTimer();
+        fail();
+      });
       return () => {
+        clearLoadTimer();
         video.onerror = null;
-        video.onloadeddata = null;
+        video.onplaying = null;
         video.removeAttribute('src');
         video.load();
       };
     }
 
     if (!Hls.isSupported()) {
+      clearLoadTimer();
       fail();
       return undefined;
     }
@@ -48,25 +76,40 @@ export function CameraPreviewVideo({ src, className = 'camera-preview-video', on
     const hls = new Hls({
       enableWorker: true,
       lowLatencyMode: true,
-      maxBufferLength: 10,
-      maxMaxBufferLength: 16,
-      manifestLoadingMaxRetry: 4,
-      levelLoadingMaxRetry: 4,
-      fragLoadingMaxRetry: 4,
+      maxBufferLength: 4,
+      maxMaxBufferLength: 8,
+      maxBufferSize: 8 * 1000 * 1000,
+      manifestLoadingTimeOut: 8000,
+      manifestLoadingMaxRetry: 2,
+      levelLoadingTimeOut: 8000,
+      levelLoadingMaxRetry: 2,
+      fragLoadingTimeOut: 8000,
+      fragLoadingMaxRetry: 2,
     });
     hls.loadSource(src);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      void video.play().catch(fail);
+      void video.play().catch(() => {
+        clearLoadTimer();
+        fail();
+      });
     });
-    hls.on(Hls.Events.FRAG_BUFFERED, markReady);
     hls.on(Hls.Events.ERROR, (_event, data) => {
-      if (data.fatal) fail();
+      if (data.fatal) {
+        clearLoadTimer();
+        fail();
+      }
     });
-    video.onerror = fail;
+    video.onerror = () => {
+      clearLoadTimer();
+      fail();
+    };
+    video.onplaying = onPlaying;
 
     return () => {
+      clearLoadTimer();
       video.onerror = null;
+      video.onplaying = null;
       hls.destroy();
     };
   }, [src]);

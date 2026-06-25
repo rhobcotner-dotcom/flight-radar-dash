@@ -1,6 +1,6 @@
 import { boundingBox, distanceMiles } from '../../lib/geo.js';
 import { cameraHlsPlaybackUrl } from './cameraStreamProxy.js';
-import { selectWorkingLiveCameras, isKnownDeadStream } from './cameraStreamValidation.js';
+import { selectWorkingLiveCameras, isKnownDeadStream, isKnownGoodStream } from './cameraStreamValidation.js';
 import {
   CACHE_MS,
   camerasInBbox,
@@ -113,9 +113,37 @@ function selectForViewport(cameras, bbox, limit, centerLat, centerLon) {
 }
 
 function regionalPoolFromRaw(pool, bbox, centerLat, centerLon) {
-  return sortCamerasStable(camerasInBbox(pool.cameras, bbox), centerLat, centerLon).filter(
-    (cam) => cam.mediaType === 'snapshot' || !isKnownDeadStream(cam.liveUrl)
-  );
+  const inBbox = sortCamerasStable(camerasInBbox(pool.cameras, bbox), centerLat, centerLon);
+  const playable = inBbox.filter((cam) => {
+    if (cam.mediaType === 'snapshot') return true;
+    if (isKnownDeadStream(cam.liveUrl)) return false;
+    return isKnownGoodStream(cam.liveUrl);
+  });
+  const snapshots = playable.filter((cam) => cam.mediaType === 'snapshot');
+  const live = playable.filter((cam) => cam.mediaType === 'hls');
+  return [...snapshots, ...live];
+}
+
+function selectCamerasForRequest({ verified, pool, bbox, limit, centerLat, centerLon }) {
+  if (verified.length) {
+    const verifiedInView = selectForViewport(camerasInBbox(verified, bbox), bbox, limit, centerLat, centerLon);
+    if (verifiedInView.length >= Math.min(limit, 8)) {
+      return verifiedInView;
+    }
+
+    const regionalPool = regionalPoolFromRaw(pool, bbox, centerLat, centerLon);
+    const snapshotBackfill = selectForViewport(
+      mapPlaybackCameras(regionalPool.filter((cam) => cam.mediaType === 'snapshot')),
+      bbox,
+      limit,
+      centerLat,
+      centerLon
+    );
+    return dedupeCameras([...verifiedInView, ...snapshotBackfill]).slice(0, limit);
+  }
+
+  const regionalPool = regionalPoolFromRaw(pool, bbox, centerLat, centerLon);
+  return selectForViewport(mapPlaybackCameras(regionalPool), bbox, limit, centerLat, centerLon);
 }
 
 function clearResponseCache() {
@@ -293,12 +321,7 @@ export async function fetchUsTrafficCameras({
   const verified = verifiedReady ? verifiedPool.cameras : [];
 
   let cameras;
-  if (isWideViewport(bbox) && verified.length) {
-    cameras = selectForViewport(camerasInBbox(verified, bbox), bbox, limit, centerLat, centerLon);
-  } else {
-    const regionalPool = regionalPoolFromRaw(pool, bbox, centerLat, centerLon);
-    cameras = selectForViewport(mapPlaybackCameras(regionalPool), bbox, limit, centerLat, centerLon);
-  }
+  cameras = selectCamerasForRequest({ verified, pool, bbox, limit, centerLat, centerLon });
 
   if (hasRoad511Key()) {
     try {

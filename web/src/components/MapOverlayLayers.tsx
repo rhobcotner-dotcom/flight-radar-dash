@@ -703,10 +703,11 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
   const kind = cam.camKind === 'rail' ? 'rail' : 'road';
   const icon = useMemo(() => cameraIcon(kind), [kind]);
   const tier = getStreamTier(cam.lat, cam.lon);
-  const streamAllowed = isStreamAllowed(cam.id);
+  const needsStreamSlot = cam.mediaType === 'hls';
+  const streamAllowed = !needsStreamSlot || isStreamAllowed(cam.id);
 
   useEffect(() => {
-    if (!previewActive) return undefined;
+    if (!needsStreamSlot || !previewActive) return undefined;
     const timer = window.setTimeout(() => {
       requestStream(cam.id, cam.lat, cam.lon, 'tooltip');
     }, CAMERA_STREAM_HOVER_DELAY_MS);
@@ -714,10 +715,10 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
       window.clearTimeout(timer);
       if (!popupOpen) releaseStream(cam.id);
     };
-  }, [previewActive, popupOpen, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
+  }, [needsStreamSlot, previewActive, popupOpen, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
 
   useEffect(() => {
-    if (!popupOpen) {
+    if (!needsStreamSlot || !popupOpen) {
       if (!previewActive) releaseStream(cam.id);
       return undefined;
     }
@@ -725,12 +726,12 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
     return () => {
       if (!previewActive) releaseStream(cam.id);
     };
-  }, [popupOpen, previewActive, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
+  }, [needsStreamSlot, popupOpen, previewActive, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
 
   useEffect(() => () => releaseStream(cam.id), [cam.id, releaseStream]);
 
-  const showTooltipStream = previewActive && streamAllowed;
-  const showPopupStream = popupOpen && streamAllowed;
+  const showTooltipStream = previewActive && cam.liveUrl && streamAllowed;
+  const showPopupStream = popupOpen && cam.liveUrl && streamAllowed;
 
   return (
     <Marker position={[cam.lat, cam.lon]} icon={icon} zIndexOffset={zIndexOffset}>
@@ -748,10 +749,10 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
               .filter(Boolean)
               .join(' · ')}
           </div>
-          {previewActive && cam.liveUrl && tier === 'distant' ? (
+          {previewActive && cam.liveUrl && needsStreamSlot && tier === 'distant' ? (
             <div className="camera-preview-loading muted">Pan the map to center this cam for a live preview.</div>
           ) : null}
-          {previewActive && cam.liveUrl && tier !== 'distant' && !streamAllowed ? (
+          {previewActive && cam.liveUrl && needsStreamSlot && tier !== 'distant' && !streamAllowed ? (
             <div className="camera-preview-loading muted">
               {tier === 'inView' ? 'Starting live preview…' : 'Queued — nearby cams load first…'}
             </div>
@@ -781,7 +782,7 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
               .filter(Boolean)
               .join(' · ')}
           </div>
-          {popupOpen && cam.liveUrl && !streamAllowed ? (
+          {popupOpen && cam.liveUrl && needsStreamSlot && !streamAllowed ? (
             <div className="camera-preview-loading muted">Starting live stream…</div>
           ) : null}
           {showPopupStream && cam.liveUrl ? (

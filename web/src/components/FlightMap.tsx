@@ -13,7 +13,7 @@ import { FlightDetails } from './FlightDetails';
 import { TrainDetails } from './TrainDetails';
 import { SatelliteDetails } from './SatelliteDetails';
 import { RadarOverlay } from './RadarOverlay';
-import { MapWeatherClick } from './MapWeatherClick';
+import { StormCellClick } from './StormCellClick';
 import {
   alertLegendSummary,
   AisVesselsLayer,
@@ -491,7 +491,7 @@ const FlightMapInner = memo(function FlightMapInner({
         onAttribution={onRadarAttribution}
         onError={onRadarError}
       />
-      <MapWeatherClick />
+      <StormCellClick radarEnabled={radarEnabled} />
       {layerToggles.weatherAlerts ? (
         <WeatherAlertPolygonLayer
           key={weatherAlertCollectionKey(mapLayers.weatherAlerts)}

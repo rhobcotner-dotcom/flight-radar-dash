@@ -1,5 +1,14 @@
 import { isHlsUrl, normalizeHlsUrl, USER_AGENT } from './cameraSources/helpers.js';
 
+const HLS_FETCH_TIMEOUT_MS = 8000;
+
+function fetchWithTimeout(url, options = {}) {
+  return fetch(url, {
+    ...options,
+    signal: AbortSignal.timeout(HLS_FETCH_TIMEOUT_MS),
+  });
+}
+
 /** Host suffixes used by state DOT / 511 live camera HLS feeds. */
 const ALLOWED_HLS_HOST_SUFFIXES = [
   'dot.ca.gov',
@@ -67,10 +76,18 @@ export async function fetchProxiedHlsManifest(urlString) {
   if (!normalized || !isAllowedHlsUrl(normalized)) {
     throw Object.assign(new Error('Camera stream host not allowed'), { status: 403 });
   }
-  const res = await fetch(normalized, {
-    headers: { 'User-Agent': USER_AGENT, Accept: '*/*' },
-    redirect: 'follow',
-  });
+  let res;
+  try {
+    res = await fetchWithTimeout(normalized, {
+      headers: { 'User-Agent': USER_AGENT, Accept: '*/*' },
+      redirect: 'follow',
+    });
+  } catch (err) {
+    const timedOut = err?.name === 'TimeoutError' || err?.name === 'AbortError';
+    throw Object.assign(new Error(timedOut ? 'Camera stream timed out' : err.message || 'Camera stream unavailable'), {
+      status: timedOut ? 504 : 502,
+    });
+  }
   if (!res.ok) {
     throw Object.assign(new Error(`Camera stream unavailable (${res.status})`), {
       status: res.status === 404 ? 404 : 502,
@@ -100,10 +117,18 @@ export async function fetchProxiedHlsSegment(urlString) {
   if (!hostAllowed(url.hostname)) {
     throw Object.assign(new Error('Camera segment host not allowed'), { status: 403 });
   }
-  const res = await fetch(url.toString(), {
-    headers: { 'User-Agent': USER_AGENT, Accept: '*/*' },
-    redirect: 'follow',
-  });
+  let res;
+  try {
+    res = await fetchWithTimeout(url.toString(), {
+      headers: { 'User-Agent': USER_AGENT, Accept: '*/*' },
+      redirect: 'follow',
+    });
+  } catch (err) {
+    const timedOut = err?.name === 'TimeoutError' || err?.name === 'AbortError';
+    throw Object.assign(new Error(timedOut ? 'Camera segment timed out' : err.message || 'Camera segment unavailable'), {
+      status: timedOut ? 504 : 502,
+    });
+  }
   if (!res.ok) {
     throw Object.assign(new Error(`Camera segment unavailable (${res.status})`), {
       status: res.status === 404 ? 404 : 502,

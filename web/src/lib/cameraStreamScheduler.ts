@@ -4,9 +4,9 @@ export type CameraStreamTier = 'inView' | 'nearby' | 'distant';
 export type CameraStreamReason = 'tooltip' | 'popup';
 
 export const CAMERA_STREAM_MAX_CONCURRENT = 4;
-export const CAMERA_STREAM_STAGGER_MS = 700;
+export const CAMERA_STREAM_STAGGER_MS = 400;
 export const CAMERA_STREAM_NEARBY_BUFFER = 0.35;
-export const CAMERA_STREAM_HOVER_DELAY_MS = 350;
+export const CAMERA_STREAM_HOVER_DELAY_MS = 200;
 
 export function expandViewportBounds(
   bounds: MapViewportBounds,

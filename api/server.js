@@ -33,6 +33,7 @@ import {
 } from './routes/mapLayers.js';
 import { handleGeocode } from './routes/geocode.js';
 import { handleRadarFrames } from './routes/radar.js';
+import { handleStormAnalysis } from './routes/stormAnalysis.js';
 import { handleLiveTrains } from './routes/trains.js';
 import { handleFreightDreamState } from './routes/freightDreamState.js';
 import { handleLiveSatellites } from './routes/satellites.js';
@@ -145,6 +146,7 @@ app.get('/api/aviation/notams', asyncHandler(handleNotams));
 app.get('/api/weather/wildfires', asyncHandler(handleWildfires));
 app.get('/api/geocode', asyncHandler(handleGeocode));
 app.get('/api/radar/frames', asyncHandler(handleRadarFrames));
+app.get('/api/weather/storm-analysis', asyncHandler(handleStormAnalysis));
 app.get('/api/hearing/config', handleHearingConfig);
 app.get('/api/fun/status', asyncHandler(handleFunStatus));
 app.get('/api/live/dashboard', asyncHandler(handleLiveDashboard));

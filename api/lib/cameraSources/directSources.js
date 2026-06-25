@@ -49,8 +49,8 @@ function regionFor(...stateCodes) {
 
 async function fetchModotCameras(bbox) {
   const params = arcGisEnvelopeParams(bbox, {
-    where: 'URL2 IS NOT NULL',
-    outFields: 'CAM_ID,DESCRIPTION,URL2',
+    where: "URL2 IS NOT NULL AND (STREAM_ERROR IS NULL OR STREAM_ERROR <> 'Y')",
+    outFields: 'CAM_ID,DESCRIPTION,URL2,STREAM_ERROR',
   });
   const features = await queryArcGis(
     'https://mapping.modot.org/arcgis/rest/services/TravelerInformation/NWSDATA/MapServer/0/query',
@@ -59,6 +59,7 @@ async function fetchModotCameras(bbox) {
   return features
     .map((feature) => {
       const props = feature.attributes || feature.properties || {};
+      if (props.STREAM_ERROR === 'Y') return null;
       const coords = feature.geometry;
       return normalizeCamera({
         id: `modot-${props.CAM_ID || feature.id}`,

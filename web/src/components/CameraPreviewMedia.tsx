@@ -8,6 +8,8 @@ interface Props {
   className?: string;
 }
 
+const SNAPSHOT_LOAD_TIMEOUT_MS = 10000;
+
 export function CameraPreviewMedia({
   liveUrl,
   sourceLiveUrl,
@@ -32,7 +34,11 @@ export function CameraPreviewMedia({
     };
     refresh();
     const timer = window.setInterval(refresh, 8000);
-    return () => window.clearInterval(timer);
+    const failTimer = window.setTimeout(() => setFailed(true), SNAPSHOT_LOAD_TIMEOUT_MS);
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(failTimer);
+    };
   }, [liveUrl, mediaType]);
 
   if (!liveUrl) return null;

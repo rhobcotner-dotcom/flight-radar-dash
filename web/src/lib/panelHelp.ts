@@ -34,7 +34,7 @@ export const MAP_LAYER_HELP = {
   satellites:
     'Satellites above 5° elevation at your location (ISS, GPS, weather sats, etc.). Positions computed from CelesTrak TLEs — not ground tracks.',
   radar:
-    'NEXRAD base reflectivity overlay (IEM, ~3–5 min scan lag). Composite tiles scale above zoom 9; click the map for point weather.',
+    'NEXRAD base reflectivity overlay (IEM, ~3–5 min scan lag). Composite tiles scale above zoom 9; with Radar on, click a storm cell for a meteorologist-style briefing (clear sky clicks do nothing).',
 } as const;
 
 export const PANEL_HELP = {
