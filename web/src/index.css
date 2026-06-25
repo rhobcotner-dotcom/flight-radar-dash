@@ -1067,6 +1067,17 @@ body {
   color: #fca5a5;
 }
 
+/* Radar is a supporting overlay — soften tile edges and let the basemap read through */
+.leaflet-pane .radar-overlay-tiles {
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.leaflet-pane .radar-overlay-tiles img.leaflet-tile {
+  image-rendering: auto;
+  filter: blur(1.25px) saturate(0.72) contrast(0.9);
+}
+
 .leaflet-tooltip.map-weather-click-tooltip {
   background: rgba(15, 23, 42, 0.94);
   border: 1px solid #38bdf8;

@@ -39,9 +39,11 @@ export interface FramesRadarPayload extends RadarPayloadBase {
 export type RadarPayload = LiveRadarPayload | FramesRadarPayload;
 
 export const RADAR_TILE_SIZE = 256;
+export const DEFAULT_RADAR_OPACITY = 0.38;
 
+/** RainViewer: color 1 = Universal Blue, smooth on, snow off — softer than raw TITAN. */
 export function buildRainviewerTileUrl(host: string, path: string) {
-  return `${host}${path}/${RADAR_TILE_SIZE}/{z}/{x}/{y}/2/1_1.png`;
+  return `${host}${path}/${RADAR_TILE_SIZE}/{z}/{x}/{y}/1/1_0.png`;
 }
 
 export function buildLiveTileUrl(template: string, cacheBust: number) {

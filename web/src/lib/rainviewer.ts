@@ -15,7 +15,7 @@ export interface RadarFramesPayload {
 export const RADAR_TILE_SIZE = 256;
 
 export function buildRadarTileUrl(host: string, path: string) {
-  return `${host}${path}/${RADAR_TILE_SIZE}/{z}/{x}/{y}/2/1_1.png`;
+  return `${host}${path}/${RADAR_TILE_SIZE}/{z}/{x}/{y}/1/1_0.png`;
 }
 
 export async function fetchRadarFrames(): Promise<RadarFramesPayload> {

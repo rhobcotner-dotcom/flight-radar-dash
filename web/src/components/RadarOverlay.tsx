@@ -19,6 +19,8 @@ interface Props {
   onError?: (message: string | null) => void;
 }
 
+const RADAR_TILE_CLASS = 'radar-overlay-tiles';
+
 function createLiveRadarLayer(payload: LiveRadarPayload, opacity: number, cacheBust: number) {
   return L.tileLayer(buildLiveTileUrl(payload.tileUrl, cacheBust), {
     opacity,
@@ -26,6 +28,7 @@ function createLiveRadarLayer(payload: LiveRadarPayload, opacity: number, cacheB
     maxNativeZoom: payload.maxNativeZoom,
     maxZoom: payload.maxZoom,
     zIndex: 450,
+    className: RADAR_TILE_CLASS,
     updateWhenZooming: false,
     updateWhenIdle: true,
     keepBuffer: 2,
@@ -36,9 +39,10 @@ function createFrameRadarLayer(url: string, opacity: number) {
   return L.tileLayer(url, {
     opacity,
     tileSize: 256,
-    maxNativeZoom: 7,
+    maxNativeZoom: 9,
     maxZoom: 12,
     zIndex: 450,
+    className: RADAR_TILE_CLASS,
     updateWhenZooming: false,
     updateWhenIdle: true,
     keepBuffer: 2,

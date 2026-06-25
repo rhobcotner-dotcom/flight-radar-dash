@@ -39,6 +39,7 @@ import type { MapViewportBounds } from '../lib/mapViewport';
 import { stableViewportKey, viewportFromArea } from '../lib/mapViewport';
 import { CameraStreamSchedulerProvider } from '../hooks/useCameraStreamScheduler';
 import { useSatellites } from '../hooks/useSatellites';
+import { DEFAULT_RADAR_OPACITY } from '../lib/radar';
 import { weatherAlertCollectionKey } from '../lib/mapLayers';
 import { classifyHelicopter } from '../lib/helicopters';
 import { MAP_LAYER_HELP, PANEL_HELP } from '../lib/panelHelp';
@@ -646,7 +647,7 @@ export function FlightMap({
     null
   );
   const [radarError, setRadarError] = useState<string | null>(null);
-  const radarOpacity = 0.62;
+  const radarOpacity = DEFAULT_RADAR_OPACITY;
   const queryString = useMemo(
     () => new URLSearchParams({ lat: String(area.lat), lon: String(area.lon) }).toString(),
     [area.lat, area.lon]
