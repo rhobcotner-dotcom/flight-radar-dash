@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { assertFr24PullEnabled } from '../api/lib/local-only.js';
 import { getLiveFlightsFull } from '../api/fr24-client.js';
 import { detectAlerts, summarizeCategories } from '../api/lib/alerts.js';
 import { loadDefaultArea, resolveArea } from '../api/lib/area.js';
@@ -9,6 +10,8 @@ function flightsFromResponse(body) {
 }
 
 async function main() {
+  assertFr24PullEnabled();
+
   const defaults = loadDefaultArea();
   const area = resolveArea({
     lat: process.env.POLL_LAT || defaults.lat,

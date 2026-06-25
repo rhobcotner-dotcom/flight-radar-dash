@@ -1,7 +1,9 @@
 {
   "name": "Saint Peters, MO",
+  "address": "",
   "lat": 38.787,
   "lon": -90.629,
-  "radiusMiles": 75,
+  "radiusMiles": 85,
+  "mapFocusMiles": 12,
   "nearbyAirport": "STL"
 }

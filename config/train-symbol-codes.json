@@ -1,0 +1,47 @@
+{
+  "bnsfTypeLetters": {
+    "Z": { "cargo": "Priority intermodal (containers/trailers)", "weight": 0.95 },
+    "Q": { "cargo": "Guaranteed intermodal", "weight": 0.92 },
+    "S": { "cargo": "Stack/intermodal (port traffic)", "weight": 0.9 },
+    "P": { "cargo": "Premium intermodal", "weight": 0.88 },
+    "B": { "cargo": "Empty intermodal equipment", "weight": 0.88 },
+    "V": { "cargo": "Automobiles (autoracks)", "weight": 0.93 },
+    "G": { "cargo": "Loaded grain unit train", "weight": 0.94 },
+    "X": { "cargo": "Empty grain hoppers", "weight": 0.9 },
+    "C": { "cargo": "Loaded coal unit train", "weight": 0.94 },
+    "E": { "cargo": "Empty coal hoppers", "weight": 0.9 },
+    "U": { "cargo": "Unit train (chemicals, aggregates, etc.)", "weight": 0.78 },
+    "H": { "cargo": "High-priority manifest (mixed freight)", "weight": 0.72 },
+    "M": { "cargo": "Manifest (mixed general freight)", "weight": 0.7 },
+    "J": { "cargo": "Dimensional/special (wind, aircraft)", "weight": 0.85 },
+    "L": { "cargo": "Local switching / industry deliveries", "weight": 0.8 },
+    "R": { "cargo": "Road switcher / local industry", "weight": 0.78 },
+    "T": { "cargo": "Transfer / interchange", "weight": 0.55 },
+    "D": { "cargo": "Light engines (no freight)", "weight": 0.95 },
+    "Y": { "cargo": "Yard job (no road freight)", "weight": 0.85 }
+  },
+  "stationHints": {
+    "CHI": "Chicago intermodal hub",
+    "LPC": "Chicago intermodal",
+    "WSP": "Willow Springs intermodal",
+    "LAC": "Los Angeles port/intermodal",
+    "BAR": "Barstow intermodal gateway",
+    "MEM": "Memphis intermodal bridge",
+    "GAL": "Galesburg manifest hub",
+    "KC": "Kansas City gateway",
+    "STL": "St. Louis gateway",
+    "MAD": "Madison IL terminal",
+    "LND": "Lincoln NE grain",
+    "NPL": "North Platte NE",
+    "HOU": "Houston petrochemicals",
+    "LRD": "Laredo border intermodal"
+  },
+  "upPrefixes": {
+    "I": { "cargo": "Intermodal", "weight": 0.88 },
+    "Z": { "cargo": "Premium intermodal", "weight": 0.92 },
+    "M": { "cargo": "Manifest", "weight": 0.7 },
+    "G": { "cargo": "Grain unit train", "weight": 0.9 },
+    "C": { "cargo": "Coal unit train", "weight": 0.9 },
+    "L": { "cargo": "Local", "weight": 0.78 }
+  }
+}

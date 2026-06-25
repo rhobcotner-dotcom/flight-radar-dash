@@ -1,3 +1,5 @@
+import { assertFr24PullEnabled } from './lib/local-only.js';
+
 const FR24_BASE = 'https://fr24api.flightradar24.com';
 
 const cache = new Map();
@@ -11,7 +13,7 @@ function cacheKey(path, params) {
 }
 
 function getCacheTtl() {
-  return Number(process.env.CACHE_TTL_MS || 45000);
+  return Number(process.env.CACHE_TTL_MS || 0);
 }
 
 export function clearFr24Cache() {
@@ -19,6 +21,8 @@ export function clearFr24Cache() {
 }
 
 export async function fr24Get(endpoint, params = {}) {
+  assertFr24PullEnabled();
+
   const token = process.env.FR24_API_TOKEN;
   if (!token) {
     const err = new Error('FR24_API_TOKEN is not configured');
@@ -32,8 +36,9 @@ export async function fr24Get(endpoint, params = {}) {
     : endpoint;
 
   const key = cacheKey(apiPath, params);
+  const ttl = getCacheTtl();
   const cached = cache.get(key);
-  if (cached && Date.now() - cached.ts < getCacheTtl()) {
+  if (ttl > 0 && cached && Date.now() - cached.ts < ttl) {
     return cached.data;
   }
 
@@ -60,7 +65,9 @@ export async function fr24Get(endpoint, params = {}) {
     throw err;
   }
 
-  cache.set(key, { ts: Date.now(), data: body });
+  if (ttl > 0) {
+    cache.set(key, { ts: Date.now(), data: body });
+  }
   return body;
 }
 
@@ -81,4 +88,24 @@ export async function getLiveFlightsCount(bounds, extraParams = {}) {
 
 export async function getAirportLight(code) {
   return fr24Get(`/api/static/airports/${encodeURIComponent(code)}/light`, {});
+}
+
+export async function getAirportFull(code) {
+  return fr24Get(`/api/static/airports/${encodeURIComponent(code)}/full`, {});
+}
+
+export async function getLiveFlightsByAirport(direction, code, extraParams = {}) {
+  return fr24Get('/api/live/flight-positions/full', {
+    airports: `${direction}:${code}`,
+    limit: 30000,
+    ...extraParams,
+  });
+}
+
+export async function getFlightSummaryLight(params = {}) {
+  return fr24Get('/api/flight-summary/light', {
+    sort: 'asc',
+    limit: 200,
+    ...params,
+  });
 }

@@ -1,0 +1,46 @@
+{
+  "celebrityAircraft": [
+    { "label": "Elon's jet", "reg": "N628TS" },
+    { "label": "Bezos' Gulfstream", "reg": "N271DV" },
+    { "label": "Taylor Swift (era tour)", "reg": "N898TS" },
+    { "label": "Drake's Boeing", "reg": "N767CJ" }
+  ],
+  "rouletteCallsigns": [
+    "POOBAH",
+    "EVIL69",
+    "GABBY",
+    "MOONEY",
+    "CUBAN",
+    "SNOOP",
+    "MAVERICK",
+    "GOOSE",
+    "BOND007",
+    "NUCLEAR"
+  ],
+  "squawkBingo": [
+    { "code": "1200", "label": "VFR parade mode" },
+    { "code": "7777", "label": "Military formation" },
+    { "code": "4400", "label": "Glider convention" },
+    { "code": "0000", "label": "Suspiciously round" },
+    { "code": "7500", "label": "Hijack (real — don't cheer)" }
+  ],
+  "blackHeloBingo": [
+    "Medevac helo",
+    "News helo",
+    "Law enforcement",
+    "Military/gov",
+    "Unknown helo",
+    "Low hover",
+    "Night ops",
+    "Hospital hop",
+    "Black helicopter"
+  ],
+  "meteorShowers": [
+    { "name": "Quadrantids", "startMonth": 1, "startDay": 1, "endMonth": 1, "endDay": 5, "radiantRa": 230, "radiantDec": 49 },
+    { "name": "Lyrids", "startMonth": 4, "startDay": 16, "endMonth": 4, "endDay": 25, "radiantRa": 271, "radiantDec": 34 },
+    { "name": "Perseids", "startMonth": 7, "startDay": 17, "endMonth": 8, "endDay": 24, "radiantRa": 48, "radiantDec": 58 },
+    { "name": "Orionids", "startMonth": 10, "startDay": 2, "endMonth": 11, "endDay": 7, "radiantRa": 95, "radiantDec": 16 },
+    { "name": "Geminids", "startMonth": 12, "startDay": 4, "endMonth": 12, "endDay": 17, "radiantRa": 112, "radiantDec": 33 }
+  ],
+  "cardinalsHomeMonths": [3, 4, 5, 6, 7, 8, 9, 10]
+}

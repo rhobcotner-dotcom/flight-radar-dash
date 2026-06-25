@@ -1,0 +1,2424 @@
+{
+  "defaultRadiusMiles": 125,
+  "generatedAt": "2026-06-23T04:55:38.411Z",
+  "cameraCount": 240,
+  "sources": [
+    "Virtual Railfan",
+    "Live Trains LLC",
+    "Railstream",
+    "Steel Highway Railcams",
+    "Tehachapi Live Train Cams",
+    "SouthWest RailCams",
+    "Northern Transcon Railcams",
+    "Railside Live",
+    "RRphotographer",
+    "Railfan Depot",
+    "PU Tower Railcam",
+    "Train Watching Live",
+    "Main Street Railfan",
+    "Rails of the MW",
+    "RailCam Live"
+  ],
+  "cameras": [
+    {
+      "id": "virtual-railfan-decatur-alabama-usa-live-train-camera-fi-5YG01nZOygQ",
+      "name": "Decatur, Alabama, USA | LIVE Train Camera (Fixed View – West)",
+      "lat": 34.608,
+      "lon": -86.98,
+      "youtubeId": "5YG01nZOygQ",
+      "railroad": null,
+      "state": "AL",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-decatur-alabama-usa-live-train-camera-fi-irU2jyvUj5U",
+      "name": "Decatur, Alabama, USA | LIVE Train Camera (Fixed View — East)",
+      "lat": 34.606,
+      "lon": -86.984,
+      "youtubeId": "irU2jyvUj5U",
+      "railroad": null,
+      "state": "AL",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-birmingham-alabama-c-KUM6HBnv_fw",
+      "name": "LIVE Trains Railcam | Birmingham, Alabama (CSX/NS Diamond)",
+      "lat": 33.521,
+      "lon": -86.802,
+      "youtubeId": "KUM6HBnv_fw",
+      "railroad": "CSX/NS",
+      "state": "AL",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-birmingham-alabama-c-bCi1fI2YUxI",
+      "name": "LIVE Trains Railcam | Birmingham, Alabama (CSX/NS Diamond)",
+      "lat": 33.528,
+      "lon": -86.792,
+      "youtubeId": "bCi1fI2YUxI",
+      "railroad": "CSX/NS",
+      "state": "AL",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-birmingham-alabama-p-8ft5kUvq27U",
+      "name": "LIVE Trains Railcam | Birmingham, Alabama (PTZ)",
+      "lat": 33.523,
+      "lon": -86.798,
+      "youtubeId": "8ft5kUvq27U",
+      "railroad": null,
+      "state": "AL",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-birmingham-alabama-p-eKKwgTs6QcY",
+      "name": "LIVE Trains Railcam | Birmingham, Alabama (PTZ)",
+      "lat": 33.526,
+      "lon": -86.795,
+      "youtubeId": "eKKwgTs6QcY",
+      "railroad": null,
+      "state": "AL",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "southwest-railcams-decatur-ar-cpkc-heavener-sub-mp-217-ptz--gQJzzwqyEsg",
+      "name": "Decatur, AR | CPKC Heavener Sub, MP 217 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 36.336,
+      "lon": -94.461,
+      "youtubeId": "gQJzzwqyEsg",
+      "railroad": "Class I",
+      "state": "AR",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-benson-az-uprr-lordsburg-sub-mp-1032-eas-DUbV6r-CrkM",
+      "name": "Benson, AZ | UPRR Lordsburg Sub, MP 1032 - East (Chat) | SouthWest RailCams LIVE",
+      "lat": 31.97,
+      "lon": -110.29,
+      "youtubeId": "DUbV6r-CrkM",
+      "railroad": null,
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-benson-az-uprr-lordsburg-sub-mp-1032-ptz-7KCnwGgb7OM",
+      "name": "Benson, AZ | UPRR Lordsburg Sub, MP 1032 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 31.968,
+      "lon": -110.294,
+      "youtubeId": "7KCnwGgb7OM",
+      "railroad": null,
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-kingman-az-bnsf-seligman-sub-mp-516-5-we-IovWWZWmNpY",
+      "name": "Kingman, AZ | BNSF Seligman Sub, MP 516.5 - West (Chat) | SouthWest RailCams LIVE",
+      "lat": 35.19,
+      "lon": -114.053,
+      "youtubeId": "IovWWZWmNpY",
+      "railroad": "BNSF",
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "virtual-railfan-tucson-arizona-usa-live-train-camera-ptz-q5BQRwSh41Q",
+      "name": "Tucson, Arizona, USA | LIVE Train Camera (PTZ)",
+      "lat": 32.223,
+      "lon": -110.975,
+      "youtubeId": "q5BQRwSh41Q",
+      "railroad": null,
+      "state": "AZ",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "southwest-railcams-tucson-az-wilmot-uprr-lordsburg-sub-mp-9-UzAxO6ZAvYE",
+      "name": "Tucson, AZ (Wilmot) | UPRR Lordsburg Sub MP 994.7 (Chat) | SouthWest RailCams LIVE",
+      "lat": 32.225,
+      "lon": -110.971,
+      "youtubeId": "UzAxO6ZAvYE",
+      "railroad": null,
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-willcox-az-uprr-lordsburg-sub-mp-1074-ea-C7SdkDRTuKA",
+      "name": "Willcox, AZ | UPRR Lordsburg Sub, MP 1074 - East | SouthWest RailCams LIVE",
+      "lat": 32.253,
+      "lon": -109.832,
+      "youtubeId": "C7SdkDRTuKA",
+      "railroad": null,
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-willcox-az-uprr-lordsburg-sub-mp-1074-7---2pfTm7AMHk",
+      "name": "Willcox, AZ | UPRR Lordsburg Sub, MP 1074.7 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 32.255,
+      "lon": -109.828,
+      "youtubeId": "-2pfTm7AMHk",
+      "railroad": null,
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-winslow-az-bnsf-seligman-sub-mp-285-3-pt-YeWwU0McfaA",
+      "name": "Winslow, AZ | BNSF Seligman Sub, MP 285.3 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 35.026,
+      "lon": -110.693,
+      "youtubeId": "YeWwU0McfaA",
+      "railroad": "BNSF",
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-winslow-az-bnsf-seligman-sub-mp-285-3-we-I59a9XZkngg",
+      "name": "Winslow, AZ | BNSF Seligman Sub, MP 285.3 - West (Chat) | SouthWest RailCams LIVE",
+      "lat": 35.024,
+      "lon": -110.697,
+      "youtubeId": "I59a9XZkngg",
+      "railroad": "BNSF",
+      "state": "AZ",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-bear-photo-bomb-the-tehachapi-loop-train-iqgnZhJy6eA",
+      "name": "Bear Photo Bomb! The Tehachapi Loop Train Cam",
+      "lat": 35.212,
+      "lon": -118.542,
+      "youtubeId": "iqgnZhJy6eA",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "southwest-railcams-colfax-ca-uprr-roseville-sub-mp-141-9-pt-8zRCgdkn_e8",
+      "name": "Colfax, CA | UPRR Roseville Sub, MP 141.9 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 39.101,
+      "lon": -120.953,
+      "youtubeId": "8zRCgdkn_e8",
+      "railroad": null,
+      "state": "CA",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-daggett-ca-bnsf-needles-sub-mp-737-8-cha-ECfBCFozPlM",
+      "name": "Daggett, CA | BNSF Needles Sub, MP 737.8 (Chat) | SouthWest RailCams LIVE",
+      "lat": 34.858,
+      "lon": -116.843,
+      "youtubeId": "ECfBCFozPlM",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-f-30-tehachapi-live-train-cams-drone-amt-LpnjtnOSgQw",
+      "name": "F-30 Tehachapi Live Train Cams Drone - AMTRAK",
+      "lat": 35.212,
+      "lon": -118.542,
+      "youtubeId": "LpnjtnOSgQw",
+      "railroad": "Amtrak",
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "southwest-railcams-indio-ca-uprr-yuma-sub-mp-610-75-ptz-sou-Ed34e7YLqoM",
+      "name": "Indio, CA | UPRR Yuma Sub MP 610.75 - PTZ | SouthWest RailCams LIVE",
+      "lat": 33.72,
+      "lon": -116.215,
+      "youtubeId": "Ed34e7YLqoM",
+      "railroad": null,
+      "state": "CA",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "rrphotographer-live-cajon-pass-california-summit-silver-jINlyilLC2Q",
+      "name": "Live🔴 Cajon Pass California, Summit / Silverwood Cam (BNSF'S CAJON SUB)",
+      "lat": 34.422,
+      "lon": -117.305,
+      "youtubeId": "jINlyilLC2Q",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-live-cajon-pass-california-summit-silver-Xq5IQCYGPoo",
+      "name": "Live🔴 Cajon Pass California, Summit / Silverwood Cam (BNSF'S CAJON SUB)",
+      "lat": 34.424,
+      "lon": -117.301,
+      "youtubeId": "Xq5IQCYGPoo",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-live-cajon-pass-california-summit-silver-q-jwaDxo7u4",
+      "name": "Live🔴 Cajon Pass California, Summit / Silverwood Cam (BNSF'S CAJON SUB)",
+      "lat": 34.427,
+      "lon": -117.298,
+      "youtubeId": "q-jwaDxo7u4",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-live-cajon-pass-california-summit-silver-JukKxIj3uDA",
+      "name": "Live🔴 Cajon Pass California, Summit / Silverwood Cam (BNSF'S CAJON SUB)",
+      "lat": 34.429,
+      "lon": -117.295,
+      "youtubeId": "JukKxIj3uDA",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-live-truckee-california-non-ptz-truckee--YvWfLgNeC3o",
+      "name": "Live🔴 Truckee, California (NON PTZ) / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.33,
+      "lon": -120.18,
+      "youtubeId": "YvWfLgNeC3o",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-live-truckee-california-non-ptz-truckee--IGb1mVpQbnI",
+      "name": "Live🔴 Truckee, California (NON PTZ) / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.333,
+      "lon": -120.177,
+      "youtubeId": "IGb1mVpQbnI",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-live-truckee-california-non-ptz-truckee--GeRuiaI-l2E",
+      "name": "Live🔴 Truckee, California (NON PTZ) / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.335,
+      "lon": -120.173,
+      "youtubeId": "GeRuiaI-l2E",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-live-truckee-california-truckee-railroad-TQU_S0Qx1b0",
+      "name": "Live🔴 Truckee, California / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.328,
+      "lon": -120.184,
+      "youtubeId": "TQU_S0Qx1b0",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "southwest-railcams-marysville-ca-uprr-valley-sub-mp-140-85--JUf1rHtQAEc",
+      "name": "Marysville, CA | UPRR Valley Sub, MP 140.85 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 39.146,
+      "lon": -121.591,
+      "youtubeId": "JUf1rHtQAEc",
+      "railroad": null,
+      "state": "CA",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-moon-setting-at-the-tehachapi-loop-tehac-sBEGsverOrk",
+      "name": "Moon Setting at the Tehachapi Loop - Tehachapi Live Train Cams",
+      "lat": 35.212,
+      "lon": -118.542,
+      "youtubeId": "sBEGsverOrk",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "rrphotographer-past-live-cajon-pass-california-summit-s-b1Lg2z6UZKw",
+      "name": "PAST Live🔴 Cajon Pass California, Summit / Silverwood Cam (BNSF'S CAJON SUB)",
+      "lat": 34.431,
+      "lon": -117.291,
+      "youtubeId": "b1Lg2z6UZKw",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-past-live-cajon-pass-california-summit-s-lKNwHaCh5OU",
+      "name": "PAST Live🔴 Cajon Pass California, Summit / Silverwood Cam (BNSF'S CAJON SUB)",
+      "lat": 34.433,
+      "lon": -117.288,
+      "youtubeId": "lKNwHaCh5OU",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-past-live-truckee-california-truckee-rai-8-JLpC0j_d8",
+      "name": "PAST Live🔴 Truckee, California / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.337,
+      "lon": -120.17,
+      "youtubeId": "8-JLpC0j_d8",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-past-live-truckee-california-truckee-rai-8UGYvCFgUf0",
+      "name": "PAST Live🔴 Truckee, California / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.339,
+      "lon": -120.166,
+      "youtubeId": "8UGYvCFgUf0",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-past-live-truckee-california-truckee-rai-eaKDzOi9JPY",
+      "name": "PAST Live🔴 Truckee, California / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.342,
+      "lon": -120.163,
+      "youtubeId": "eaKDzOi9JPY",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "rrphotographer-past-live-truckee-california-truckee-rai-MY9pNUqhYDA",
+      "name": "PAST Live🔴 Truckee, California / Truckee Railroad Museum Cam (UP'S ROSEVILLE SUB)",
+      "lat": 39.344,
+      "lon": -120.159,
+      "youtubeId": "MY9pNUqhYDA",
+      "railroad": "UP",
+      "state": "CA",
+      "source": "RRphotographer"
+    },
+    {
+      "id": "southwest-railcams-stockton-ca-bnsf-up-stockton-diamond-ptz-Fbc8zmqrhn8",
+      "name": "Stockton, CA | BNSF / UP Stockton Diamond - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 37.957,
+      "lon": -121.29,
+      "youtubeId": "Fbc8zmqrhn8",
+      "railroad": "BNSF",
+      "state": "CA",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-and-airbnb-at--bdUvP9rsbfA",
+      "name": "Tehachapi Live Train Cams and 🏡 Airbnb 🛌 at West Cable",
+      "lat": 35.128,
+      "lon": -118.465,
+      "youtubeId": "bdUvP9rsbfA",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-and-airbnb-at--mYdQFWjY6Eo",
+      "name": "Tehachapi Live Train Cams and 🏡 Airbnb 🛌 at West Cable",
+      "lat": 35.13,
+      "lon": -118.461,
+      "youtubeId": "mYdQFWjY6Eo",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-gardner-rea-TdugPEnluFo",
+      "name": "Tehachapi Live Train Cams at Gardner Realty in Mojave CA 🚂",
+      "lat": 35.052,
+      "lon": -118.174,
+      "youtubeId": "TdugPEnluFo",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-giumarra-vi-ouIGTQ8_V28",
+      "name": "Tehachapi Live Train Cams at Giumarra Vineyard in Edison CA",
+      "lat": 35.384,
+      "lon": -118.849,
+      "youtubeId": "ouIGTQ8_V28",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-giumarra-vi-TlgQSJEkERs",
+      "name": "Tehachapi Live Train Cams at Giumarra Vineyards 🍇 in Edison CA.",
+      "lat": 35.379,
+      "lon": -118.856,
+      "youtubeId": "TlgQSJEkERs",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-giumarra-vi-f6lRrgOpIIM",
+      "name": "Tehachapi Live Train Cams at Giumarra Vineyards 🍇 in Edison CA.",
+      "lat": 35.381,
+      "lon": -118.852,
+      "youtubeId": "f6lRrgOpIIM",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-the-tehacha-IwRVRADtGBQ",
+      "name": "Tehachapi Live Train Cams at the Tehachapi Depot Railroad Museum",
+      "lat": 35.143,
+      "lon": -118.43,
+      "youtubeId": "IwRVRADtGBQ",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-the-tehacha-fdDma6qLhu4",
+      "name": "Tehachapi Live Train Cams at the Tehachapi Depot Railroad Museum",
+      "lat": 35.146,
+      "lon": -118.427,
+      "youtubeId": "fdDma6qLhu4",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-the-tehacha-Ysa6gS2TWuo",
+      "name": "Tehachapi Live Train Cams at the Tehachapi Depot Railroad Museum 🚉",
+      "lat": 35.134,
+      "lon": -118.444,
+      "youtubeId": "Ysa6gS2TWuo",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-the-tehacha-iDeqI543gqQ",
+      "name": "Tehachapi Live Train Cams at the Tehachapi Depot Railroad Museum 🚉",
+      "lat": 35.137,
+      "lon": -118.441,
+      "youtubeId": "iDeqI543gqQ",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-the-tehacha-n8SKPOQSvzQ",
+      "name": "Tehachapi Live Train Cams at the Tehachapi Depot Railroad Museum 🚉",
+      "lat": 35.139,
+      "lon": -118.437,
+      "youtubeId": "n8SKPOQSvzQ",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-the-tehacha-KyFT1qMTrGU",
+      "name": "Tehachapi Live Train Cams at the Tehachapi Loop 🚂",
+      "lat": 35.212,
+      "lon": -118.542,
+      "youtubeId": "KyFT1qMTrGU",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-the-tehacha-rOjVrHnQPik",
+      "name": "Tehachapi Live Train Cams at the Tehachapi Loop 🚂",
+      "lat": 35.221,
+      "lon": -118.528,
+      "youtubeId": "rOjVrHnQPik",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable-nApxyxIei78",
+      "name": "Tehachapi Live Train Cams at West Cable",
+      "lat": 35.128,
+      "lon": -118.465,
+      "youtubeId": "nApxyxIei78",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--KoVEy-4cMSY",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.128,
+      "lon": -118.465,
+      "youtubeId": "KoVEy-4cMSY",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--d9lJcZpX_cA",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.13,
+      "lon": -118.461,
+      "youtubeId": "d9lJcZpX_cA",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--03tperBNUCE",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.133,
+      "lon": -118.458,
+      "youtubeId": "03tperBNUCE",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--KIuWe4eTqaM",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.135,
+      "lon": -118.455,
+      "youtubeId": "KIuWe4eTqaM",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--4wZgUoYZL8o",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.137,
+      "lon": -118.451,
+      "youtubeId": "4wZgUoYZL8o",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--6hrlkytOmOM",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.139,
+      "lon": -118.447,
+      "youtubeId": "6hrlkytOmOM",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--H3rJ6CdRm1c",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.142,
+      "lon": -118.444,
+      "youtubeId": "H3rJ6CdRm1c",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--kuokQ44oAco",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.144,
+      "lon": -118.44,
+      "youtubeId": "kuokQ44oAco",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--ZoLq-WWkcBU",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.146,
+      "lon": -118.437,
+      "youtubeId": "ZoLq-WWkcBU",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--ILFbmFaGdRA",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.148,
+      "lon": -118.434,
+      "youtubeId": "ILFbmFaGdRA",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-at-west-cable--RZHULVKcXfw",
+      "name": "Tehachapi Live Train Cams at West Cable MP 357-358",
+      "lat": 35.151,
+      "lon": -118.43,
+      "youtubeId": "RZHULVKcXfw",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-live-train-cams-presentation-a-QRYZcwDGhjU",
+      "name": "Tehachapi Live Train Cams Presentation at the Tehachapi Depot Railroad Museum 03/14/2023",
+      "lat": 35.132,
+      "lon": -118.448,
+      "youtubeId": "QRYZcwDGhjU",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-loop-fire-7-21-2021-at-tehacha-cWn2L5e6eHg",
+      "name": "Tehachapi Loop Fire 7-21-2021 at Tehachapi Loop Overlook - Tehachapi Live Train Cams",
+      "lat": 35.212,
+      "lon": -118.542,
+      "youtubeId": "cWn2L5e6eHg",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-loop-overlook-project-MutU9p2OAa4",
+      "name": "Tehachapi Loop Overlook Project",
+      "lat": 35.212,
+      "lon": -118.542,
+      "youtubeId": "MutU9p2OAa4",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "tehachapi-live-train-cams-tehachapi-loop-overlook-project-how-to-d-b3JawXwKy9g",
+      "name": "Tehachapi Loop Overlook Project - How to Donate!",
+      "lat": 35.212,
+      "lon": -118.542,
+      "youtubeId": "b3JawXwKy9g",
+      "railroad": null,
+      "state": "CA",
+      "source": "Tehachapi Live Train Cams"
+    },
+    {
+      "id": "southwest-railcams-fort-collins-co-bnsf-front-range-sub-mp--LObvUcMIqOM",
+      "name": "Fort Collins, CO | BNSF Front Range Sub, MP 68.8 (Chat) | SouthWest RailCams LIVE",
+      "lat": 40.587,
+      "lon": -105.077,
+      "youtubeId": "LObvUcMIqOM",
+      "railroad": "BNSF",
+      "state": "CO",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "railside-live-live-new-london-ct-railcam-railside-live-dKI_sYiiY7Y",
+      "name": "LIVE New London, CT Railcam | Railside Live",
+      "lat": 41.36,
+      "lon": -71.965,
+      "youtubeId": "dKI_sYiiY7Y",
+      "railroad": null,
+      "state": "CT",
+      "source": "Railside Live"
+    },
+    {
+      "id": "virtual-railfan-austell-georgia-usa-live-train-camera-pt-Ux0rtJXPPQ0",
+      "name": "Austell, Georgia, USA | LIVE Train Camera (PTZ)",
+      "lat": 33.813,
+      "lon": -84.634,
+      "youtubeId": "Ux0rtJXPPQ0",
+      "railroad": null,
+      "state": "GA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-cohutta-georgia-usa-live-train-camera-pt-diibGG3KEeo",
+      "name": "Cohutta, Georgia, USA  |  LIVE Train Camera (PTZ)",
+      "lat": 34.96,
+      "lon": -84.953,
+      "youtubeId": "diibGG3KEeo",
+      "railroad": null,
+      "state": "GA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-cordele-georgia-usa-live-train-camera-fi-ll3X1mH_g9Q",
+      "name": "Cordele, Georgia, USA | LIVE Train Camera (Fixed View – Diamond)",
+      "lat": 31.969,
+      "lon": -83.783,
+      "youtubeId": "ll3X1mH_g9Q",
+      "railroad": null,
+      "state": "GA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-folkston-georgia-usa-live-train-camera-f-vDdj-QLNkiY",
+      "name": "Folkston, Georgia, USA | LIVE Train Camera (Fixed View — Looking West)",
+      "lat": 30.831,
+      "lon": -82.01,
+      "youtubeId": "vDdj-QLNkiY",
+      "railroad": null,
+      "state": "GA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-jesup-georgia-usa-live-train-camera-1AOrlYblQR8",
+      "name": "Jesup, Georgia, USA | LIVE Train Camera",
+      "lat": 31.607,
+      "lon": -81.885,
+      "youtubeId": "1AOrlYblQR8",
+      "railroad": null,
+      "state": "GA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "railstream-live-from-the-howell-wye-bi-tower-atlant-QRj1aojRv7o",
+      "name": "LIVE from The Howell Wye – BI Tower (Atlanta, Georgia Rail Cam)",
+      "lat": 33.754,
+      "lon": -84.39,
+      "youtubeId": "QRj1aojRv7o",
+      "railroad": null,
+      "state": "GA",
+      "source": "Railstream"
+    },
+    {
+      "id": "steel-highway-railcams-bellevue-2nd-street-station-live-railcam-to8iWyVHNM4",
+      "name": "Bellevue 2nd Street Station Live Railcam - Bellevue, IA",
+      "lat": 42.258,
+      "lon": -90.422,
+      "youtubeId": "to8iWyVHNM4",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-carroll-depot-live-railcam-east-carroll--0NmQptMRnf8",
+      "name": "Carroll Depot Live Railcam East - Carroll, IA",
+      "lat": 42.067,
+      "lon": -94.867,
+      "youtubeId": "0NmQptMRnf8",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-clarence-sundstop-live-railcam-clarence--EATGu96rNcA",
+      "name": "Clarence Sundstop Live Railcam - Clarence, Iowa",
+      "lat": 41.889,
+      "lon": -90.589,
+      "youtubeId": "EATGu96rNcA",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-clinton-county-historical-society-live-r-oIZcm3amp3A",
+      "name": "Clinton County Historical Society Live Railcam - Clinton, IA",
+      "lat": 41.844,
+      "lon": -90.189,
+      "youtubeId": "oIZcm3amp3A",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "southwest-railcams-council-bluffs-ia-uprr-omaha-sub-mp-350--QerYTIciDxU",
+      "name": "Council Bluffs, IA | UPRR Omaha Sub, MP 350.85 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 41.259,
+      "lon": -95.852,
+      "youtubeId": "QerYTIciDxU",
+      "railroad": null,
+      "state": "IA",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "steel-highway-railcams-creston-realty-live-railcam-creston-ia-QxJF9ndSLlA",
+      "name": "Creston Realty Live Railcam - Creston, IA",
+      "lat": 41.059,
+      "lon": -94.361,
+      "youtubeId": "QxJF9ndSLlA",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-dubuque-junction-live-railcam-dubuque-ia-zO0JSkhFsr4",
+      "name": "Dubuque Junction Live Railcam - Dubuque, IA",
+      "lat": 42.501,
+      "lon": -90.664,
+      "youtubeId": "zO0JSkhFsr4",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-fort-madison-spring-creek-model-trains-l-mexGMd6-8ik",
+      "name": "Fort Madison Spring Creek Model Trains Live Railcam - Fort Madison, IA",
+      "lat": 40.636,
+      "lon": -91.304,
+      "youtubeId": "mexGMd6-8ik",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "virtual-railfan-fort-madison-iowa-usa-live-train-camera--DuXSP6y9W7U",
+      "name": "Fort Madison, Iowa, USA | LIVE Train Camera (Marina Fixed View – West)",
+      "lat": 40.634,
+      "lon": -91.308,
+      "youtubeId": "DuXSP6y9W7U",
+      "railroad": null,
+      "state": "IA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-fort-madison-iowa-usa-live-train-camera--clH9iSEN8LA",
+      "name": "Fort Madison, Iowa, USA | LIVE Train Camera (PTZ – Bridge)",
+      "lat": 40.629,
+      "lon": -91.315,
+      "youtubeId": "clH9iSEN8LA",
+      "railroad": null,
+      "state": "IA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-fort-madison-iowa-usa-live-train-camera--L6eG4ahJc_Q",
+      "name": "Fort Madison, Iowa, USA | LIVE Train Camera (PTZ)",
+      "lat": 40.631,
+      "lon": -91.311,
+      "youtubeId": "L6eG4ahJc_Q",
+      "railroad": null,
+      "state": "IA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "steel-highway-railcams-grand-mound-depot-museum-live-railcam-gr-UTI_9a0CV0U",
+      "name": "Grand Mound Depot Museum Live Railcam - Grand Mound, IA",
+      "lat": 41.824,
+      "lon": -90.647,
+      "youtubeId": "UTI_9a0CV0U",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-onawa-dreamdirt-real-estate-live-railcam-rL13vXguMDw",
+      "name": "Onawa DreamDirt Real Estate Live Railcam - Onawa, IA",
+      "lat": 42.027,
+      "lon": -96.095,
+      "youtubeId": "rL13vXguMDw",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-ottumwa-main-street-donuts-live-railcam--qZ3c9t3oKYo",
+      "name": "Ottumwa Main Street Donuts Live Railcam (BNSF) - Ottumwa, IA",
+      "lat": 41.02,
+      "lon": -92.411,
+      "youtubeId": "qZ3c9t3oKYo",
+      "railroad": "BNSF",
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-ottumwa-main-street-donuts-live-railcam--er1hokqpN0w",
+      "name": "Ottumwa Main Street Donuts Live Railcam (CPKC) - Ottumwa, IA",
+      "lat": 41.022,
+      "lon": -92.407,
+      "youtubeId": "er1hokqpN0w",
+      "railroad": "Class I",
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-red-oak-depot-museum-live-railcam-red-oa-q2FMuL7GdGg",
+      "name": "Red Oak Depot & Museum Live Railcam - Red Oak, IA",
+      "lat": 41.011,
+      "lon": -95.225,
+      "youtubeId": "q2FMuL7GdGg",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-woodbine-main-street-live-railcam-woodbi-mYXToi9g62c",
+      "name": "Woodbine Main Street Live Railcam - Woodbine, IA",
+      "lat": 41.738,
+      "lon": -95.703,
+      "youtubeId": "mYXToi9g62c",
+      "railroad": null,
+      "state": "IA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-flossmoor-station-restaurant-brewery-liv-VhzzLzsB7sI",
+      "name": "Flossmoor Station Restaurant & Brewery Live Railcam South - Flossmoor, IL",
+      "lat": 41.543,
+      "lon": -87.684,
+      "youtubeId": "VhzzLzsB7sI",
+      "railroad": null,
+      "state": "IL",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-galesburg-peck-park-live-railcam-galesbu-W31PETVfWNs",
+      "name": "Galesburg Peck Park Live Railcam - Galesburg, IL",
+      "lat": 40.948,
+      "lon": -90.371,
+      "youtubeId": "W31PETVfWNs",
+      "railroad": null,
+      "state": "IL",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "virtual-railfan-galesburg-illinois-usa-live-train-camera-On1MRt0NqFs",
+      "name": "Galesburg, Illinois, USA | LIVE Train Camera (PTZ)",
+      "lat": 40.95,
+      "lon": -90.367,
+      "youtubeId": "On1MRt0NqFs",
+      "railroad": null,
+      "state": "IL",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-live-railcam-rochelle-illinois-usa-XX6EOgOmUX8",
+      "name": "LIVE RAILCAM: Rochelle, Illinois, USA",
+      "lat": 41.924,
+      "lon": -89.069,
+      "youtubeId": "XX6EOgOmUX8",
+      "railroad": null,
+      "state": "IL",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-blue-island-illinois-RDxBH2S1hxs",
+      "name": "LIVE Trains Railcam | Blue Island, Illinois (South Cam)",
+      "lat": 41.657,
+      "lon": -87.68,
+      "youtubeId": "RDxBH2S1hxs",
+      "railroad": null,
+      "state": "IL",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-blue-island-illinois-GKjSoXuZ0hU",
+      "name": "LIVE Trains Railcam | Blue Island, Illinois PTZ",
+      "lat": 41.659,
+      "lon": -87.676,
+      "youtubeId": "GKjSoXuZ0hU",
+      "railroad": null,
+      "state": "IL",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-des-plaines-illinois-g1_NXFJRlOQ",
+      "name": "LIVE Trains Railcam | Des Plaines, Illinois (PTZ)",
+      "lat": 42.033,
+      "lon": -87.883,
+      "youtubeId": "g1_NXFJRlOQ",
+      "railroad": null,
+      "state": "IL",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "steel-highway-railcams-mendota-union-depot-railroad-museum-mend-f8u6iNqQ8u8",
+      "name": "Mendota Union Depot Railroad Museum - Mendota, IL",
+      "lat": 35.132,
+      "lon": -118.448,
+      "youtubeId": "f8u6iNqQ8u8",
+      "railroad": null,
+      "state": "IL",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-vpxjJrnsWfk",
+      "name": "Oak Park IL Railcam, UP Geneva sub MP 8.5",
+      "lat": 41.899,
+      "lon": -87.771,
+      "youtubeId": "vpxjJrnsWfk",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-metra-upw--4MHrBp3Srvg",
+      "name": "Oak Park IL Railcam! UP Geneva & Metra UPW line MP 8.5",
+      "lat": 41.908,
+      "lon": -87.758,
+      "youtubeId": "4MHrBp3Srvg",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-and-me-Lkt9WYPdkR4",
+      "name": "Oak Park IL Railcam! UP geneva sub and Metra UPW MP 8.5",
+      "lat": 41.913,
+      "lon": -87.75,
+      "youtubeId": "Lkt9WYPdkR4",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-BgEIOA7zXss",
+      "name": "Oak Park IL Railcam! UP Geneva sub mp 8.5",
+      "lat": 41.902,
+      "lon": -87.768,
+      "youtubeId": "BgEIOA7zXss",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-WEbMSMGkwHA",
+      "name": "Oak Park IL Railcam! UP Geneva sub MP 8.5",
+      "lat": 41.904,
+      "lon": -87.764,
+      "youtubeId": "WEbMSMGkwHA",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-6VPLUO2ntrQ",
+      "name": "Oak Park IL Railcam! UP Geneva sub MP 8.5",
+      "lat": 41.906,
+      "lon": -87.761,
+      "youtubeId": "6VPLUO2ntrQ",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-vdpiw0n7H5E",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.915,
+      "lon": -87.747,
+      "youtubeId": "vdpiw0n7H5E",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-qu9NegKNH9Y",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.918,
+      "lon": -87.743,
+      "youtubeId": "qu9NegKNH9Y",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-tKFFSzO6SZ8",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.922,
+      "lon": -87.736,
+      "youtubeId": "tKFFSzO6SZ8",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-bbkDpPqLaMM",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.924,
+      "lon": -87.733,
+      "youtubeId": "bbkDpPqLaMM",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-OneXIQBaKO8",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.927,
+      "lon": -87.729,
+      "youtubeId": "OneXIQBaKO8",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-gMWweDmdn8k",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.929,
+      "lon": -87.726,
+      "youtubeId": "gMWweDmdn8k",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-Dh1kv14__mo",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.931,
+      "lon": -87.722,
+      "youtubeId": "Dh1kv14__mo",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-Ojcom3K6_2k",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.933,
+      "lon": -87.719,
+      "youtubeId": "Ojcom3K6_2k",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-XqB9tl_thiI",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.936,
+      "lon": -87.715,
+      "youtubeId": "XqB9tl_thiI",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-kZqgoZkrvRc",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.938,
+      "lon": -87.712,
+      "youtubeId": "kZqgoZkrvRc",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-0vbcCV-eNlA",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.94,
+      "lon": -87.708,
+      "youtubeId": "0vbcCV-eNlA",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-IEfBjH_b3cQ",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.943,
+      "lon": -87.705,
+      "youtubeId": "IEfBjH_b3cQ",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-Jj47XPw7wr8",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.945,
+      "lon": -87.701,
+      "youtubeId": "Jj47XPw7wr8",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-Oy9-v3o1y-A",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.947,
+      "lon": -87.698,
+      "youtubeId": "Oy9-v3o1y-A",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-mz2HBp5VsWA",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.949,
+      "lon": -87.694,
+      "youtubeId": "mz2HBp5VsWA",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-LLJapBfyuNI",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.952,
+      "lon": -87.691,
+      "youtubeId": "LLJapBfyuNI",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-MbimCXywvAc",
+      "name": "Oak Park IL Railcam! UP Geneva Sub MP 8.5",
+      "lat": 41.954,
+      "lon": -87.687,
+      "youtubeId": "MbimCXywvAc",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-metra-upw--S3rIpaRyPtU",
+      "name": "Oak Park IL Railcam. UP Geneva & Metra UPW line MP 8.5",
+      "lat": 41.911,
+      "lon": -87.754,
+      "youtubeId": "S3rIpaRyPtU",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-oak-park-il-railcam-up-geneva-sub-mp-8-5-VSrN24Joaww",
+      "name": "Oak park IL railcam. UP geneva sub MP 8.5",
+      "lat": 41.92,
+      "lon": -87.74,
+      "youtubeId": "VSrN24Joaww",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "steel-highway-railcams-port-byron-live-railcam-port-byron-il-SToWZs1nwOA",
+      "name": "Port Byron Live Railcam - Port Byron, IL",
+      "lat": 41.604,
+      "lon": -90.335,
+      "youtubeId": "SToWZs1nwOA",
+      "railroad": null,
+      "state": "IL",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "rails-of-the-mw-up-geneva-sub-railcam-mp-8-5-oak-park-il-WK6ZCq4PwPs",
+      "name": "UP Geneva Sub Railcam MP 8.5 - Oak Park IL Railcam",
+      "lat": 41.888,
+      "lon": -87.789,
+      "youtubeId": "WK6ZCq4PwPs",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-up-geneva-sub-railcam-mp-8-5-oak-park-il-PdLpt3tuh70",
+      "name": "UP Geneva Sub Railcam MP 8.5 - Oak Park IL Railcam",
+      "lat": 41.89,
+      "lon": -87.785,
+      "youtubeId": "PdLpt3tuh70",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-up-geneva-sub-railcam-mp-8-5-oak-park-il-D7p5fbal34c",
+      "name": "UP Geneva Sub Railcam MP 8.5 - Oak Park IL Railcam",
+      "lat": 41.893,
+      "lon": -87.782,
+      "youtubeId": "D7p5fbal34c",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-up-geneva-sub-railcam-mp-8-5-oak-park-il-Hg_rKt9Gg_Q",
+      "name": "UP Geneva Sub Railcam MP 8.5 - Oak Park IL Railcam",
+      "lat": 41.895,
+      "lon": -87.779,
+      "youtubeId": "Hg_rKt9Gg_Q",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "rails-of-the-mw-up-geneva-sub-railcam-mp-8-5-oak-park-il-RjeFpHPZKKA",
+      "name": "UP Geneva Sub Railcam MP 8.5 - Oak Park IL Railcam",
+      "lat": 41.897,
+      "lon": -87.775,
+      "youtubeId": "RjeFpHPZKKA",
+      "railroad": "UP",
+      "state": "IL",
+      "source": "Rails of the MW"
+    },
+    {
+      "id": "virtual-railfan-chesterton-indiana-usa-live-train-camera-BDb_sSL-K5k",
+      "name": "Chesterton, Indiana, USA | LIVE Train Camera (Fixed View – East)",
+      "lat": 41.613,
+      "lon": -87.048,
+      "youtubeId": "BDb_sSL-K5k",
+      "railroad": null,
+      "state": "IN",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-chesterton-indiana-usa-live-train-camera-a8LZ6wVb81E",
+      "name": "Chesterton, Indiana, USA | LIVE Train Camera (PTZ)",
+      "lat": 41.611,
+      "lon": -87.052,
+      "youtubeId": "a8LZ6wVb81E",
+      "railroad": null,
+      "state": "IN",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-muncie-indiana-usa-live-train-camera-fix-G8iIhudKPsQ",
+      "name": "Muncie, Indiana, USA | LIVE Train Camera (Fixed View – East)",
+      "lat": 40.196,
+      "lon": -85.383,
+      "youtubeId": "G8iIhudKPsQ",
+      "railroad": null,
+      "state": "IN",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-muncie-indiana-usa-live-train-camera-ptz-_ESx1v-hJG4",
+      "name": "Muncie, Indiana, USA | LIVE Train Camera (PTZ)",
+      "lat": 40.194,
+      "lon": -85.387,
+      "youtubeId": "_ESx1v-hJG4",
+      "railroad": null,
+      "state": "IN",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-la-grange-kentucky-usa-live-railcam-came-OtssjZ3hdX0",
+      "name": "La Grange, Kentucky, USA |  LIVE Railcam Camera (Observation Platform PTZ)",
+      "lat": 38.408,
+      "lon": -85.379,
+      "youtubeId": "OtssjZ3hdX0",
+      "railroad": null,
+      "state": "KY",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "railside-live-live-worcester-ma-railcam-railside-live-azMQk5x_xps",
+      "name": "LIVE Worcester, MA Railcam | Railside Live",
+      "lat": 42.262,
+      "lon": -71.802,
+      "youtubeId": "azMQk5x_xps",
+      "railroad": null,
+      "state": "MA",
+      "source": "Railside Live"
+    },
+    {
+      "id": "virtual-railfan-csx-mainline-in-cumberland-maryland-usa--cR3kSHm7Ts0",
+      "name": "CSX Mainline in Cumberland, Maryland, USA | LIVE Train Camera (PTZ – South)",
+      "lat": 39.653,
+      "lon": -78.762,
+      "youtubeId": "cR3kSHm7Ts0",
+      "railroad": "CSX",
+      "state": "MD",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-battle-creek-michigan-usa-live-train-cam-m3iasBkPAbo",
+      "name": "Battle Creek, Michigan, USA | LIVE Train Camera (PTZ)",
+      "lat": 42.319,
+      "lon": -85.182,
+      "youtubeId": "m3iasBkPAbo",
+      "railroad": null,
+      "state": "MI",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "steel-highway-railcams-brainerd-mn-usa-boiler-train-yard-cam-li-IU7Xi1ZUr2M",
+      "name": "Brainerd, MN, USA | Boiler Train Yard Cam LIVE NOW | Brainerd Sub MP 118 BNSF",
+      "lat": 46.358,
+      "lon": -94.201,
+      "youtubeId": "IU7Xi1ZUr2M",
+      "railroad": "BNSF",
+      "state": "MN",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "northern-transcon-railcams-little-falls-mn-ptz-cam-live-now-bnsf-st-ynOO_QTY_YA",
+      "name": "Little Falls, MN PTZ Cam LIVE NOW | BNSF Staples Sub | Northern Transcon Railcams | MP 106.3",
+      "lat": 45.976,
+      "lon": -94.363,
+      "youtubeId": "ynOO_QTY_YA",
+      "railroad": "BNSF",
+      "state": "MN",
+      "source": "Northern Transcon Railcams"
+    },
+    {
+      "id": "northern-transcon-railcams-little-falls-mn-ptz-cam-live-now-bnsf-st-8m3Vp6nFnfY",
+      "name": "Little Falls, MN PTZ Cam LIVE NOW | BNSF Staples Sub | Northern Transcon Railcams | MP 106.3",
+      "lat": 45.978,
+      "lon": -94.359,
+      "youtubeId": "8m3Vp6nFnfY",
+      "railroad": "BNSF",
+      "state": "MN",
+      "source": "Northern Transcon Railcams"
+    },
+    {
+      "id": "northern-transcon-railcams-little-falls-mn-ptz-cam-live-now-bnsf-st-efgvwf2q1sc",
+      "name": "Little Falls, MN PTZ Cam LIVE NOW | BNSF Staples Sub | Northern Transcon Railcams | MP 106.3",
+      "lat": 45.981,
+      "lon": -94.356,
+      "youtubeId": "efgvwf2q1sc",
+      "railroad": "BNSF",
+      "state": "MN",
+      "source": "Northern Transcon Railcams"
+    },
+    {
+      "id": "southwest-railcams-dexter-mo-uprr-hoxie-sub-mp-141-2-ptz-ch-e4YOLMOrEy8",
+      "name": "Dexter, MO | UPRR Hoxie Sub, MP 141.2 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 36.794,
+      "lon": -89.956,
+      "youtubeId": "e4YOLMOrEy8",
+      "railroad": null,
+      "state": "MO",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "virtual-railfan-kansas-city-missouri-usa-live-train-came-PyLw5HQKiYU",
+      "name": "Kansas City, Missouri, USA | LIVE Train Camera (PTZ – Bottom)",
+      "lat": 39.1,
+      "lon": -94.578,
+      "youtubeId": "PyLw5HQKiYU",
+      "railroad": null,
+      "state": "MO",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-la-plata-missouri-usa-live-train-camera--X-ir2KfXMX0",
+      "name": "La Plata, Missouri, USA | LIVE Train Camera (Fixed View – East)",
+      "lat": 40.023,
+      "lon": -92.492,
+      "youtubeId": "X-ir2KfXMX0",
+      "railroad": null,
+      "state": "MO",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-la-plata-missouri-usa-live-train-camera--flEBdsoP4o0",
+      "name": "La Plata, Missouri, USA | LIVE Train Camera (Fixed View – West)",
+      "lat": 40.025,
+      "lon": -92.488,
+      "youtubeId": "flEBdsoP4o0",
+      "railroad": null,
+      "state": "MO",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-la-plata-missouri-usa-live-train-camera--iz9IQhp_fu0",
+      "name": "La Plata, Missouri, USA | LIVE Train Camera (PTZ – Lookout)",
+      "lat": 39.729,
+      "lon": -92.49,
+      "youtubeId": "iz9IQhp_fu0",
+      "railroad": null,
+      "state": "MO",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "live-trains-llc-live-trains-ad-free-st-louis-missouri-83zOF_E687I",
+      "name": "LIVE Trains AD Free | St Louis, Missouri",
+      "lat": 38.625,
+      "lon": -90.19,
+      "youtubeId": "83zOF_E687I",
+      "railroad": null,
+      "state": "MO",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-st-louis-missouri-pt-NXmFAhX_3vY",
+      "name": "LIVE Trains Railcam | St Louis, Missouri (PTZ)",
+      "lat": 38.627,
+      "lon": -90.186,
+      "youtubeId": "NXmFAhX_3vY",
+      "railroad": null,
+      "state": "MO",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-st-louis-missouri-we-OHRc7YRmuTk",
+      "name": "LIVE Trains Railcam | St Louis, Missouri (West Cam)",
+      "lat": 38.63,
+      "lon": -90.183,
+      "youtubeId": "OHRc7YRmuTk",
+      "railroad": null,
+      "state": "MO",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "steel-highway-railcams-pacific-partnership-live-railcam-pacific-EUnTmdt5WBo",
+      "name": "Pacific Partnership Live Railcam - Pacific, MO",
+      "lat": 38.482,
+      "lon": -90.744,
+      "youtubeId": "EUnTmdt5WBo",
+      "railroad": null,
+      "state": "MO",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "live-trains-llc-live-trains-ad-free-essex-montana-JDXflJ29jYs",
+      "name": "Live Trains Ad Free | Essex, Montana",
+      "lat": 48.275,
+      "lon": -113.61,
+      "youtubeId": "JDXflJ29jYs",
+      "railroad": null,
+      "state": "MT",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-essex-montana-yoZkbeEbWb4",
+      "name": "LIVE Trains Railcam | Essex, Montana",
+      "lat": 48.277,
+      "lon": -113.606,
+      "youtubeId": "yoZkbeEbWb4",
+      "railroad": null,
+      "state": "MT",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "steel-highway-railcams-belvidere-spring-creek-model-trains-live-mt3Y7o2sYV8",
+      "name": "Belvidere Spring Creek Model Trains Live Railcam - Belvidere, NE",
+      "lat": 40.14,
+      "lon": -97.723,
+      "youtubeId": "mt3Y7o2sYV8",
+      "railroad": null,
+      "state": "NE",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "virtual-railfan-lincoln-nebraska-usa-live-train-camera-p-Kz7pDVt8kmQ",
+      "name": "Lincoln, Nebraska, USA | Live Train Camera (PTZ)",
+      "lat": 40.809,
+      "lon": -96.708,
+      "youtubeId": "Kz7pDVt8kmQ",
+      "railroad": null,
+      "state": "NE",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "railside-live-live-cozad-ne-railcam-railside-live-ePdG9zr-MzY",
+      "name": "LIVE Cozad, NE Railcam | Railside Live",
+      "lat": 40.86,
+      "lon": -99.987,
+      "youtubeId": "ePdG9zr-MzY",
+      "railroad": null,
+      "state": "NE",
+      "source": "Railside Live"
+    },
+    {
+      "id": "pu-tower-railcam-live-test-operation-toy-train-pu-tower-p-BTmi7q2VHDw",
+      "name": "[LIVE TEST] Operation Toy Train - PU Tower - Phillipsburg, NJ - Washington Line Cam",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "BTmi7q2VHDw",
+      "railroad": null,
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-test-operation-toy-train-pu-tower-p-5oNJI40Cpb8",
+      "name": "[LIVE TEST] Operation Toy Train PU Tower Phillipsburg, NJ Washington Line Cam",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "5oNJI40Cpb8",
+      "railroad": null,
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-24x-up-up-wfrx-bnsf-live-ns-lehigh-line--wot8MVeUuJU",
+      "name": "24X UP UP WFRX (BNSF) LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "wot8MVeUuJU",
+      "railroad": "BNSF",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-test-operation-toy-train-pu-tower-p-VLK-Mm7mQIo",
+      "name": "LIVE *TEST* Operation Toy Train PU Tower Phillipsburg, NJ Washington Line Railcam [No Audio]",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "VLK-Mm7mQIo",
+      "railroad": null,
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ns-lehigh-line-ptz-railcam-phillips-MbSpPgNu84E",
+      "name": "LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "MbSpPgNu84E",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ns-lehigh-line-ptz-railcam-phillips-zpjKos0qBzg",
+      "name": "LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.695,
+      "lon": -75.186,
+      "youtubeId": "zpjKos0qBzg",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ns-lehigh-line-ptz-railcam-phillips-oqwMc1AfB4Q",
+      "name": "LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.698,
+      "lon": -75.183,
+      "youtubeId": "oqwMc1AfB4Q",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ns-lehigh-line-ptz-railcam-phillips-gzcaFxhEj5A",
+      "name": "LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.7,
+      "lon": -75.179,
+      "youtubeId": "gzcaFxhEj5A",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ns-lehigh-line-ptz-railcam-phillips-jMcjA_KWo8Y",
+      "name": "LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.702,
+      "lon": -75.176,
+      "youtubeId": "jMcjA_KWo8Y",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-operation-toy-train-pu-tower-philli-TEFdwdIhUao",
+      "name": "LIVE Operation Toy Train PU Tower Phillipsburg, NJ Washington Line Railcam",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "TEFdwdIhUao",
+      "railroad": null,
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-i8n6l-0mkuU",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "i8n6l-0mkuU",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-0nBG_i-PLqw",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.695,
+      "lon": -75.186,
+      "youtubeId": "0nBG_i-PLqw",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-Y317RFRn7oQ",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.698,
+      "lon": -75.183,
+      "youtubeId": "Y317RFRn7oQ",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-A-ipeyBxLsE",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.7,
+      "lon": -75.179,
+      "youtubeId": "A-ipeyBxLsE",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-HaHuMyavML0",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.702,
+      "lon": -75.176,
+      "youtubeId": "HaHuMyavML0",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-7ZtB9QF482Y",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "7ZtB9QF482Y",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-3X0cBpRKrw4",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.695,
+      "lon": -75.186,
+      "youtubeId": "3X0cBpRKrw4",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-ptz-railcam-ns-lehigh-line-phillips-_5HHRXqoSUQ",
+      "name": "LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.698,
+      "lon": -75.183,
+      "youtubeId": "_5HHRXqoSUQ",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-replay-interior-pu-tower-operator-r-NySvBgZ4WcQ",
+      "name": "LIVE REPLAY Interior PU Tower Operator Room View Phillipsburg, NJ Limited Railcam",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "NySvBgZ4WcQ",
+      "railroad": null,
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-replay-interior-pu-tower-operator-r-Vy6XhHW-z88",
+      "name": "LIVE REPLAY Interior PU Tower Operator Room View Phillipsburg, NJ Limited Railcam",
+      "lat": 40.695,
+      "lon": -75.186,
+      "youtubeId": "Vy6XhHW-z88",
+      "railroad": null,
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-replay-ns-lehigh-line-ptz-railcam-p-CM9NThcVWK0",
+      "name": "LIVE REPLAY NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.695,
+      "lon": -75.186,
+      "youtubeId": "CM9NThcVWK0",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-replay-ns-lehigh-line-ptz-railcam-p-7LfA50MziMw",
+      "name": "LIVE REPLAY NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.698,
+      "lon": -75.183,
+      "youtubeId": "7LfA50MziMw",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-replay-ns-lehigh-line-ptz-railcam-p-v0UjaEtcyhQ",
+      "name": "LIVE REPLAY NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 𝟟𝟚𝟘𝕡",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "v0UjaEtcyhQ",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-replay-operation-toy-train-pu-tower-sG6OZQIm5n4",
+      "name": "LIVE REPLAY Operation Toy Train PU Tower Phillipsburg, NJ Washington Line Cam [No Audio]",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "sG6OZQIm5n4",
+      "railroad": null,
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-live-replay-pu-tower-interior-ns-lehigh--J27RAsidvZI",
+      "name": "LIVE REPLAY PU Tower Interior NS Lehigh Line Railcam Phillipsburg, NJ MP-76",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "J27RAsidvZI",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-loram-rail-grinder-on-the-ns-lehigh-line-E_bbJsrPoUA",
+      "name": "LORAM Rail Grinder on the NS Lehigh Line Phillipsburg, NJ July 18, 2023",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "E_bbJsrPoUA",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-norfolk-southern-269-horn-battle-with-ny-kjUYzCH2kIA",
+      "name": "Norfolk Southern 269 horn battle with NYS&W 142 crew in Phillipsburg, NJ",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "kjUYzCH2kIA",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-ns-11n-with-bnsf-dpu-live-ns-lehigh-line-DMvogq5rTns",
+      "name": "NS 11N with BNSF DPU LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "DMvogq5rTns",
+      "railroad": "BNSF",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-rainbow-over-the-ns-lehigh-line-6QK4pLsSKQ8",
+      "name": "Rainbow over the NS Lehigh Line",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "6QK4pLsSKQ8",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-replay-live-ns-lehigh-line-ptz-railcam-p-LfNJ5L0LkdY",
+      "name": "REPLAY LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76 720p",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "LfNJ5L0LkdY",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-replay-live-ptz-railcam-ns-lehigh-line-p-XR7kaWBF-AM",
+      "name": "REPLAY LIVE PTZ Railcam | NS Lehigh Line | Phillipsburg, NJ",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "XR7kaWBF-AM",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-up-1988-the-katy-leading-18g-live-ns-leh-oSAVhbioXtw",
+      "name": "UP 1988 The Katy leading 18G LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "oSAVhbioXtw",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "pu-tower-railcam-up-sd70ah-t4-dpu-on-18g-live-ns-lehigh-l-Mfm-wuUMgxY",
+      "name": "UP SD70AH-T4 DPU on 18G LIVE NS Lehigh Line PTZ Railcam Phillipsburg, NJ MP-76",
+      "lat": 40.693,
+      "lon": -75.19,
+      "youtubeId": "Mfm-wuUMgxY",
+      "railroad": "NS",
+      "state": "NJ",
+      "source": "PU Tower Railcam"
+    },
+    {
+      "id": "southwest-railcams-gallup-nm-bnsf-gallup-sub-mp-157-5-west--hatt7HlQGu0",
+      "name": "Gallup, NM | BNSF Gallup Sub, MP 157.5 - West (Chat) | SouthWest RailCams LIVE",
+      "lat": 35.528,
+      "lon": -108.744,
+      "youtubeId": "hatt7HlQGu0",
+      "railroad": "BNSF",
+      "state": "NM",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-grants-nm-bnsf-gallup-sub-mp-96-2-ptz-ch-MYfMV_WR3s4",
+      "name": "Grants, NM | BNSF Gallup Sub, MP 96.2 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 35.154,
+      "lon": -107.859,
+      "youtubeId": "MYfMV_WR3s4",
+      "railroad": "BNSF",
+      "state": "NM",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-las-vegas-nm-bnsf-raton-sub-mp-770-ptz-s-4vEbKMmiK_4",
+      "name": "Las Vegas, NM | BNSF Raton Sub MP 770 - PTZ | SouthWest RailCams LIVE",
+      "lat": 35.594,
+      "lon": -105.223,
+      "youtubeId": "4vEbKMmiK_4",
+      "railroad": "BNSF",
+      "state": "NM",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-melrose-nm-bnsf-clovis-sub-mp-680-7-chat-dteUSXY5zW0",
+      "name": "Melrose, NM | BNSF Clovis Sub, MP 680.7 (Chat) | SouthWest RailCams LIVE",
+      "lat": 34.428,
+      "lon": -103.627,
+      "youtubeId": "dteUSXY5zW0",
+      "railroad": "BNSF",
+      "state": "NM",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-santa-fe-nm-nmrx-santa-fe-sub-mp-18-32-s-R168_-P5PQw",
+      "name": "Santa Fe, NM | NMRX Santa Fe Sub, MP 18.32 - Static (Chat) | SouthWest RailCams LIVE",
+      "lat": 35.688,
+      "lon": -105.938,
+      "youtubeId": "R168_-P5PQw",
+      "railroad": null,
+      "state": "NM",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "live-trains-llc-live-trains-ad-free-caliente-nevada-depo-C3WFn2jgMzk",
+      "name": "LIVE Trains AD Free | Caliente, Nevada (Depot Cam)",
+      "lat": 37.62,
+      "lon": -114.504,
+      "youtubeId": "C3WFn2jgMzk",
+      "railroad": null,
+      "state": "NV",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-ad-free-caliente-nevada-ptz-8ScBBBEuFVY",
+      "name": "LIVE Trains AD Free | Caliente, Nevada (PTZ)",
+      "lat": 37.622,
+      "lon": -114.5,
+      "youtubeId": "8ScBBBEuFVY",
+      "railroad": null,
+      "state": "NV",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-caliente-nevada-depo-4nwnbVcNiKA",
+      "name": "LIVE Trains Railcam | Caliente, Nevada (Depot Cam)",
+      "lat": 37.615,
+      "lon": -114.511,
+      "youtubeId": "4nwnbVcNiKA",
+      "railroad": null,
+      "state": "NV",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-caliente-nevada-ptz-RVLqQtrbCT8",
+      "name": "LIVE Trains Railcam | Caliente, Nevada (PTZ)",
+      "lat": 37.617,
+      "lon": -114.507,
+      "youtubeId": "RVLqQtrbCT8",
+      "railroad": null,
+      "state": "NV",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "virtual-railfan-fairport-new-york-usa-live-train-camera--t66DKzx1IuQ",
+      "name": "Fairport, New York, USA | LIVE Train Camera (Fixed View – East)",
+      "lat": 43.099,
+      "lon": -77.443,
+      "youtubeId": "t66DKzx1IuQ",
+      "railroad": null,
+      "state": "NY",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "railstream-big-boy-event-preview-from-the-nkp-camer-4byrbeGFGAc",
+      "name": "Big Boy Event Preview from the NKP Camera POP-UP LIVE Railcam: Fostoria, Ohio",
+      "lat": 41.159,
+      "lon": -83.41,
+      "youtubeId": "4byrbeGFGAc",
+      "railroad": "UP",
+      "state": "OH",
+      "source": "Railstream"
+    },
+    {
+      "id": "virtual-railfan-deshler-ohio-usa-live-train-camera-ptz-TjMwpB8JRw8",
+      "name": "Deshler, Ohio, USA | LIVE Train Camera (PTZ)",
+      "lat": 41.208,
+      "lon": -83.906,
+      "youtubeId": "TjMwpB8JRw8",
+      "railroad": null,
+      "state": "OH",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "main-street-railfan-huron-ohio-usa-live-train-camera-EmHxDrI2Wcs",
+      "name": "Huron, Ohio, USA | LIVE Train Camera",
+      "lat": 41.364,
+      "lon": -82.552,
+      "youtubeId": "EmHxDrI2Wcs",
+      "railroad": null,
+      "state": "OH",
+      "source": "Main Street Railfan"
+    },
+    {
+      "id": "main-street-railfan-huron-ohio-usa-live-train-camera-qg08riRSPMM",
+      "name": "Huron, Ohio, USA | LIVE Train Camera",
+      "lat": 41.366,
+      "lon": -82.548,
+      "youtubeId": "qg08riRSPMM",
+      "railroad": null,
+      "state": "OH",
+      "source": "Main Street Railfan"
+    },
+    {
+      "id": "railstream-live-rail-cam-fostoria-ohio-csx-ex-b-o-wHUXFg3nPqA",
+      "name": "LIVE Rail Cam – Fostoria, Ohio | CSX (ex-B&O)",
+      "lat": 41.157,
+      "lon": -83.414,
+      "youtubeId": "wHUXFg3nPqA",
+      "railroad": "CSX",
+      "state": "OH",
+      "source": "Railstream"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-hummelstown-pennsylv-ecrEy4BMf-o",
+      "name": "LIVE Trains Railcam | Hummelstown, Pennsylvania",
+      "lat": 40.265,
+      "lon": -76.708,
+      "youtubeId": "ecrEy4BMf-o",
+      "railroad": null,
+      "state": "PA",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "virtual-railfan-strasburg-pennsylvania-usa-live-train-ca-RZpIX6cq7Os",
+      "name": "Strasburg, Pennsylvania, USA | LIVE Train Camera (PTZ)",
+      "lat": 39.983,
+      "lon": -76.184,
+      "youtubeId": "RZpIX6cq7Os",
+      "railroad": null,
+      "state": "PA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "railside-live-live-east-greenwich-ri-railcam-railside--sFCofJMI4ew",
+      "name": "LIVE East Greenwich, RI Railcam | Railside Live",
+      "lat": 41.661,
+      "lon": -71.456,
+      "youtubeId": "sFCofJMI4ew",
+      "railroad": null,
+      "state": "RI",
+      "source": "Railside Live"
+    },
+    {
+      "id": "virtual-railfan-spartanburg-south-carolina-usa-live-trai-xJMJegqnl8Y",
+      "name": "Spartanburg, South Carolina, USA | LIVE Train Camera (Fixed View – North)",
+      "lat": 34.95,
+      "lon": -81.932,
+      "youtubeId": "xJMJegqnl8Y",
+      "railroad": null,
+      "state": "SC",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-spartanburg-south-carolina-usa-live-trai-JUNFDH1Nq6A",
+      "name": "Spartanburg, South Carolina, USA | LIVE Train Camera (Fixed View – South)",
+      "lat": 34.952,
+      "lon": -81.928,
+      "youtubeId": "JUNFDH1Nq6A",
+      "railroad": null,
+      "state": "SC",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-rockwood-tennessee-usa-live-train-camera-sOFA93jWtvA",
+      "name": "Rockwood, Tennessee, USA | LIVE Train Camera (Fixed View – North)",
+      "lat": 35.868,
+      "lon": -84.681,
+      "youtubeId": "sOFA93jWtvA",
+      "railroad": null,
+      "state": "TN",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-rockwood-tennessee-usa-live-train-camera-4F9idLDuvXg",
+      "name": "Rockwood, Tennessee, USA | LIVE Train Camera (PTZ)",
+      "lat": 35.866,
+      "lon": -84.685,
+      "youtubeId": "4F9idLDuvXg",
+      "railroad": null,
+      "state": "TN",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "southwest-railcams-flatonia-tx-uprr-glidden-sub-mp-119-56-p-WGP4-3S7pTQ",
+      "name": "Flatonia, TX | UPRR Glidden Sub, MP 119.56 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 29.687,
+      "lon": -97.107,
+      "youtubeId": "WGP4-3S7pTQ",
+      "railroad": null,
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "live-trains-llc-live-trains-ad-free-houston-texas-tower--_RzRU-DSAWY",
+      "name": "LIVE Trains AD Free | Houston, Texas (Tower 26) PTZ",
+      "lat": 29.776,
+      "lon": -95.369,
+      "youtubeId": "_RzRU-DSAWY",
+      "railroad": null,
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-houston-texas-sampso-DTLIqs3mWiM",
+      "name": "LIVE Trains Railcam | Houston, Texas (Sampson Street East Cam)",
+      "lat": 29.781,
+      "lon": -95.362,
+      "youtubeId": "DTLIqs3mWiM",
+      "railroad": null,
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-houston-texas-sampso-oAJH5nZgrNQ",
+      "name": "LIVE Trains Railcam | Houston, Texas (Sampson Street North)",
+      "lat": 29.785,
+      "lon": -95.355,
+      "youtubeId": "oAJH5nZgrNQ",
+      "railroad": null,
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-houston-texas-sampso-OmWt0efvmNQ",
+      "name": "LIVE Trains Railcam | Houston, Texas (Sampson Street South)",
+      "lat": 29.783,
+      "lon": -95.358,
+      "youtubeId": "OmWt0efvmNQ",
+      "railroad": null,
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-houston-texas-tower--bchdO4OtIEI",
+      "name": "LIVE Trains Railcam | Houston, Texas (Tower 26) East Cam",
+      "lat": 29.778,
+      "lon": -95.365,
+      "youtubeId": "bchdO4OtIEI",
+      "railroad": null,
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-houston-texas-tower--cRRQyXQAvsE",
+      "name": "LIVE Trains Railcam | Houston, Texas (Tower 26) PTZ",
+      "lat": 29.776,
+      "lon": -95.369,
+      "youtubeId": "cRRQyXQAvsE",
+      "railroad": null,
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "live-trains-llc-live-trains-railcam-houston-texas-ptz-ba-gpSR9c0p6lI",
+      "name": "LIVE Trains Railcam | Houston, Texas PTZ (Baer Jct)",
+      "lat": 29.787,
+      "lon": -95.351,
+      "youtubeId": "gpSR9c0p6lI",
+      "railroad": null,
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "southwest-railcams-longview-tx-uprr-mineola-89-6-little-roc-swYWt-aGBR8",
+      "name": "Longview, TX | UPRR Mineola (89.6) / Little Rock (89.6) Subs – East (Chat) | SouthWest RailCams LIVE",
+      "lat": 32.503,
+      "lon": -94.736,
+      "youtubeId": "swYWt-aGBR8",
+      "railroad": null,
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-longview-tx-uprr-mineola-89-6-little-roc-bupCD8_2L3g",
+      "name": "Longview, TX | UPRR Mineola (89.6) / Little Rock (89.6) Subs – West (Chat) | SouthWest RailCams LIVE",
+      "lat": 32.501,
+      "lon": -94.74,
+      "youtubeId": "bupCD8_2L3g",
+      "railroad": null,
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-marshall-tx-up-little-rock-66-7-reisor-3-xeCphUbUgGk",
+      "name": "Marshall, TX | UP Little Rock (66.7) / Reisor (351.3) Subs - PTZ",
+      "lat": 32.547,
+      "lon": -94.363,
+      "youtubeId": "xeCphUbUgGk",
+      "railroad": "UP",
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-marshall-tx-up-reisor-351-3-little-rock--drPwNidc28w",
+      "name": "Marshall, TX | UP Reisor (351.3) / Little Rock (66.7) Subs - PTZ",
+      "lat": 32.545,
+      "lon": -94.367,
+      "youtubeId": "drPwNidc28w",
+      "railroad": "UP",
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "live-trains-llc-mow-train-backs-up-at-tower-26-9-lZliJX5Yo",
+      "name": "Mow Train Backs up at Tower 26",
+      "lat": 29.776,
+      "lon": -95.369,
+      "youtubeId": "9-lZliJX5Yo",
+      "railroad": "UP",
+      "state": "TX",
+      "source": "Live Trains LLC"
+    },
+    {
+      "id": "southwest-railcams-new-braunfels-tx-uprr-austin-sub-m1-mp-2-3Bt_Uk31yyU",
+      "name": "New Braunfels, TX | UPRR Austin Sub M1, MP 227.43 - East | SouthWest RailCams LIVE",
+      "lat": 29.703,
+      "lon": -98.126,
+      "youtubeId": "3Bt_Uk31yyU",
+      "railroad": null,
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "southwest-railcams-new-braunfels-tx-uprr-austin-sub-mp-227--sZtDyjaEl70",
+      "name": "New Braunfels, TX | UPRR Austin Sub, MP 227.43 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 29.705,
+      "lon": -98.122,
+      "youtubeId": "sZtDyjaEl70",
+      "railroad": null,
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "virtual-railfan-quanah-texas-usa-live-train-camera-fixed-RhQOUKgklto",
+      "name": "Quanah, Texas, USA | LIVE Train Camera (Fixed View — East)",
+      "lat": 34.294,
+      "lon": -99.742,
+      "youtubeId": "RhQOUKgklto",
+      "railroad": null,
+      "state": "TX",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-quanah-texas-usa-live-train-camera-ptz-LInPY_D1Ln4",
+      "name": "Quanah, Texas, USA | LIVE Train Camera (PTZ)",
+      "lat": 34.296,
+      "lon": -99.738,
+      "youtubeId": "LInPY_D1Ln4",
+      "railroad": null,
+      "state": "TX",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "southwest-railcams-rockdale-tx-uprr-austin-sub-mp-119-25-pt-GgmBURmqNbg",
+      "name": "Rockdale, TX | UPRR Austin Sub, MP 119.25 - PTZ (Chat) | SouthWest RailCams LIVE",
+      "lat": 30.655,
+      "lon": -97.006,
+      "youtubeId": "GgmBURmqNbg",
+      "railroad": null,
+      "state": "TX",
+      "source": "SouthWest RailCams"
+    },
+    {
+      "id": "virtual-railfan-ashland-virginia-usa-live-train-camera-f-D5kKdEBmrYU",
+      "name": "Ashland, Virginia, USA | LIVE Train Camera (Fixed View — North)",
+      "lat": 37.761,
+      "lon": -77.477,
+      "youtubeId": "D5kKdEBmrYU",
+      "railroad": null,
+      "state": "VA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-ashland-virginia-usa-live-train-camera-f-0u6wBsMlnhg",
+      "name": "Ashland, Virginia, USA | LIVE Train Camera (Fixed View — South)",
+      "lat": 37.764,
+      "lon": -77.474,
+      "youtubeId": "0u6wBsMlnhg",
+      "railroad": null,
+      "state": "VA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "virtual-railfan-ashland-virginia-usa-live-train-camera-p-_eArnSLGhSo",
+      "name": "Ashland, Virginia, USA | LIVE Train Camera (PTZ)",
+      "lat": 37.759,
+      "lon": -77.481,
+      "youtubeId": "_eArnSLGhSo",
+      "railroad": null,
+      "state": "VA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "steel-highway-railcams-lewis-county-historical-museum-live-rail-gg6Vc3W2Y5Y",
+      "name": "Lewis County Historical Museum Live Railcam (Static) - Chehalis, WA",
+      "lat": 46.662,
+      "lon": -122.965,
+      "youtubeId": "gg6Vc3W2Y5Y",
+      "railroad": null,
+      "state": "WA",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "virtual-railfan-seattle-washington-usa-live-train-camera-pHqTDmH7H7c",
+      "name": "Seattle, Washington, USA | LIVE Train Camera (PTZ)",
+      "lat": 47.604,
+      "lon": -122.33,
+      "youtubeId": "pHqTDmH7H7c",
+      "railroad": null,
+      "state": "WA",
+      "source": "Virtual Railfan"
+    },
+    {
+      "id": "steel-highway-railcams-burlington-wi-doug-s-auto-service-live-r-iXQCj9fyJlA",
+      "name": "Burlington, WI Doug's Auto Service Live Railcam",
+      "lat": 42.678,
+      "lon": -88.276,
+      "youtubeId": "iXQCj9fyJlA",
+      "railroad": null,
+      "state": "WI",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-neenah-live-railcam-neenah-wi-aLGC-TnEj6c",
+      "name": "Neenah Live Railcam - Neenah, WI",
+      "lat": 44.186,
+      "lon": -88.473,
+      "youtubeId": "aLGC-TnEj6c",
+      "railroad": null,
+      "state": "WI",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-riverside-great-northern-live-railcam-na-8v69iuim8JQ",
+      "name": "Riverside & Great Northern Live Railcam Narrow Gauge - Wisconsin Dells, WI",
+      "lat": 43.628,
+      "lon": -89.777,
+      "youtubeId": "8v69iuim8JQ",
+      "railroad": null,
+      "state": "WI",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "steel-highway-railcams-waupaca-nelson-s-strike-zone-live-railca-FxPL5cbUGD4",
+      "name": "Waupaca Nelson's Strike Zone Live Railcam - Waupaca, WI",
+      "lat": 44.358,
+      "lon": -89.086,
+      "youtubeId": "FxPL5cbUGD4",
+      "railroad": null,
+      "state": "WI",
+      "source": "Steel Highway Railcams"
+    },
+    {
+      "id": "virtual-railfan-laramie-wyoming-usa-live-train-camera-pt-LRTTZdNTW_0",
+      "name": "Laramie, Wyoming, USA | LIVE Train Camera (PTZ)",
+      "lat": 41.312,
+      "lon": -105.592,
+      "youtubeId": "LRTTZdNTW_0",
+      "railroad": null,
+      "state": "WY",
+      "source": "Virtual Railfan"
+    }
+  ]
+}

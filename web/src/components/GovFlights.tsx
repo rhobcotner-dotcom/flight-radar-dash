@@ -1,4 +1,6 @@
 import type { Flight } from '../types';
+import { PANEL_HELP } from '../lib/panelHelp';
+import { PanelTip } from './PanelTip';
 
 interface Props {
   flights: Flight[];
@@ -6,7 +8,7 @@ interface Props {
 
 export function GovFlights({ flights }: Props) {
   return (
-    <div className="panel">
+    <PanelTip tip={PANEL_HELP.govMilitary} className="panel">
       <div className="panel-header">
         <h2>Gov / military</h2>
         <span className="muted">{flights.length} aircraft</span>
@@ -24,6 +26,6 @@ export function GovFlights({ flights }: Props) {
           ))}
         </ul>
       )}
-    </div>
+    </PanelTip>
   );
 }

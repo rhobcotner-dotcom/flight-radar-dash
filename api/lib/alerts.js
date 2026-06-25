@@ -1,6 +1,9 @@
+import { isLikelyMilGov } from '../../lib/military.js';
+
+export { isLikelyMilGov };
+
 const EMERGENCY_SQUAWKS = new Set([7500, 7600, 7700]);
 const HEAVY_TYPES = /^(A3|B7|B77|B78|A35|A38|B74|MD11|IL76|C17|KC10|KC135|B52)/i;
-const MIL_CALLSIGN = /^(RCH|CNV|EVAC|NAVY|ARMY|USAF|SPAR|DUKE|IRON|REACH|SAM|CONVOY|HOMER)/i;
 
 export function detectAlerts(flights = []) {
   const alerts = [];
@@ -38,14 +41,6 @@ export function detectAlerts(flights = []) {
   }
 
   return dedupeAlerts(alerts);
-}
-
-export function isLikelyMilGov(flight) {
-  const callsign = String(flight.callsign || flight.flight || '');
-  const reg = String(flight.reg || '');
-  if (MIL_CALLSIGN.test(callsign)) return true;
-  if (/^(AF|AE|AD|CN|AN)\d/i.test(reg)) return true;
-  return false;
 }
 
 export function summarizeCategories(flights = []) {

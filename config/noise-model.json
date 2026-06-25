@@ -1,0 +1,64 @@
+{
+  "version": 3,
+  "notes": "Indoor audibility — estimates what you'd notice inside the house (walls/windows), not just in the yard.",
+  "reference": {
+    "horizontalMiles": 0.5,
+    "altitudeFt": 2000,
+    "description": "Strong pass near home: ~0.5 mi horizontally, ~2000 ft"
+  },
+  "indoor": {
+    "transmissionLossDb": 15,
+    "description": "Typical loss through walls/windows for jet rumble before it reaches your ears indoors"
+  },
+  "attenuation": {
+    "horizontalDbPerDistanceDoubling": 6.5,
+    "extraDbPer1000ftAboveReference": 4,
+    "distanceFadeStartMiles": 3.5,
+    "extraDbPerMileBeyondFadeStart": 3.4,
+    "minEstimatedDb": 10,
+    "maxEstimatedDb": 88
+  },
+  "limits": {
+    "maxHorizontalMiles": 7,
+    "mediumAltitudeFt": 4000,
+    "maxHorizontalAtMediumAltitudeMiles": 3,
+    "highAltitudeFt": 5000,
+    "maxHorizontalAtHighAltitudeMiles": 2
+  },
+  "thresholds": {
+    "audibleDb": 52,
+    "soonDb": 48,
+    "attentionDb": 62,
+    "loudDb": 70
+  },
+  "phaseDbAdjust": {
+    "takeoff_climb": 2,
+    "cruise_overhead": -12,
+    "descent": -4,
+    "approach_low": 4,
+    "level_low": 0,
+    "ground": -18
+  },
+  "approach": {
+    "headingToleranceDeg": 30,
+    "approachingBonusDb": 2,
+    "recedingPenaltyDb": 10,
+    "minGroundSpeedKt": 90
+  },
+  "timing": {
+    "maxLeadSeconds": 90,
+    "minLeadSeconds": 12,
+    "audibleHorizonMiles": 5,
+    "notifyLeadSecondsMax": 60,
+    "notifyLeadSecondsMin": 15,
+    "toastAutoDismissMs": 14000
+  },
+  "weather": {
+    "tailwindAssistDbMax": 2,
+    "headwindPenaltyDbMax": 2,
+    "humidityHighThresholdPct": 85,
+    "humidityHighPenaltyDb": 1,
+    "temperatureInversionDeltaC": 2,
+    "inversionAssistDb": 2
+  }
+}

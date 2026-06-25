@@ -17,6 +17,7 @@ export function resolveArea(query = {}) {
   const lon = query.lon ?? defaults.lon;
   const radiusMiles = query.radiusMiles ?? defaults.radiusMiles;
   const name = query.name ?? defaults.name;
+  const nearbyAirport = query.nearbyAirport ?? defaults.nearbyAirport ?? 'STL';
   const { bounds, north, south, west, east } = boundsFromCenter(lat, lon, radiusMiles);
 
   return {
@@ -24,7 +25,7 @@ export function resolveArea(query = {}) {
     lat: Number(lat),
     lon: Number(lon),
     radiusMiles: Number(radiusMiles),
-    nearbyAirport: defaults.nearbyAirport,
+    nearbyAirport,
     bounds,
     box: { north, south, west, east },
   };

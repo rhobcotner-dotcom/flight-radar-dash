@@ -1,8 +1,62 @@
 export interface AreaSettings {
   name: string;
+  address?: string;
   lat: number;
   lon: number;
   radiusMiles: number;
+  mapFocusMiles?: number;
+  nearbyAirport?: string;
+}
+
+export interface AirportMovement {
+  fr24_id?: string;
+  flight?: string;
+  callsign?: string;
+  carrierLabel?: string;
+  type?: string;
+  reg?: string;
+  route?: string;
+  alt?: number;
+  gspeed?: number;
+  eta?: string;
+  etaLabel?: string;
+  minutesUntilEta?: number | null;
+  squawk?: number | string;
+  status?: string;
+  timeLabel?: string;
+  ended?: boolean;
+}
+
+export interface AirportDelay {
+  type: string;
+  severity: 'high' | 'medium' | 'info';
+  message: string;
+  flight: AirportMovement;
+}
+
+export interface AirportHub {
+  code: string;
+  name: string;
+  iata: string;
+  icao: string;
+  dateLabel: string;
+  fetchedAt: string;
+  stats: {
+    liveOutbound: number;
+    liveInbound: number;
+    upcomingDepartures?: number;
+    departuresToday: number;
+    arrivalsToday: number;
+    onGround: number;
+    delayedCount: number;
+  };
+  upcomingDepartures: AirportMovement[];
+  upcomingArrivals: AirportMovement[];
+  recentDepartures: AirportMovement[];
+  delays: AirportDelay[];
+  liveOutbound: AirportMovement[];
+  liveInbound: AirportMovement[];
+  error?: string;
 }
 
 export interface Flight {
@@ -15,13 +69,92 @@ export interface Flight {
   alt?: number;
   gspeed?: number;
   vspeed?: number;
-  squawk?: number;
+  squawk?: number | string;
   timestamp?: string;
   type?: string;
   reg?: string;
-  orig_iata?: string;
-  dest_iata?: string;
   hex?: string;
+  orig_iata?: string;
+  orig_icao?: string;
+  orig_city?: string;
+  orig_country?: string;
+  orig_country_iso?: string;
+  dest_iata?: string;
+  dest_icao?: string;
+  dest_city?: string;
+  dest_country?: string;
+  dest_country_iso?: string;
+  eta?: string;
+  painted_as?: string;
+  operating_as?: string;
+  source?: string;
+  distanceMiles?: number;
+  carrierIcao?: string | null;
+  carrierName?: string | null;
+  carrierLabel?: string;
+  googleFlightsUrl?: string;
+}
+
+export interface WeatherConditions {
+  source: string;
+  fetchedAt: string;
+  observedAt?: string | null;
+  temperatureC: number | null;
+  temperatureF?: number | null;
+  relativeHumidityPct: number | null;
+  windSpeedMph: number | null;
+  windDirectionDeg: number | null;
+  surfacePressureHpa: number | null;
+  surfaceInversion: boolean;
+  weatherCode?: number | null;
+  precipitationMm?: number | null;
+  cloudCoverPct?: number | null;
+  conditionLabel?: string;
+  stationId?: string | null;
+  stationName?: string | null;
+}
+
+export interface WeatherAlert {
+  id: string;
+  event: string;
+  severity: 'high' | 'medium' | 'info';
+  urgency: string;
+  certainty: string;
+  headline: string;
+  description: string;
+  instruction: string;
+  areaDesc: string;
+  effective: string | null;
+  expires: string | null;
+  senderName: string;
+}
+
+export interface HearingPrediction {
+  flight: Flight;
+  estimatedDb: number;
+  horizontalMiles: number;
+  slantMiles: number;
+  phase: string;
+  categoryKey: string;
+  categoryLabel: string;
+  bearingToObserver: number;
+  secondsUntilAudible: number | null;
+  confidence: 'high' | 'medium' | 'low';
+  reason: string;
+  audibleNow: boolean;
+  alertTier: 'soon' | 'audible' | 'attention' | 'loud';
+}
+
+export interface HearingToast {
+  id: string;
+  flightKey: string;
+  title: string;
+  body: string;
+  variant: 'hearing' | 'military' | 'weather' | 'fun' | 'b52';
+  prediction?: HearingPrediction;
+  flight?: Flight;
+  weatherAlert?: WeatherAlert;
+  createdAt: number;
 }
 
 export interface Alert {
@@ -29,6 +162,50 @@ export interface Alert {
   severity: 'high' | 'medium' | 'info';
   message: string;
   flight: Flight;
+}
+
+export interface TrainStop {
+  name: string;
+  code: string;
+  status: string;
+  scheduledArrival: string | null;
+  scheduledDeparture: string | null;
+}
+
+export type TrainKind = 'passenger' | 'freight' | 'crossing' | 'yard' | 'corridor';
+
+export interface Train {
+  trainNum: string;
+  trainId: string;
+  routeName: string;
+  lat: number;
+  lon: number;
+  heading?: string | null;
+  velocityMph?: number | null;
+  timely?: string | null;
+  originCode?: string | null;
+  destCode?: string | null;
+  trainState?: string | null;
+  trainKind?: TrainKind;
+  railroad?: string | null;
+  crossingStatus?: string | null;
+  sourceLabel?: string | null;
+  cargoClue?: boolean;
+  nextStop?: TrainStop | null;
+  distanceMiles?: number;
+}
+
+export interface Satellite {
+  noradId: string;
+  name: string;
+  group?: string;
+  lat: number;
+  lon: number;
+  altitudeKm: number;
+  elevationDeg: number;
+  azimuthDeg: number;
+  rangeKm: number;
+  velocityKmh?: number | null;
 }
 
 export interface TrendPoint {

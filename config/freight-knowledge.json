@@ -1,0 +1,137 @@
+{
+  "railroads": {
+    "BNSF": {
+      "name": "BNSF Railway",
+      "hubYards": ["Galesburg IL", "Argentine KS", "Barstow CA", "Alliance TX"],
+      "strengths": ["intermodal", "grain", "coal", "consumer goods"],
+      "notes": "Dominant western carrier; heavy Chicago–LA and Plains grain traffic."
+    },
+    "UP": {
+      "name": "Union Pacific",
+      "hubYards": ["North Platte NE", "Roseville CA", "Englewood TX", "Proviso IL"],
+      "strengths": ["intermodal", "automotive", "grain", "chemicals"],
+      "notes": "Primary western mainline; strong auto racks and chemical tank trains."
+    },
+    "CSX": {
+      "name": "CSX Transportation",
+      "hubYards": ["Cumberland MD", "Waycross GA", "Selkirk NY", "Avon IN"],
+      "strengths": ["intermodal", "coal", "automotive", "mixed freight"],
+      "notes": "Eastern network; coal and intermodal corridors through the Midwest."
+    },
+    "NS": {
+      "name": "Norfolk Southern",
+      "hubYards": ["Bellevue OH", "Conway PA", "Atlanta GA", "Decatur IL"],
+      "strengths": ["intermodal", "automotive", "steel", "grain"],
+      "notes": "East–Midwest bridge; strong auto and steel moves."
+    },
+    "KCS": {
+      "name": "Kansas City Southern / CPKC",
+      "hubYards": ["Shreveport LA", "Kansas City MO", "Laredo TX"],
+      "strengths": ["intermodal", "grain", "petroleum", "automotive"],
+      "notes": "Gulf and Mexico gateway; petrochemical and grain exports."
+    },
+    "CN": {
+      "name": "Canadian National",
+      "hubYards": ["Markham IL", "Memphis TN", "New Orleans LA"],
+      "strengths": ["grain", "intermodal", "forest products", "petroleum"],
+      "notes": "Chicago gateway and Gulf Coast petrochemical corridors."
+    },
+    "CP": {
+      "name": "Canadian Pacific Kansas City",
+      "hubYards": ["Bensenville IL", "Kansas City MO", "Calgary AB"],
+      "strengths": ["grain", "potash", "intermodal", "energy"],
+      "notes": "Canadian grain and potash; Midwest interchange at KC."
+    }
+  },
+  "cargoKeywords": [
+    { "pattern": "stack|doublestack|intermodal|containers?|well cars?", "commodity": "Intermodal containers", "weight": 0.9, "role": "mainline through freight" },
+    { "pattern": "autorack|auto rack|vehicle|automotive|multilevel", "commodity": "Automobiles & trucks", "weight": 0.92, "role": "unit train" },
+    { "pattern": "grain|corn|soy|wheat|shuttle|shuttle train|hopper.*grain", "commodity": "Grain (corn, soy, wheat)", "weight": 0.88, "role": "unit train" },
+    { "pattern": "coal|black diamonds|unit coal", "commodity": "Coal", "weight": 0.9, "role": "unit train" },
+    { "pattern": "ethanol|tank train|crude|petroleum|lpg|lng|caustic|acid tank|chemical", "commodity": "Petroleum & chemicals", "weight": 0.86, "role": "unit train" },
+    { "pattern": "manifest|mixed freight|general merchandise|boxcar", "commodity": "Mixed general freight", "weight": 0.75, "role": "manifest" },
+    { "pattern": "steel|coil|pipe|scrap metal|gondola", "commodity": "Steel, pipe & metal", "weight": 0.8, "role": "manifest" },
+    { "pattern": "lumber|forest|paper|pulp|wood", "commodity": "Forest products & paper", "weight": 0.78, "role": "manifest" },
+    { "pattern": "cement|aggregate|sand|gravel|stone", "commodity": "Construction materials", "weight": 0.82, "role": "local or manifest" },
+    { "pattern": "refrigerator|reefer|perishable|food", "commodity": "Refrigerated food", "weight": 0.84, "role": "manifest" },
+    { "pattern": "mty|mt\\b|empty|baretable|bare table|empties", "commodity": "Empty equipment repositioning", "weight": 0.85, "role": "equipment move" },
+    { "pattern": "local|yard job|switching|switcher|transfer", "commodity": "Local switching & industry deliveries", "weight": 0.8, "role": "local freight" },
+    { "pattern": "hopper", "commodity": "Bulk hopper loads (grain or minerals)", "weight": 0.55, "role": "unit or manifest" },
+    { "pattern": "unit train", "commodity": "Single-commodity unit train", "weight": 0.6, "role": "unit train" }
+  ],
+  "regions": [
+    {
+      "id": "stl-gateway",
+      "name": "St. Louis gateway",
+      "bbox": { "west": -91.2, "south": 38.2, "east": -89.8, "north": 39.2 },
+      "commodities": [
+        { "name": "Intermodal (Chicago ↔ Gulf/Texas)", "weight": 0.7 },
+        { "name": "Grain from Iowa/Illinois/Missouri", "weight": 0.65 },
+        { "name": "Chemicals & petroleum", "weight": 0.55 },
+        { "name": "Mixed manifest for regional industry", "weight": 0.6 }
+      ],
+      "notes": "Major interchange for BNSF, UP, NS, CSX, CN, and CPKC."
+    },
+    {
+      "id": "houston-gulf",
+      "name": "Houston / Gulf Coast",
+      "bbox": { "west": -96.5, "south": 29.2, "east": -94.5, "north": 30.5 },
+      "commodities": [
+        { "name": "Petrochemicals & plastics", "weight": 0.85 },
+        { "name": "Intermodal port traffic", "weight": 0.7 },
+        { "name": "Grain & export bulk", "weight": 0.5 }
+      ],
+      "notes": "Refinery and petrochemical cluster; heavy tank-train traffic."
+    },
+    {
+      "id": "chicago-hub",
+      "name": "Chicago rail hub",
+      "bbox": { "west": -88.5, "south": 41.5, "east": -87.2, "north": 42.2 },
+      "commodities": [
+        { "name": "Intermodal transfer & block swaps", "weight": 0.9 },
+        { "name": "Automotive racks", "weight": 0.65 },
+        { "name": "Mixed manifest", "weight": 0.7 }
+      ],
+      "notes": "Nation's largest classification complex; almost every commodity passes through."
+    },
+    {
+      "id": "plains-grain",
+      "name": "Great Plains grain belt",
+      "bbox": { "west": -102, "south": 37, "east": -93, "north": 44 },
+      "commodities": [
+        { "name": "Corn & soybean shuttle trains", "weight": 0.9 },
+        { "name": "Wheat unit trains", "weight": 0.75 },
+        { "name": "Empty hoppers returning west", "weight": 0.6 }
+      ],
+      "notes": "Harvest peaks Sep–Nov; empty hoppers eastbound in spring."
+    },
+    {
+      "id": "midwest-general",
+      "name": "Midwest general",
+      "bbox": { "west": -96, "south": 37, "east": -82, "north": 44 },
+      "commodities": [
+        { "name": "Mixed manifest & automotive", "weight": 0.65 },
+        { "name": "Steel & industrial metals", "weight": 0.55 },
+        { "name": "Intermodal", "weight": 0.6 }
+      ],
+      "notes": "Default Midwest inference when no tighter region matches."
+    }
+  ],
+  "seasons": [
+    {
+      "months": [9, 10, 11],
+      "label": "Harvest season",
+      "boost": [{ "commodity": "Grain (corn, soy, wheat)", "weight": 0.15 }]
+    },
+    {
+      "months": [3, 4, 5],
+      "label": "Spring planting",
+      "boost": [{ "commodity": "Fertilizer & empty hoppers", "weight": 0.12 }]
+    },
+    {
+      "months": [11, 12, 1],
+      "label": "Holiday retail",
+      "boost": [{ "commodity": "Intermodal containers", "weight": 0.1 }]
+    }
+  ]
+}

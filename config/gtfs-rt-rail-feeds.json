@@ -1,0 +1,28 @@
+[
+  {
+    "id": "mbta",
+    "name": "MBTA",
+    "railroad": "MBTA",
+    "format": "gtfs-json",
+    "url": "https://cdn.mbta.com/realtime/VehiclePositions.json",
+    "enabled": true
+  },
+  {
+    "id": "metrolink-stl",
+    "name": "MetroLink",
+    "railroad": "MetroLink",
+    "format": "metrolink-json",
+    "url": "https://metrolink-gtfsrt.gbsdigital.us/extended/vehicles",
+    "authEnv": "METRO_API_KEY",
+    "authHeader": "X-Api-Key"
+  },
+  {
+    "id": "metra-chicago",
+    "name": "Metra",
+    "railroad": "Metra",
+    "format": "metra-json",
+    "url": "https://gtfspublic.metrarr.com/gtfs/public/positions",
+    "authEnv": "METRA_API_TOKEN",
+    "authQuery": "api_token"
+  }
+]

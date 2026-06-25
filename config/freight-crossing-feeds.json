@@ -1,0 +1,13 @@
+[
+  {
+    "id": "houston-train-watch",
+    "name": "Houston Train Watch",
+    "url": "https://services.arcgis.com/NummVBqZSIJKUeVR/arcgis/rest/services/Train_CrossingStatus_Public_Current/FeatureServer/0/query",
+    "statusField": "crossingStatus",
+    "activeValues": ["blocked", "occupied", "active", "approaching", "train detected"],
+    "streetField": "street",
+    "codeField": "code",
+    "movementField": "trainMovement",
+    "directionField": "direction"
+  }
+]

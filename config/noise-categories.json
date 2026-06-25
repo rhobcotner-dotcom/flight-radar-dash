@@ -1,0 +1,112 @@
+{
+  "light_ga": {
+    "label": "Light general aviation",
+    "sourceDbByPhase": {
+      "takeoff_climb": 68,
+      "cruise_overhead": 52,
+      "descent": 58,
+      "approach_low": 72,
+      "level_low": 64,
+      "ground": 45
+    }
+  },
+  "turboprop": {
+    "label": "Turboprop / commuter",
+    "sourceDbByPhase": {
+      "takeoff_climb": 78,
+      "cruise_overhead": 62,
+      "descent": 68,
+      "approach_low": 82,
+      "level_low": 74,
+      "ground": 52
+    }
+  },
+  "regional_jet": {
+    "label": "Regional jet",
+    "sourceDbByPhase": {
+      "takeoff_climb": 82,
+      "cruise_overhead": 66,
+      "descent": 72,
+      "approach_low": 86,
+      "level_low": 78,
+      "ground": 55
+    }
+  },
+  "narrowbody": {
+    "label": "Narrowbody jet",
+    "sourceDbByPhase": {
+      "takeoff_climb": 86,
+      "cruise_overhead": 70,
+      "descent": 76,
+      "approach_low": 90,
+      "level_low": 82,
+      "ground": 58
+    }
+  },
+  "widebody": {
+    "label": "Widebody jet",
+    "sourceDbByPhase": {
+      "takeoff_climb": 90,
+      "cruise_overhead": 74,
+      "descent": 80,
+      "approach_low": 94,
+      "level_low": 86,
+      "ground": 60
+    }
+  },
+  "heavy": {
+    "label": "Heavy / super-heavy",
+    "sourceDbByPhase": {
+      "takeoff_climb": 94,
+      "cruise_overhead": 78,
+      "descent": 84,
+      "approach_low": 98,
+      "level_low": 90,
+      "ground": 62
+    }
+  },
+  "military": {
+    "label": "Military / fast jet",
+    "sourceDbByPhase": {
+      "takeoff_climb": 92,
+      "cruise_overhead": 76,
+      "descent": 82,
+      "approach_low": 96,
+      "level_low": 88,
+      "ground": 60
+    }
+  },
+  "helicopter": {
+    "label": "Helicopter",
+    "sourceDbByPhase": {
+      "takeoff_climb": 80,
+      "cruise_overhead": 72,
+      "descent": 76,
+      "approach_low": 84,
+      "level_low": 78,
+      "ground": 70
+    }
+  },
+  "unknown_jet": {
+    "label": "Unknown jet",
+    "sourceDbByPhase": {
+      "takeoff_climb": 84,
+      "cruise_overhead": 68,
+      "descent": 74,
+      "approach_low": 88,
+      "level_low": 80,
+      "ground": 56
+    }
+  },
+  "unknown": {
+    "label": "Unknown aircraft",
+    "sourceDbByPhase": {
+      "takeoff_climb": 76,
+      "cruise_overhead": 60,
+      "descent": 66,
+      "approach_low": 80,
+      "level_low": 72,
+      "ground": 50
+    }
+  }
+}

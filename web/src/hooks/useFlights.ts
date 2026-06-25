@@ -1,62 +1,214 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { Alert, Flight } from '../types';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Alert, AirportHub, Flight } from '../types';
+import type { MapViewportBounds } from '../lib/mapViewport';
+import { stableViewportKey, viewportSearchParams } from '../lib/mapViewport';
+import { flightListsEqual, mergeFlightList } from '../lib/mergeFlights';
 
-interface LivePayload {
+interface MapRefreshPayload {
   flights: Flight[];
-  count: number;
-  fetchedAt: string;
-  error?: string;
-}
-
-interface AlertsPayload {
+  govFlights: Flight[];
+  b52Flights?: Flight[];
   alerts: Alert[];
   alertCount: number;
   fetchedAt: string;
+  count?: number;
+  homeCount?: number;
+  dataSource?: string;
+  dataWarning?: string | null;
   error?: string;
 }
 
-export function useFlights(queryString: string, refreshMs = 60000) {
+interface AirportPayload {
+  airport: AirportHub;
+  fetchedAt: string;
+  error?: string;
+}
+
+/** Seconds between map refreshes. 0 = off. */
+export type AutoRefreshSeconds = 0 | 5 | 10 | 30 | 60 | 120 | 300 | 600;
+
+export const AUTO_REFRESH_OPTIONS: Array<{ value: AutoRefreshSeconds; label: string }> = [
+  { value: 0, label: 'Auto: off' },
+  { value: 5, label: 'Auto: 5s' },
+  { value: 10, label: 'Auto: 10s' },
+  { value: 30, label: 'Auto: 30s' },
+  { value: 60, label: 'Auto: 1m' },
+  { value: 120, label: 'Auto: 2m' },
+  { value: 300, label: 'Auto: 5m' },
+  { value: 600, label: 'Auto: 10m' },
+];
+
+const AUTO_REFRESH_KEY = 'flight-radar-dash-auto-refresh-sec';
+const LEGACY_REFRESH_KEY = 'flight-radar-dash-auto-refresh-min';
+
+const VALID_SECONDS = new Set<AutoRefreshSeconds>(AUTO_REFRESH_OPTIONS.map((o) => o.value));
+
+function readAutoRefreshSeconds(): AutoRefreshSeconds {
+  try {
+    const rawSec = localStorage.getItem(AUTO_REFRESH_KEY);
+    if (rawSec !== null) {
+      const sec = Number(rawSec);
+      if (VALID_SECONDS.has(sec as AutoRefreshSeconds)) return sec as AutoRefreshSeconds;
+    }
+
+    const rawMin = localStorage.getItem(LEGACY_REFRESH_KEY);
+    if (rawMin === '0' || rawMin === '2' || rawMin === '5' || rawMin === '10') {
+      const migrated = Number(rawMin) * 60;
+      if (VALID_SECONDS.has(migrated as AutoRefreshSeconds)) return migrated as AutoRefreshSeconds;
+    }
+  } catch {
+    /* ignore */
+  }
+  return 5;
+}
+
+export function useFlights(queryString: string, viewportBounds: MapViewportBounds) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [govFlights, setGovFlights] = useState<Flight[]>([]);
+  const [b52Flights, setB52Flights] = useState<Flight[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [inViewCount, setInViewCount] = useState(0);
+  const [homeCount, setHomeCount] = useState(0);
+  const [airport, setAirport] = useState<AirportHub | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [airportLoading, setAirportLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dataWarning, setDataWarning] = useState<string | null>(null);
+  const [airportError, setAirportError] = useState<string | null>(null);
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
+  const [airportFetchedAt, setAirportFetchedAt] = useState<string | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [trendsKey, setTrendsKey] = useState(0);
+  const [autoRefreshSeconds, setAutoRefreshSecondsState] = useState<AutoRefreshSeconds>(readAutoRefreshSeconds);
+  const refreshInFlight = useRef(false);
+  const hasFetchedRef = useRef(false);
+  const viewportKey = useMemo(() => stableViewportKey(viewportBounds), [viewportBounds]);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const refreshMap = useCallback(
+    async (options: { snapshot?: boolean; silent?: boolean } = {}) => {
+      if (refreshInFlight.current) return;
+      refreshInFlight.current = true;
+      const showLoading = !hasLoaded && !options.silent;
+      if (showLoading) {
+        setLoading(true);
+      }
+      if (!options.silent) {
+        setError(null);
+        setDataWarning(null);
+      }
+
+      const params = viewportSearchParams(queryString, viewportBounds);
+      if (options.snapshot === false) {
+        params.set('snapshot', 'false');
+      }
+
+      try {
+        const res = await fetch(`/api/live/refresh?${params.toString()}`);
+        const data: MapRefreshPayload = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Failed to load flights');
+
+        const incoming = data.flights || [];
+        if (options.silent) {
+          setFlights((prev) => {
+            const merged = mergeFlightList(prev, incoming);
+            return flightListsEqual(prev, merged) ? prev : merged;
+          });
+          setB52Flights(data.b52Flights || []);
+        } else {
+          setFlights(incoming);
+          setGovFlights(data.govFlights || []);
+          setB52Flights(data.b52Flights || []);
+          setAlerts(data.alerts || []);
+        }
+
+        setFetchedAt(data.fetchedAt || new Date().toISOString());
+        setInViewCount(data.count ?? incoming.length);
+        setHomeCount(data.homeCount ?? 0);
+        setDataWarning(data.dataWarning || null);
+        setHasLoaded(true);
+        if (options.snapshot !== false && !options.silent) {
+          setTrendsKey((k) => k + 1);
+        }
+      } catch (err) {
+        if (!options.silent) {
+          setError(err instanceof Error ? err.message : 'Unknown error');
+        }
+      } finally {
+        if (showLoading) {
+          setLoading(false);
+        }
+        refreshInFlight.current = false;
+      }
+    },
+    [queryString, viewportBounds, hasLoaded]
+  );
+
+  const loadAirport = useCallback(async () => {
+    setAirportLoading(true);
+    setAirportError(null);
     try {
-      const [liveRes, govRes, alertsRes] = await Promise.all([
-        fetch(`/api/live/flights?${queryString}`),
-        fetch(`/api/live/flights/gov?${queryString}`),
-        fetch(`/api/live/alerts?${queryString}`),
-      ]);
+      const res = await fetch(`/api/live/airport?${queryString}`);
+      const data: AirportPayload = await res.json();
 
-      const live: LivePayload = await liveRes.json();
-      const gov: LivePayload = await govRes.json();
-      const alertData: AlertsPayload = await alertsRes.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load airport board');
 
-      if (!liveRes.ok) throw new Error(live.error || 'Failed to load flights');
-      if (!govRes.ok) throw new Error(gov.error || 'Failed to load gov flights');
-      if (!alertsRes.ok) throw new Error(alertData.error || 'Failed to load alerts');
-
-      setFlights(live.flights || []);
-      setGovFlights(gov.flights || []);
-      setAlerts(alertData.alerts || []);
-      setFetchedAt(live.fetchedAt || new Date().toISOString());
+      setAirport(data.airport || null);
+      setAirportFetchedAt(data.fetchedAt || new Date().toISOString());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setAirportError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
-      setLoading(false);
+      setAirportLoading(false);
     }
   }, [queryString]);
 
-  useEffect(() => {
-    refresh();
-    const id = window.setInterval(refresh, refreshMs);
-    return () => window.clearInterval(id);
-  }, [refresh, refreshMs]);
+  const setAutoRefreshSeconds = useCallback((seconds: AutoRefreshSeconds) => {
+    setAutoRefreshSecondsState(seconds);
+    localStorage.setItem(AUTO_REFRESH_KEY, String(seconds));
+  }, []);
 
-  return { flights, govFlights, alerts, loading, error, fetchedAt, refresh };
+  useEffect(() => {
+    const delay = hasFetchedRef.current ? 150 : 0;
+    const timer = window.setTimeout(() => {
+      void refreshMap({ snapshot: false, silent: hasFetchedRef.current });
+      hasFetchedRef.current = true;
+    }, delay);
+    return () => window.clearTimeout(timer);
+    // Reload when the watched area or viewport changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queryString, viewportKey]);
+
+  useEffect(() => {
+    if (!autoRefreshSeconds || !hasLoaded) return undefined;
+
+    const id = window.setInterval(() => {
+      refreshMap({ snapshot: false, silent: true });
+    }, autoRefreshSeconds * 1000);
+
+    return () => window.clearInterval(id);
+  }, [autoRefreshSeconds, hasLoaded, refreshMap]);
+
+  return {
+    flights,
+    govFlights,
+    b52Flights,
+    alerts,
+    inViewCount,
+    homeCount,
+    airport,
+    loading,
+    airportLoading,
+    error,
+    dataWarning,
+    airportError,
+    fetchedAt,
+    airportFetchedAt,
+    hasLoaded,
+    trendsKey,
+    autoRefreshSeconds,
+    setAutoRefreshSeconds,
+    refreshMap,
+    loadAirport,
+    refresh: () => refreshMap({ snapshot: true }),
+  };
 }

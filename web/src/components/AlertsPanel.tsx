@@ -1,4 +1,6 @@
 import type { Alert } from '../types';
+import { PANEL_HELP } from '../lib/panelHelp';
+import { PanelTip } from './PanelTip';
 
 interface Props {
   alerts: Alert[];
@@ -12,7 +14,7 @@ const severityClass: Record<Alert['severity'], string> = {
 
 export function AlertsPanel({ alerts }: Props) {
   return (
-    <div className="panel">
+    <PanelTip tip={PANEL_HELP.alerts} className="panel">
       <div className="panel-header">
         <h2>Alerts</h2>
         <span className="muted">{alerts.length} events</span>
@@ -29,6 +31,6 @@ export function AlertsPanel({ alerts }: Props) {
           ))}
         </ul>
       )}
-    </div>
+    </PanelTip>
   );
 }
