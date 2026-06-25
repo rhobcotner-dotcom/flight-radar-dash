@@ -1,8 +1,10 @@
 import { GeoJSON, CircleMarker, Marker, Popup, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { PathOptions, TooltipOptions } from 'leaflet';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CameraPreviewMedia } from './CameraPreviewMedia';
+import { useCameraStreamScheduler } from '../hooks/useCameraStreamScheduler';
+import { CAMERA_STREAM_HOVER_DELAY_MS } from '../lib/cameraStreamScheduler';
 import { VesselDetails } from './VesselDetails';
 import {
   alertKindLabel,
@@ -696,8 +698,39 @@ const CAMERA_TOOLTIP_OPTIONS: TooltipOptions = {
 
 function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexOffset?: number }) {
   const [previewActive, setPreviewActive] = useState(false);
+  const [popupOpen, setPopupOpen] = useState(false);
+  const { requestStream, releaseStream, isStreamAllowed, getStreamTier } = useCameraStreamScheduler();
   const kind = cam.camKind === 'rail' ? 'rail' : 'road';
   const icon = useMemo(() => cameraIcon(kind), [kind]);
+  const tier = getStreamTier(cam.lat, cam.lon);
+  const streamAllowed = isStreamAllowed(cam.id);
+
+  useEffect(() => {
+    if (!previewActive) return undefined;
+    const timer = window.setTimeout(() => {
+      requestStream(cam.id, cam.lat, cam.lon, 'tooltip');
+    }, CAMERA_STREAM_HOVER_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      if (!popupOpen) releaseStream(cam.id);
+    };
+  }, [previewActive, popupOpen, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
+
+  useEffect(() => {
+    if (!popupOpen) {
+      if (!previewActive) releaseStream(cam.id);
+      return undefined;
+    }
+    requestStream(cam.id, cam.lat, cam.lon, 'popup');
+    return () => {
+      if (!previewActive) releaseStream(cam.id);
+    };
+  }, [popupOpen, previewActive, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
+
+  useEffect(() => () => releaseStream(cam.id), [cam.id, releaseStream]);
+
+  const showTooltipStream = previewActive && streamAllowed;
+  const showPopupStream = popupOpen && streamAllowed;
 
   return (
     <Marker position={[cam.lat, cam.lon]} icon={icon} zIndexOffset={zIndexOffset}>
@@ -715,9 +748,17 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
               .filter(Boolean)
               .join(' · ')}
           </div>
-          {previewActive && cam.liveUrl ? (
+          {previewActive && cam.liveUrl && tier === 'distant' ? (
+            <div className="camera-preview-loading muted">Pan the map to center this cam for a live preview.</div>
+          ) : null}
+          {previewActive && cam.liveUrl && tier !== 'distant' && !streamAllowed ? (
+            <div className="camera-preview-loading muted">
+              {tier === 'inView' ? 'Starting live preview…' : 'Queued — nearby cams load first…'}
+            </div>
+          ) : null}
+          {showTooltipStream && cam.liveUrl ? (
             <CameraPreviewMedia
-              key={cam.liveUrl}
+              key={`${cam.id}-tooltip-${cam.liveUrl}`}
               liveUrl={cam.liveUrl}
               sourceLiveUrl={cam.sourceLiveUrl}
               mediaType={cam.mediaType}
@@ -725,7 +766,14 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
           ) : null}
         </div>
       </Tooltip>
-      <Popup maxWidth={720} minWidth={480}>
+      <Popup
+        maxWidth={720}
+        minWidth={480}
+        eventHandlers={{
+          add: () => setPopupOpen(true),
+          remove: () => setPopupOpen(false),
+        }}
+      >
         <div className="camera-popup">
           <strong>{cam.description}</strong>
           <div className="muted">
@@ -733,9 +781,12 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
               .filter(Boolean)
               .join(' · ')}
           </div>
-          {cam.liveUrl ? (
+          {popupOpen && cam.liveUrl && !streamAllowed ? (
+            <div className="camera-preview-loading muted">Starting live stream…</div>
+          ) : null}
+          {showPopupStream && cam.liveUrl ? (
             <CameraPreviewMedia
-              key={cam.liveUrl}
+              key={`${cam.id}-popup-${cam.liveUrl}`}
               liveUrl={cam.liveUrl}
               sourceLiveUrl={cam.sourceLiveUrl}
               mediaType={cam.mediaType}

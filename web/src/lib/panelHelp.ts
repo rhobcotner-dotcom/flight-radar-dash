@@ -3,10 +3,6 @@ export const MAP_LAYER_HELP = {
     'NWS warning polygons on the map: tornado, severe thunderstorm, flood, flash flood, winter, and heat alerts for MO/IL/IA/AR/KS. Refreshes every minute.',
   lightning:
     'Recent cloud-to-ground lightning strikes near your area (last ~30 min). Yellow dots fade as strikes age. Source: Blitzortung.',
-  metar:
-    'Airport weather stations (KSTL, KSUS, KBLV, KUIN, KCPS). Badge color = flight category (VFR/MVFR/IFR). Click for raw METAR and TAF.',
-  tfrs:
-    'FAA Temporary Flight Restrictions — no-fly zones for VIP visits, disasters, stadium events, etc. Yellow dashed polygons from tfr.faa.gov.',
   helos:
     'Highlights helicopters on your existing ADSB feed: purple = general, pink = medevac, cyan = news, blue = law enforcement (best-effort callsign/type matching).',
   rivers:
@@ -15,16 +11,10 @@ export const MAP_LAYER_HELP = {
     'MetroLink and MetroBus vehicle positions from Metro GTFS-RT. Requires METRO_API_KEY in .env — request a free key at metrolinktrains.com.',
   roads:
     'Missouri DOT road conditions: closures, work zones, traffic delays, and winter impacts from mapping.modot.org. Red = closed, yellow = delay, cyan = winter.',
-  airQuality:
-    'US Air Quality Index at your home point from Open-Meteo (free). Optional AIRNOW_API_KEY upgrades to EPA monitor data when available.',
   aisVessels:
     'Large ships only (cargo, tanker, river tow) on nearby waterways. Pink boat icons. Live AIS via Axiom Overwatch — no API key required.',
-  notams:
-    'Airport NOTAMs for KSTL, KSUS, KCPS, KBLV, KUIN from FAA NMS API. Requires FAA_NMS_CLIENT_ID and FAA_NMS_CLIENT_SECRET (email NOTAMS@faa.gov).',
   earthquakes:
     'USGS earthquakes in the last 24 hours within 500 mi. Orange circles scale with magnitude.',
-  sondes:
-    'Amateur radio weather balloon sondes tracked by SondeHub — useful during severe weather season.',
   wildfires:
     'NASA FIRMS VIIRS wildfire hotspots within 200 mi. Requires free NASA_FIRMS_MAP_KEY from firms.modaps.eosdis.nasa.gov.',
   cameras:

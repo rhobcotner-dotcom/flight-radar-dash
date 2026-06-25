@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
-  AirQualityPayload,
   AisVesselPayload,
   AprsPayload,
   DroughtCollection,
@@ -8,13 +7,9 @@ import type {
   EbirdPayload,
   INaturalistPayload,
   LightningPayload,
-  MetarPayload,
-  NotamCollection,
   RiverForecastPayload,
   RiverGaugePayload,
   RoadConditionCollection,
-  SondePayload,
-  TfrCollection,
   TransitPayload,
   WeatherAlertPolygonCollection,
   WildfirePayload,
@@ -24,16 +19,11 @@ import { friendlyApiError } from '../lib/panelHelp';
 interface LayerToggles {
   weatherAlerts: boolean;
   lightning: boolean;
-  metar: boolean;
-  tfrs: boolean;
   rivers: boolean;
   transit: boolean;
   roads: boolean;
-  airQuality: boolean;
   aisVessels: boolean;
-  notams: boolean;
   earthquakes: boolean;
-  sondes: boolean;
   wildfires: boolean;
   riverForecast: boolean;
   ebird: boolean;
@@ -45,16 +35,11 @@ interface LayerToggles {
 const REFRESH_MS = {
   weatherAlerts: 60_000,
   lightning: 30_000,
-  metar: 90_000,
-  tfrs: 5 * 60_000,
   rivers: 5 * 60_000,
   transit: 20_000,
   roads: 3 * 60_000,
-  airQuality: 10 * 60_000,
   aisVessels: 60_000,
-  notams: 5 * 60_000,
   earthquakes: 5 * 60_000,
-  sondes: 2 * 60_000,
   wildfires: 15 * 60_000,
   riverForecast: 10 * 60_000,
   ebird: 10 * 60_000,
@@ -79,16 +64,11 @@ export function useMapLayers(
 ) {
   const [weatherAlerts, setWeatherAlerts] = useState<WeatherAlertPolygonCollection | null>(null);
   const [lightning, setLightning] = useState<LightningPayload | null>(null);
-  const [metar, setMetar] = useState<MetarPayload | null>(null);
-  const [tfrs, setTfrs] = useState<TfrCollection | null>(null);
   const [rivers, setRivers] = useState<RiverGaugePayload | null>(null);
   const [transit, setTransit] = useState<TransitPayload | null>(null);
   const [roads, setRoads] = useState<RoadConditionCollection | null>(null);
-  const [airQuality, setAirQuality] = useState<AirQualityPayload | null>(null);
   const [aisVessels, setAisVessels] = useState<AisVesselPayload | null>(null);
-  const [notams, setNotams] = useState<NotamCollection | null>(null);
   const [earthquakes, setEarthquakes] = useState<EarthquakePayload | null>(null);
-  const [sondes, setSondes] = useState<SondePayload | null>(null);
   const [wildfires, setWildfires] = useState<WildfirePayload | null>(null);
   const [riverForecast, setRiverForecast] = useState<RiverForecastPayload | null>(null);
   const [ebird, setEbird] = useState<EbirdPayload | null>(null);
@@ -135,16 +115,6 @@ export function useMapLayers(
         setter: setLightning as (value: never) => void,
       },
       {
-        key: 'metar',
-        url: `/api/aviation/metar?${queryString}`,
-        setter: setMetar as (value: never) => void,
-      },
-      {
-        key: 'tfrs',
-        url: `/api/aviation/tfrs?${queryString}`,
-        setter: setTfrs as (value: never) => void,
-      },
-      {
         key: 'rivers',
         url: `/api/live/river-gauges?${queryString}`,
         setter: setRivers as (value: never) => void,
@@ -160,29 +130,14 @@ export function useMapLayers(
         setter: setRoads as (value: never) => void,
       },
       {
-        key: 'airQuality',
-        url: `/api/weather/air-quality?${queryString}`,
-        setter: setAirQuality as (value: never) => void,
-      },
-      {
         key: 'aisVessels',
         url: `/api/live/ais-vessels?${queryString}`,
         setter: setAisVessels as (value: never) => void,
       },
       {
-        key: 'notams',
-        url: `/api/aviation/notams?${queryString}`,
-        setter: setNotams as (value: never) => void,
-      },
-      {
         key: 'earthquakes',
         url: `/api/live/earthquakes?${queryString}`,
         setter: setEarthquakes as (value: never) => void,
-      },
-      {
-        key: 'sondes',
-        url: `/api/live/sondes?${queryString}`,
-        setter: setSondes as (value: never) => void,
       },
       {
         key: 'wildfires',
@@ -236,16 +191,11 @@ export function useMapLayers(
   useEffect(() => {
     if (!toggles.weatherAlerts) setWeatherAlerts(null);
     if (!toggles.lightning) setLightning(null);
-    if (!toggles.metar) setMetar(null);
-    if (!toggles.tfrs) setTfrs(null);
     if (!toggles.rivers) setRivers(null);
     if (!toggles.transit) setTransit(null);
     if (!toggles.roads) setRoads(null);
-    if (!toggles.airQuality) setAirQuality(null);
     if (!toggles.aisVessels) setAisVessels(null);
-    if (!toggles.notams) setNotams(null);
     if (!toggles.earthquakes) setEarthquakes(null);
-    if (!toggles.sondes) setSondes(null);
     if (!toggles.wildfires) setWildfires(null);
     if (!toggles.riverForecast) setRiverForecast(null);
     if (!toggles.ebird) setEbird(null);
@@ -257,16 +207,11 @@ export function useMapLayers(
   return {
     weatherAlerts,
     lightning,
-    metar,
-    tfrs,
     rivers,
     transit,
     roads,
-    airQuality,
     aisVessels,
-    notams,
     earthquakes,
-    sondes,
     wildfires,
     riverForecast,
     ebird,

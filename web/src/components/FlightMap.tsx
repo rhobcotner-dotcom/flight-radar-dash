@@ -16,15 +16,11 @@ import { RadarOverlay } from './RadarOverlay';
 import { MapWeatherClick } from './MapWeatherClick';
 import {
   alertLegendSummary,
-  AirQualityLayer,
   AisVesselsLayer,
   EarthquakeLayer,
   LightningLayer,
-  MetarLayer,
-  NotamLayer,
   RoadConditionsLayer,
   RiverGaugeLayer,
-  SondeLayer,
   AprsLayer,
   DroughtLayer,
   EbirdLayer,
@@ -33,7 +29,6 @@ import {
   TrafficCameraLayer,
   RailCameraLayer,
   TransitLayer,
-  TfrPolygonLayer,
   WeatherAlertPolygonLayer,
   WildfireLayer,
 } from './MapOverlayLayers';
@@ -41,6 +36,8 @@ import { useMapLayers } from '../hooks/useMapLayers';
 import { useViewportCameras } from '../hooks/useViewportCameras';
 import { useViewportRailCameras } from '../hooks/useViewportRailCameras';
 import type { MapViewportBounds } from '../lib/mapViewport';
+import { stableViewportKey, viewportFromArea } from '../lib/mapViewport';
+import { CameraStreamSchedulerProvider } from '../hooks/useCameraStreamScheduler';
 import { useSatellites } from '../hooks/useSatellites';
 import { weatherAlertCollectionKey } from '../lib/mapLayers';
 import { classifyHelicopter } from '../lib/helicopters';
@@ -71,17 +68,12 @@ const SATELLITES_ENABLED_KEY = 'flight-radar-dash-satellites-enabled';
 const LAYER_KEYS = {
   weatherAlerts: 'flight-radar-dash-layer-weather-alerts',
   lightning: 'flight-radar-dash-layer-lightning',
-  metar: 'flight-radar-dash-layer-metar',
-  tfrs: 'flight-radar-dash-layer-tfrs',
   helos: 'flight-radar-dash-layer-helos',
   rivers: 'flight-radar-dash-layer-rivers',
   transit: 'flight-radar-dash-layer-transit',
   roads: 'flight-radar-dash-layer-roads',
-  airQuality: 'flight-radar-dash-layer-air-quality',
   aisVessels: 'flight-radar-dash-layer-ais-vessels',
-  notams: 'flight-radar-dash-layer-notams',
   earthquakes: 'flight-radar-dash-layer-earthquakes',
-  sondes: 'flight-radar-dash-layer-sondes',
   wildfires: 'flight-radar-dash-layer-wildfires',
   cameras: 'flight-radar-dash-layer-cameras',
   railCameras: 'flight-radar-dash-layer-rail-cameras',
@@ -422,6 +414,8 @@ const FlightMapInner = memo(function FlightMapInner({
   mapLayers,
   cameras,
   railCameras,
+  viewportBounds,
+  cameraStreamBoundsKey,
   onViewportChange,
   weather,
   fun,
@@ -442,17 +436,12 @@ const FlightMapInner = memo(function FlightMapInner({
   layerToggles: {
     weatherAlerts: boolean;
     lightning: boolean;
-    metar: boolean;
-    tfrs: boolean;
     helos: boolean;
     rivers: boolean;
     transit: boolean;
     roads: boolean;
-    airQuality: boolean;
     aisVessels: boolean;
-    notams: boolean;
     earthquakes: boolean;
-    sondes: boolean;
     wildfires: boolean;
     cameras: boolean;
     railCameras: boolean;
@@ -465,6 +454,8 @@ const FlightMapInner = memo(function FlightMapInner({
   mapLayers: ReturnType<typeof useMapLayers>;
   cameras: TrafficCameraPayload | null;
   railCameras: TrafficCameraPayload | null;
+  viewportBounds: MapViewportBounds | null;
+  cameraStreamBoundsKey: string;
   onViewportChange: (bounds: MapViewportBounds) => void;
   weather: WeatherConditions | null;
   fun: ReturnType<typeof useFunMode>;
@@ -475,6 +466,7 @@ const FlightMapInner = memo(function FlightMapInner({
   const focusMeters = focusMiles * 1609.34;
   const fetchMeters = fetchMiles * 1609.34;
   const homeLabel = area.address || area.name;
+  const streamBounds = viewportBounds ?? viewportFromArea(area);
 
   return (
     <MapContainer
@@ -485,6 +477,7 @@ const FlightMapInner = memo(function FlightMapInner({
     >
       <FitToHome area={area} />
       <MapViewportReporter onViewportChange={onViewportChange} />
+      <CameraStreamSchedulerProvider bounds={streamBounds} boundsKey={cameraStreamBoundsKey}>
       {clearHighlightNow ? <MapHighlightExit onExit={clearHighlightNow} /> : null}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
@@ -505,8 +498,6 @@ const FlightMapInner = memo(function FlightMapInner({
         />
       ) : null}
       {layerToggles.lightning ? <LightningLayer payload={mapLayers.lightning} /> : null}
-      {layerToggles.tfrs ? <TfrPolygonLayer collection={mapLayers.tfrs} /> : null}
-      {layerToggles.metar ? <MetarLayer payload={mapLayers.metar} /> : null}
       {layerToggles.rivers ? <RiverGaugeLayer payload={mapLayers.rivers} /> : null}
       {layerToggles.transit ? (
         <TransitLayer
@@ -516,11 +507,8 @@ const FlightMapInner = memo(function FlightMapInner({
         />
       ) : null}
       {layerToggles.roads ? <RoadConditionsLayer collection={mapLayers.roads} /> : null}
-      {layerToggles.airQuality ? <AirQualityLayer payload={mapLayers.airQuality} /> : null}
       {layerToggles.aisVessels ? <AisVesselsLayer payload={mapLayers.aisVessels} /> : null}
-      {layerToggles.notams ? <NotamLayer collection={mapLayers.notams} /> : null}
       {layerToggles.earthquakes ? <EarthquakeLayer payload={mapLayers.earthquakes} /> : null}
-      {layerToggles.sondes ? <SondeLayer payload={mapLayers.sondes} /> : null}
       {layerToggles.wildfires ? <WildfireLayer payload={mapLayers.wildfires} /> : null}
       {layerToggles.cameras ? <TrafficCameraLayer payload={cameras} /> : null}
       {layerToggles.railCameras ? <RailCameraLayer payload={railCameras} /> : null}
@@ -584,6 +572,7 @@ const FlightMapInner = memo(function FlightMapInner({
           mapHandlers={mapHandlers}
         />
       ))}
+      </CameraStreamSchedulerProvider>
     </MapContainer>
   );
 });
@@ -624,23 +613,16 @@ export function FlightMap({
     readLayerFlag(LAYER_KEYS.weatherAlerts, true)
   );
   const [lightningEnabled, setLightningEnabled] = useState(() => readLayerFlag(LAYER_KEYS.lightning, true));
-  const [metarEnabled, setMetarEnabled] = useState(() => readLayerFlag(LAYER_KEYS.metar, true));
-  const [tfrsEnabled, setTfrsEnabled] = useState(() => readLayerFlag(LAYER_KEYS.tfrs, true));
   const [helosEnabled, setHelosEnabled] = useState(() => readLayerFlag(LAYER_KEYS.helos, true));
   const [riversEnabled, setRiversEnabled] = useState(() => readLayerFlag(LAYER_KEYS.rivers, true));
   const [transitEnabled, setTransitEnabled] = useState(() => readLayerFlag(LAYER_KEYS.transit, false));
   const [roadsEnabled, setRoadsEnabled] = useState(() => readLayerFlag(LAYER_KEYS.roads, true));
-  const [airQualityEnabled, setAirQualityEnabled] = useState(() =>
-    readLayerFlag(LAYER_KEYS.airQuality, true)
-  );
   const [aisVesselsEnabled, setAisVesselsEnabled] = useState(() =>
     readLayerFlag(LAYER_KEYS.aisVessels, true)
   );
-  const [notamsEnabled, setNotamsEnabled] = useState(() => readLayerFlag(LAYER_KEYS.notams, false));
   const [earthquakesEnabled, setEarthquakesEnabled] = useState(() =>
     readLayerFlag(LAYER_KEYS.earthquakes, true)
   );
-  const [sondesEnabled, setSondesEnabled] = useState(() => readLayerFlag(LAYER_KEYS.sondes, false));
   const [wildfiresEnabled, setWildfiresEnabled] = useState(() =>
     readLayerFlag(LAYER_KEYS.wildfires, false)
   );
@@ -673,17 +655,12 @@ export function FlightMap({
     () => ({
       weatherAlerts: weatherAlertsEnabled,
       lightning: lightningEnabled,
-      metar: metarEnabled,
-      tfrs: tfrsEnabled,
       helos: helosEnabled,
       rivers: riversEnabled,
       transit: transitEnabled,
       roads: roadsEnabled,
-      airQuality: airQualityEnabled,
       aisVessels: aisVesselsEnabled,
-      notams: notamsEnabled,
       earthquakes: earthquakesEnabled,
-      sondes: sondesEnabled,
       wildfires: wildfiresEnabled,
       riverForecast: riverForecastEnabled,
       ebird: ebirdEnabled,
@@ -694,17 +671,12 @@ export function FlightMap({
     [
       weatherAlertsEnabled,
       lightningEnabled,
-      metarEnabled,
-      tfrsEnabled,
       helosEnabled,
       riversEnabled,
       transitEnabled,
       roadsEnabled,
-      airQualityEnabled,
       aisVesselsEnabled,
-      notamsEnabled,
       earthquakesEnabled,
-      sondesEnabled,
       wildfiresEnabled,
       riverForecastEnabled,
       ebirdEnabled,
@@ -718,6 +690,10 @@ export function FlightMap({
     [layerToggles, camerasEnabled, railCamerasEnabled]
   );
   const [viewportBounds, setViewportBounds] = useState<MapViewportBounds | null>(null);
+  const cameraStreamBoundsKey = useMemo(
+    () => (viewportBounds ? stableViewportKey(viewportBounds) : 'initial'),
+    [viewportBounds]
+  );
   const handleViewportChange = useCallback(
     (bounds: MapViewportBounds) => {
       setViewportBounds(bounds);
@@ -800,20 +776,6 @@ export function FlightMap({
             storageKey={LAYER_KEYS.lightning}
           />
           <LayerToggle
-            label="METAR"
-            tip={MAP_LAYER_HELP.metar}
-            checked={metarEnabled}
-            onChange={setMetarEnabled}
-            storageKey={LAYER_KEYS.metar}
-          />
-          <LayerToggle
-            label="TFRs"
-            tip={MAP_LAYER_HELP.tfrs}
-            checked={tfrsEnabled}
-            onChange={setTfrsEnabled}
-            storageKey={LAYER_KEYS.tfrs}
-          />
-          <LayerToggle
             label="Helos"
             tip={MAP_LAYER_HELP.helos}
             checked={helosEnabled}
@@ -842,13 +804,6 @@ export function FlightMap({
             storageKey={LAYER_KEYS.roads}
           />
           <LayerToggle
-            label="AQI"
-            tip={MAP_LAYER_HELP.airQuality}
-            checked={airQualityEnabled}
-            onChange={setAirQualityEnabled}
-            storageKey={LAYER_KEYS.airQuality}
-          />
-          <LayerToggle
             label="Ships"
             tip={MAP_LAYER_HELP.aisVessels}
             checked={aisVesselsEnabled}
@@ -856,25 +811,11 @@ export function FlightMap({
             storageKey={LAYER_KEYS.aisVessels}
           />
           <LayerToggle
-            label="NOTAMs"
-            tip={MAP_LAYER_HELP.notams}
-            checked={notamsEnabled}
-            onChange={setNotamsEnabled}
-            storageKey={LAYER_KEYS.notams}
-          />
-          <LayerToggle
             label="Quakes"
             tip={MAP_LAYER_HELP.earthquakes}
             checked={earthquakesEnabled}
             onChange={setEarthquakesEnabled}
             storageKey={LAYER_KEYS.earthquakes}
-          />
-          <LayerToggle
-            label="Sondes"
-            tip={MAP_LAYER_HELP.sondes}
-            checked={sondesEnabled}
-            onChange={setSondesEnabled}
-            storageKey={LAYER_KEYS.sondes}
           />
           <LayerToggle
             label="Fires"
@@ -980,6 +921,8 @@ export function FlightMap({
             mapLayers={mapLayers}
             cameras={viewportCameras}
             railCameras={viewportRailCameras}
+            viewportBounds={viewportBounds}
+            cameraStreamBoundsKey={cameraStreamBoundsKey}
             onViewportChange={handleViewportChange}
             weather={weather}
             fun={fun}
@@ -997,12 +940,6 @@ export function FlightMap({
             ) : null}
             {lightningEnabled && mapLayers.lightning?.count ? (
               <span className="muted">Lightning strikes nearby: {mapLayers.lightning.count}</span>
-            ) : null}
-            {metarEnabled && mapLayers.metar?.count ? (
-              <span className="muted">METAR stations: {mapLayers.metar.count}</span>
-            ) : null}
-            {tfrsEnabled && mapLayers.tfrs?.count ? (
-              <span className="muted">TFRs within range: {mapLayers.tfrs.count}</span>
             ) : null}
             {helosEnabled && heloCount ? (
               <span className="muted">Helicopters highlighted: {heloCount}</span>
@@ -1023,11 +960,6 @@ export function FlightMap({
             {roadsEnabled && mapLayers.roads?.count ? (
               <span className="muted">MoDOT incidents: {mapLayers.roads.count}</span>
             ) : null}
-            {airQualityEnabled && mapLayers.airQuality?.usAqi != null ? (
-              <span className="muted">
-                Air quality: AQI {mapLayers.airQuality.usAqi} ({mapLayers.airQuality.category})
-              </span>
-            ) : null}
             {aisVesselsEnabled ? (
               <span className="muted">
                 Large ships
@@ -1038,21 +970,8 @@ export function FlightMap({
                     : ' · none nearby'}
               </span>
             ) : null}
-            {notamsEnabled ? (
-              <span className="muted">
-                NOTAMs
-                {mapLayers.notams?.enabled === false
-                  ? ` · ${mapLayers.notams.message || 'FAA credentials required'}`
-                  : mapLayers.notams?.count
-                    ? ` · ${mapLayers.notams.count}`
-                    : ' · none active'}
-              </span>
-            ) : null}
             {earthquakesEnabled && mapLayers.earthquakes?.count ? (
               <span className="muted">Earthquakes (24h): {mapLayers.earthquakes.count}</span>
-            ) : null}
-            {sondesEnabled && mapLayers.sondes?.count ? (
-              <span className="muted">Weather sondes: {mapLayers.sondes.count}</span>
             ) : null}
             {wildfiresEnabled ? (
               <span className="muted">
