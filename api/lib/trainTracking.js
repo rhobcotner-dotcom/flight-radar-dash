@@ -90,7 +90,7 @@ function flattenTrainPayload(body) {
   return [];
 }
 
-async function fetchPassengerTrainsRaw() {
+export async function fetchPassengerTrainsRaw() {
   if (passengerCache.trains && Date.now() - passengerCache.fetchedAt < CACHE_TTL_MS) {
     return passengerCache.trains;
   }

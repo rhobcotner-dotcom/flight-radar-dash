@@ -345,6 +345,16 @@ const FlightMarker = memo(function FlightMarker({
     prev.flight.squawk === next.flight.squawk &&
     prev.flight.alt === next.flight.alt &&
     prev.flight.gspeed === next.flight.gspeed &&
+    prev.flight.orig_iata === next.flight.orig_iata &&
+    prev.flight.orig_icao === next.flight.orig_icao &&
+    prev.flight.orig_city === next.flight.orig_city &&
+    prev.flight.orig_lat === next.flight.orig_lat &&
+    prev.flight.orig_lon === next.flight.orig_lon &&
+    prev.flight.dest_iata === next.flight.dest_iata &&
+    prev.flight.dest_icao === next.flight.dest_icao &&
+    prev.flight.dest_city === next.flight.dest_city &&
+    prev.flight.dest_lat === next.flight.dest_lat &&
+    prev.flight.dest_lon === next.flight.dest_lon &&
     prev.mapHandlers === next.mapHandlers
   );
 });

@@ -79,11 +79,15 @@ export interface Flight {
   orig_city?: string;
   orig_country?: string;
   orig_country_iso?: string;
+  orig_lat?: number;
+  orig_lon?: number;
   dest_iata?: string;
   dest_icao?: string;
   dest_city?: string;
   dest_country?: string;
   dest_country_iso?: string;
+  dest_lat?: number;
+  dest_lon?: number;
   eta?: string;
   painted_as?: string;
   operating_as?: string;

@@ -39,6 +39,7 @@ import { handleLiveTrains } from './routes/trains.js';
 import { handleFreightDreamState } from './routes/freightDreamState.js';
 import { handleLiveSatellites } from './routes/satellites.js';
 import { handleFunStatus } from './routes/fun.js';
+import { handleTrackingStats } from './routes/trackingStats.js';
 import {
   handleAprs,
   handleDrought,
@@ -152,6 +153,7 @@ app.get('/api/radar/frames', asyncHandler(handleRadarFrames));
 app.get('/api/weather/storm-analysis', asyncHandler(handleStormAnalysis));
 app.get('/api/hearing/config', handleHearingConfig);
 app.get('/api/fun/status', asyncHandler(handleFunStatus));
+app.get('/api/live/tracking-stats', asyncHandler(handleTrackingStats));
 app.get('/api/live/dashboard', asyncHandler(handleLiveDashboard));
 app.get('/api/live/traffic-cameras', asyncHandler(handleTrafficCameras));
 app.get('/api/live/cameras-near', asyncHandler(handleCamerasNear));

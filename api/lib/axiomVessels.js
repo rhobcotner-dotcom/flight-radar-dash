@@ -141,3 +141,24 @@ export async function fetchAxiomVessels(lat, lon, radiusMiles = 85, viewport = n
   cache = { fetchedAt: Date.now(), key: cacheKey, payload };
   return payload;
 }
+
+/** Count significant vessels in a bbox without returning full vessel payloads. */
+export async function countSignificantVesselsInBbox(bbox) {
+  const params = new URLSearchParams({
+    west: String(bbox.west),
+    east: String(bbox.east),
+    south: String(bbox.south),
+    north: String(bbox.north),
+  });
+
+  const body = await fetchWithTimeout(`${AXIOM_URL}?${params.toString()}`);
+  const features = Array.isArray(body?.features) ? body.features : [];
+  let count = 0;
+
+  for (const feature of features) {
+    const vessel = normalizeAxiomFeature(feature);
+    if (vessel && isSignificantVessel(vessel)) count += 1;
+  }
+
+  return { count, source: 'axiomoverwatch.io' };
+}

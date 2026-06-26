@@ -62,6 +62,26 @@ function endpointLabel(flight: Flight, role: 'orig' | 'dest') {
   return iata || icao || '?';
 }
 
+export function flightDepartureLabel(flight: Flight) {
+  const location = endpointLabel(flight, 'orig');
+  return location !== '?' ? location : null;
+}
+
+export function flightDestinationLabel(flight: Flight) {
+  const location = endpointLabel(flight, 'dest');
+  return location !== '?' ? location : null;
+}
+
+const NEAR_TAKEOFF_RADIUS_MILES = 30;
+
+export function isNearTakeoffLocation(flight: Flight, radiusMiles = NEAR_TAKEOFF_RADIUS_MILES) {
+  const origLat = Number(flight.orig_lat);
+  const origLon = Number(flight.orig_lon);
+  if (!Number.isFinite(origLat) || !Number.isFinite(origLon)) return false;
+  if (!Number.isFinite(flight.lat) || !Number.isFinite(flight.lon)) return false;
+  return distanceMiles(flight.lat, flight.lon, origLat, origLon) <= radiusMiles;
+}
+
 export function routeLabel(flight: Flight) {
   const from = endpointLabel(flight, 'orig');
   const to = endpointLabel(flight, 'dest');

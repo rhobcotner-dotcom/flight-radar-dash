@@ -8,6 +8,7 @@ import type { FlightAltitudeTrend } from './flightAltitudeTrend';
 import type { FlightSpeedTrend } from './flightSpeedTrend';
 import { isHighAltitudeFlight } from './flightAltitudeTrend';
 import { isGroundLevelFlight } from './flightGroundLevel';
+import { flightDepartureLabel, flightDestinationLabel, isNearTakeoffLocation } from './flightUtils';
 
 const MAP_PLANE_SIZE = 38;
 const MAP_PLANE_ACTIVE = 48;
@@ -60,6 +61,51 @@ function mapFlightCarrierLabel(flight: Flight) {
   const icao = airlineIcao(flight);
   if (!icao) return null;
   return airlineNameFromIcao(icao);
+}
+
+type MarkerSubLabel = {
+  text: string;
+  tone: 'from' | 'to';
+};
+
+function mapFlightMarkerLabels(flight: Flight, trend: FlightAltitudeTrend) {
+  const bottomLabel = mapFlightCarrierLabel(flight);
+  let bottomSubLabel: MarkerSubLabel | null = null;
+
+  if (isNearTakeoffLocation(flight)) {
+    const destination = flightDestinationLabel(flight);
+    if (destination) bottomSubLabel = { text: `to ${destination}`, tone: 'to' };
+  } else if (trend === 'down') {
+    const departure = flightDepartureLabel(flight);
+    if (departure) bottomSubLabel = { text: `from ${departure}`, tone: 'from' };
+  }
+
+  return { bottomLabel, bottomSubLabel };
+}
+
+function markerLabelHtml(
+  primary: string | null | undefined,
+  sub: MarkerSubLabel | null | undefined,
+  className: string
+) {
+  if (!primary && !sub) return '';
+  if (!primary && sub) {
+    return `<div class="map-marker-label map-marker-label-sub map-marker-label-sub-${sub.tone} ${className}">${escapeHtml(sub.text)}</div>`;
+  }
+  if (!sub) {
+    return `<div class="map-marker-label ${className}">${escapeHtml(primary || '')}</div>`;
+  }
+  return `
+    <div class="map-marker-label-stack ${className}">
+      <div class="map-marker-label map-marker-label-primary ${className}">${escapeHtml(primary || '')}</div>
+      <div class="map-marker-label map-marker-label-sub map-marker-label-sub-${sub.tone}">${escapeHtml(sub.text)}</div>
+    </div>
+  `;
+}
+
+function markerLabelHeight(primary: string | null | undefined, sub: MarkerSubLabel | null | undefined) {
+  if (!primary && !sub) return 0;
+  return sub ? 34 : 18;
 }
 
 function shellClasses(
@@ -160,13 +206,18 @@ function flightMarkerBodyHtml(options: {
   const wrapHeight = size + cloudPad + tailPad;
   const plume = ground ? '' : speedPlumeHtml(speedTrend);
 
+  const exhaustSlot =
+    tailPad > 0
+      ? `<div class="map-aircraft-exhaust-slot" style="height:${tailPad}px;">${plume}</div>`
+      : '';
+
   return `
     <div class="map-aircraft-marker-wrap${ground ? ' map-aircraft-marker-wrap-ground' : ''}" style="width:${size}px;height:${wrapHeight}px;">
       ${highAltitude && !ground ? highAltitudeCloudHtml() : ''}
       ${ground ? '' : altitudeTrendHtml(trend)}
-      <div class="map-rotating-marker map-aircraft-rotating" style="width:${size}px;height:${size}px;transform:rotate(${rotation}deg);">
-        <div class="map-aircraft-body">${inner}</div>
-        ${plume}
+      <div class="map-rotating-marker map-aircraft-rotating${tailPad ? ' map-aircraft-rotating-with-exhaust' : ''}" style="width:${size}px;height:${size + tailPad}px;transform:rotate(${rotation}deg);">
+        <div class="map-aircraft-body" style="width:${size}px;height:${size}px;">${inner}</div>
+        ${exhaustSlot}
       </div>
     </div>
   `;
@@ -216,17 +267,16 @@ function buildRotatedMarkerIcon(options: {
   rotation: number;
   className: string;
   bottomLabel?: string | null;
+  bottomSubLabel?: MarkerSubLabel | null;
   bottomLabelClass?: string;
   bodyHeight?: number;
   anchorY?: number;
 }) {
-  const { html, size, rotation, className, bottomLabel, bottomLabelClass = '' } = options;
+  const { html, size, rotation, className, bottomLabel, bottomSubLabel, bottomLabelClass = '' } = options;
   const bodyHeight = options.bodyHeight ?? size;
   const anchorY = options.anchorY ?? size / 2;
-  const labelHtml = bottomLabel
-    ? `<div class="map-marker-label ${bottomLabelClass}">${escapeHtml(bottomLabel)}</div>`
-    : '';
-  const labelHeight = bottomLabel ? 18 : 0;
+  const labelHtml = markerLabelHtml(bottomLabel, bottomSubLabel, bottomLabelClass);
+  const labelHeight = markerLabelHeight(bottomLabel, bottomSubLabel);
   const totalHeight = bodyHeight + labelHeight;
 
   return L.divIcon({
@@ -247,13 +297,15 @@ function buildFlightRotatedMarkerIcon(options: {
   size: number;
   rotation: number;
   bottomLabel?: string | null;
+  bottomSubLabel?: MarkerSubLabel | null;
   bottomLabelClass?: string;
   trend: FlightAltitudeTrend;
   speedTrend: FlightSpeedTrend;
   highAltitude: boolean;
   ground: boolean;
 }) {
-  const { inner, size, rotation, bottomLabel, bottomLabelClass, trend, speedTrend, highAltitude, ground } = options;
+  const { inner, size, rotation, bottomLabel, bottomSubLabel, bottomLabelClass, trend, speedTrend, highAltitude, ground } =
+    options;
   const cloudPad = highAltitude && !ground ? 8 : 0;
   const tailPad = speedTrend && !ground ? 20 : 0;
   const bodyHeight = size + cloudPad + tailPad;
@@ -264,6 +316,7 @@ function buildFlightRotatedMarkerIcon(options: {
     rotation,
     className: 'map-aircraft-marker',
     bottomLabel,
+    bottomSubLabel,
     bottomLabelClass,
     bodyHeight,
     anchorY: size / 2,
@@ -292,11 +345,14 @@ export async function buildFlightMapIcon(
     ? coloredSpriteHtml(position, sheet, scale, highlighted, military, emergency, heloKind, ground)
     : `<div class="${shellClasses(highlighted, military, emergency, heloKind, ground)}">${planeFallbackSvg()}</div>`;
 
+  const { bottomLabel, bottomSubLabel } = mapFlightMarkerLabels(flight, altitudeTrend);
+
   return buildFlightRotatedMarkerIcon({
     inner,
     size,
     rotation: track,
-    bottomLabel: mapFlightCarrierLabel(flight),
+    bottomLabel,
+    bottomSubLabel,
     bottomLabelClass: markerLabelClass(military, emergency, heloKind, ground),
     trend: altitudeTrend,
     speedTrend,
@@ -367,11 +423,14 @@ export function buildFlightMapIconPlaceholder(
   const highAltitude = isHighAltitudeFlight(flight.alt);
   const ground = isGroundLevelFlight(flight);
 
+  const { bottomLabel, bottomSubLabel } = mapFlightMarkerLabels(flight, altitudeTrend);
+
   return buildFlightRotatedMarkerIcon({
     inner: `<div class="${shellClasses(highlighted, military, emergency, heloKind, ground)}">${planeFallbackSvg()}</div>`,
     size,
     rotation: track,
-    bottomLabel: mapFlightCarrierLabel(flight),
+    bottomLabel,
+    bottomSubLabel,
     bottomLabelClass: markerLabelClass(military, emergency, heloKind, ground),
     trend: altitudeTrend,
     speedTrend,

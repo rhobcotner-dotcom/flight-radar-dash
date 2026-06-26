@@ -375,3 +375,47 @@ export async function fetchRegionalRailTrains(area, radiusMiles) {
     sourceCounts: { ...sourceCounts, nearby: nearbyCounts },
   };
 }
+
+/** All live regional rail positions (not filtered to a map viewport). */
+export async function fetchAllRegionalRailTrains() {
+  const feeds = parseFeedList();
+  const feedResults = await Promise.allSettled(feeds.map((feed) => fetchGtfsFeed(feed)));
+  const siri511Result = await fetch511RailTrains();
+
+  const trains = [];
+  const sourceCounts = {};
+
+  feedResults.forEach((result, index) => {
+    const feed = feeds[index];
+    if (result.status !== 'fulfilled') {
+      sourceCounts[feed.id] = { error: result.reason?.message || 'failed' };
+      return;
+    }
+
+    if (result.value.skipped) {
+      sourceCounts[feed.id] = result.value.skipped;
+      return;
+    }
+
+    if (result.value.configured) {
+      sourceCounts[feed.id] = result.value.count;
+      trains.push(...result.value.trains);
+    }
+  });
+
+  if (siri511Result.configured) {
+    Object.assign(sourceCounts, siri511Result.sourceCounts || {});
+    sourceCounts['511_total'] = siri511Result.trains.length;
+    trains.push(...siri511Result.trains);
+  }
+
+  const byId = new Map();
+  for (const train of trains) {
+    byId.set(`${train.trainKind}:${train.trainId}`, train);
+  }
+
+  return {
+    count: byId.size,
+    sourceCounts,
+  };
+}

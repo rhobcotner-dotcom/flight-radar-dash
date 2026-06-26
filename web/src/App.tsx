@@ -14,6 +14,8 @@ import { viewportFromArea } from './lib/mapViewport';
 import { useTrains } from './hooks/useTrains';
 import { useHighlight } from './hooks/useHighlight';
 import { useFunMode } from './hooks/useFunMode';
+import { useTrackingStats } from './hooks/useTrackingStats';
+import { TrackingBanner } from './components/TrackingBanner';
 
 export default function App() {
   const { area, setArea, queryString } = useAreaSettings();
@@ -107,6 +109,7 @@ export default function App() {
     [dismissB52Toast, dismissHearingToast, dismissWeatherToast, fun.dismissFunToast]
   );
   const { highlightedId, setHighlight, clearHighlightNow, mapHandlers, listHandlers } = useHighlight();
+  const trackingStats = useTrackingStats(hasLoaded);
 
   return (
     <div
@@ -185,6 +188,8 @@ export default function App() {
         onSelect={(id) => setHighlight(id, 'list')}
         b52AlertStats={b52AlertStats}
       />
+
+      <TrackingBanner stats={trackingStats} />
     </div>
   );
 }
