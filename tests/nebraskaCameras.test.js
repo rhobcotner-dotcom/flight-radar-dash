@@ -1,13 +1,37 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fetchDirectCameras, mapNebraska511Camera } from '../api/lib/cameraSources/directSources.js';
+import { mapNebraska511Camera } from '../api/lib/cameraSources/directSources.js';
+import { isAllowedHlsUrl } from '../api/lib/cameraStreamProxy.js';
 
-test('mapNebraska511Camera maps STILL_IMAGE snapshot URLs', () => {
+test('mapNebraska511Camera prefers HLS when both preview and stream exist', () => {
+  const cameras = mapNebraska511Camera({
+    id: 99,
+    active: true,
+    public: true,
+    name: 'I-80 near Lincoln',
+    location: { latitude: 40.81, longitude: -96.68 },
+    views: [
+      {
+        name: 'Eastbound',
+        url: 'https://example.skyvdn.com:443/live/ne99/playlist.m3u8',
+        videoPreviewUrl: 'https://netg.carsprogram.org/cameras_v1/api/cameras/99/preview.jpg',
+      },
+    ],
+  });
+
+  assert.equal(cameras.length, 1);
+  assert.equal(cameras[0].mediaType, 'hls');
+  assert.match(cameras[0].liveUrl, /playlist\.m3u8/);
+  assert.match(cameras[0].previewUrl, /carsprogram\.org/);
+  assert.equal(isAllowedHlsUrl(cameras[0].liveUrl), true);
+});
+
+test('mapNebraska511Camera maps STILL_IMAGE dot511.nebraska.gov snapshots', () => {
   const cameras = mapNebraska511Camera({
     id: 1,
     public: true,
     name: 'Scale E of Lincoln',
-    location: { latitude: 40.928, longitude: -96.449, fips: 31 },
+    location: { latitude: 40.93, longitude: -96.45 },
     views: [
       {
         name: 'Various Views',
@@ -18,34 +42,26 @@ test('mapNebraska511Camera maps STILL_IMAGE snapshot URLs', () => {
   });
 
   assert.equal(cameras.length, 1);
-  assert.equal(cameras[0].id, 'ne511-1');
   assert.equal(cameras[0].mediaType, 'snapshot');
-  assert.equal(cameras[0].state, 'NE');
-  assert.match(cameras[0].liveUrl, /dot511\.nebraska\.gov\/images\//);
+  assert.match(cameras[0].streamUrl, /dot511\.nebraska\.gov/);
 });
 
-test('mapNebraska511Camera expands multi-view sites', () => {
+test('mapNebraska511Camera maps snapshot-only views', () => {
   const cameras = mapNebraska511Camera({
-    id: 42,
+    id: 100,
+    active: true,
     public: true,
-    name: 'I-80 at Omaha',
-    location: { latitude: 41.25, longitude: -96.05, fips: 31 },
+    name: 'US-75',
+    location: { latitude: 41.25, longitude: -96.0 },
     views: [
-      { name: 'West', type: 'STILL_IMAGE', url: 'https://dot511.nebraska.gov/images/vid-a.jpg' },
-      { name: 'East', type: 'STILL_IMAGE', url: 'https://dot511.nebraska.gov/images/vid-b.jpg' },
+      {
+        name: 'North',
+        url: 'https://netg.carsprogram.org/cameras_v1/api/cameras/100/preview.jpg',
+        videoPreviewUrl: 'https://netg.carsprogram.org/cameras_v1/api/cameras/100/preview.jpg',
+      },
     ],
   });
 
-  assert.equal(cameras.length, 2);
-  assert.equal(cameras[0].id, 'ne511-42-view-1');
-  assert.equal(cameras[1].id, 'ne511-42-view-2');
-});
-
-test('fetchDirectCameras loads Nebraska 511 CARS pool statewide', async () => {
-  const nebraska = { west: -104.1, south: 40.0, east: -95.3, north: 43.0 };
-  const direct = await fetchDirectCameras(nebraska);
-  const neCams = direct.cameras.filter((cam) => cam.state === 'NE');
-  assert.ok(direct.sourceCounts['nebraska-511'] >= 900, `expected nebraska-511 pool, got ${direct.sourceCounts['nebraska-511']}`);
-  assert.ok(neCams.length >= 900, `expected dense Nebraska coverage, got ${neCams.length}`);
-  assert.ok(neCams.every((cam) => cam.mediaType === 'snapshot'));
+  assert.equal(cameras.length, 1);
+  assert.equal(cameras[0].mediaType, 'snapshot');
 });

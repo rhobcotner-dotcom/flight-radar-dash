@@ -319,6 +319,14 @@ const FlightMarker = memo(function FlightMarker({
     flight.carrierName,
     flight.operating_as,
     flight.painted_as,
+    flight.orig_city,
+    flight.orig_iata,
+    flight.orig_lat,
+    flight.orig_lon,
+    flight.dest_city,
+    flight.dest_iata,
+    flight.dest_lat,
+    flight.dest_lon,
     flight.type,
     flight.track,
     flight.squawk,
@@ -327,6 +335,8 @@ const FlightMarker = memo(function FlightMarker({
     flight.reg,
     flight.alt,
     flight.gspeed,
+    flight.lat,
+    flight.lon,
     altitudeTrend,
     speedTrend,
     highlighted,
@@ -346,7 +356,7 @@ const FlightMarker = memo(function FlightMarker({
       ref={markerRef}
       position={markerPosition}
       icon={icon}
-      zIndexOffset={highlighted ? 800 : undefined}
+      zIndexOffset={highlighted ? 800 : 480}
       eventHandlers={mapHandlers?.(id)}
     >
       <Tooltip

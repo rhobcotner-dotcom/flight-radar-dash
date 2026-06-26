@@ -20,10 +20,29 @@ import { DIRECT_STATE_COVERAGE, fetchDirectCameras, STATE_FEED_GAPS } from './ca
 import { fetchRoad511Cameras, hasRoad511Key } from './cameraSources/road511.js';
 
 export const CONUS_BBOX = { west: -125, south: 24, east: -66, north: 50 };
+/** Full US camera inventory bbox (includes AK/HI). */
+const NATIONWIDE_CAMERA_BBOX = { west: -180, south: 18, east: -66, north: 72 };
 const VERIFIED_HLS_PER_STATE = 24;
 const VERIFIED_SNAP_PER_STATE = 24;
 /** Wisconsin has ~480 live HLS feeds — keep a larger verified slice for map + storm reliability. */
-const VERIFIED_HLS_OVERRIDES = { WI: 96, OK: 96, MO: 96, AL: 96, MS: 96, NV: 96, CO: 96, CA: 96 };
+const VERIFIED_HLS_OVERRIDES = {
+  WI: 96,
+  OK: 96,
+  MO: 96,
+  AL: 96,
+  MS: 96,
+  NV: 96,
+  CO: 96,
+  CA: 96,
+  KS: 96,
+  IN: 96,
+  NY: 96, // ~95% skyvdn reachability (100-sample probe); dead HLS falls back to Url snapshot
+  IA: 96,
+  VA: 96, // ~99% vdotcameras.com reachability via 511.vdot.virginia.gov (100-sample probe)
+  TN: 96, // ~80% TDOT mcleansfs skyvdn reachability (15-sample probe)
+  SC: 96, // Iteris skyvdn HLS + snapshot thumbs (15-sample probe)
+  DE: 96, // 100% video.deldot.gov reachability (10-sample probe; 356 statewide HLS)
+};
 /** Illinois is snapshot-only via Travel Midwest — verify more working feeds for dense map coverage. */
 const VERIFIED_SNAP_OVERRIDES = {
   IL: 96,
@@ -47,11 +66,11 @@ const VERIFIED_SNAP_OVERRIDES = {
   VA: 96,
   TX: 96,
   KY: 96,
+  NC: 96,
 };
 /** States where snapshots are the primary inventory (no public HLS). */
 const SNAPSHOT_PRIMARY_STATES = new Set([
   'IL',
-  'IN',
   'OH',
   'NE',
   'FL',
@@ -64,14 +83,13 @@ const SNAPSHOT_PRIMARY_STATES = new Set([
   'WY',
   'WA',
   'AK',
-  'SC',
   'SD',
   'PA',
   'ME',
   'VT',
-  'VA',
   'TX',
   'KY',
+  'NC',
 ]);
 const LOCAL_POOL_RADIUS_MILES = 120;
 const DEFAULT_WARM = {
@@ -145,18 +163,30 @@ function ensureMapPreviewUrls(cam) {
   return cam;
 }
 
-function mapPlaybackCameras(cameras) {
+export function mapPlaybackCameras(cameras) {
   return cameras.map((cam) => {
     const sourceLiveUrl = cam.liveUrl;
     if (cam.mediaType === 'hls') {
+      const rawHlsSource = hlsSourceUrl({ ...cam, sourceLiveUrl: cam.liveUrl }) || sourceLiveUrl;
+      const rawPreview =
+        cam.previewUrl || modotRtplexSnapshotUrl(rawHlsSource);
+      if (isKnownDeadStream(rawHlsSource) && rawPreview) {
+        const previewUrl = cameraPreviewUrl(rawPreview, 'snapshot');
+        return {
+          ...cam,
+          sourceLiveUrl: rawHlsSource,
+          mediaType: 'snapshot',
+          liveUrl: previewUrl,
+          streamUrl: previewUrl,
+          previewUrl,
+        };
+      }
       const modotDirect = isModotRtplexStreamUrl(sourceLiveUrl);
       const playbackUrl = modotDirect ? sourceLiveUrl : cameraHlsPlaybackUrl(cam.liveUrl);
-      const rawPreview =
-        cam.previewUrl || modotRtplexSnapshotUrl(hlsSourceUrl({ ...cam, sourceLiveUrl: cam.liveUrl }));
       const previewUrl = rawPreview ? cameraPreviewUrl(rawPreview, 'snapshot') : null;
       return {
         ...cam,
-        sourceLiveUrl,
+        sourceLiveUrl: rawHlsSource,
         liveUrl: playbackUrl,
         streamUrl: playbackUrl,
         previewUrl,
@@ -216,9 +246,12 @@ function selectForViewport(cameras, bbox, limit, centerLat, centerLon) {
 
 function regionalPoolFromRaw(pool, bbox, centerLat, centerLon) {
   const inBbox = sortCamerasStable(camerasInBbox(pool.cameras, bbox), centerLat, centerLon);
-  const playable = inBbox.filter(
-    (cam) => cam.mediaType === 'snapshot' || !isKnownDeadStream(cam.sourceLiveUrl || cam.liveUrl)
-  );
+  const playable = inBbox.filter((cam) => {
+    if (cam.mediaType === 'snapshot') return true;
+    const hlsUrl = cam.sourceLiveUrl || cam.liveUrl;
+    if (!isKnownDeadStream(hlsUrl)) return true;
+    return Boolean(cam.previewUrl);
+  });
   const live = playable.filter((cam) => cam.mediaType === 'hls' || cam.mediaType === 'youtube');
   const snapshots = playable.filter((cam) => cam.mediaType === 'snapshot');
   return [...live, ...snapshots];
@@ -227,7 +260,7 @@ function regionalPoolFromRaw(pool, bbox, centerLat, centerLon) {
 /** Snapshot-primary state under the viewport center (IL vs IN vs OH, etc.). */
 function viewportSnapshotPrimaryState(centerLat, centerLon) {
   if (!Number.isFinite(centerLat) || !Number.isFinite(centerLon)) return null;
-  for (const code of ['IL', 'IN', 'OH', 'NE', 'FL', 'GA', 'AZ', 'NV', 'UT', 'CO', 'ID', 'NM', 'WI', 'WY', 'HI']) {
+  for (const code of ['IL', 'OH', 'NE', 'FL', 'GA', 'AZ', 'NV', 'UT', 'CO', 'ID', 'NM', 'WI', 'WY', 'HI']) {
     if (!SNAPSHOT_PRIMARY_STATES.has(code)) continue;
     const bounds = STATE_BOUNDS[code];
     if (!bounds) continue;
@@ -306,7 +339,7 @@ function startFullPoolWarm() {
   if (fullPoolWarmPromise) return fullPoolWarmPromise;
 
   fullPoolWarmPromise = (async () => {
-    const direct = await fetchDirectCameras(CONUS_BBOX);
+    const direct = await fetchDirectCameras(NATIONWIDE_CAMERA_BBOX);
     nationwidePool = {
       fetchedAt: Date.now(),
       partial: false,
@@ -455,7 +488,7 @@ async function ensureLocalPool(centerLat, centerLon) {
 
 export async function warmNationwideCameraPool({ lat, lon } = DEFAULT_WARM) {
   await ensureLocalPool(lat, lon);
-  startFullPoolWarm();
+  await startFullPoolWarm();
   startVerifiedPoolWarm();
   return nationwidePool;
 }

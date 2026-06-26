@@ -35,6 +35,7 @@ test('mapMississippiTrafficCamera maps MDOT Traffic streams', () => {
   assert.equal(cam.state, 'MS');
   assert.equal(cam.source, 'MDOT Traffic');
   assert.equal(cam.mediaType, 'hls');
+  assert.match(cam.previewUrl, /mdottraffic\.com\/thumbnail/);
 });
 
 test('fetchDirectCameras loads MDOT Traffic pool statewide', async () => {

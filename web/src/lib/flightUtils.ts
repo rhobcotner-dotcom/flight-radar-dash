@@ -72,14 +72,22 @@ export function flightDestinationLabel(flight: Flight) {
   return location !== '?' ? location : null;
 }
 
-const NEAR_TAKEOFF_RADIUS_MILES = 30;
+const NEAR_AIRPORT_RADIUS_MILES = 30;
 
-export function isNearTakeoffLocation(flight: Flight, radiusMiles = NEAR_TAKEOFF_RADIUS_MILES) {
+export function isNearTakeoffLocation(flight: Flight, radiusMiles = NEAR_AIRPORT_RADIUS_MILES) {
   const origLat = Number(flight.orig_lat);
   const origLon = Number(flight.orig_lon);
   if (!Number.isFinite(origLat) || !Number.isFinite(origLon)) return false;
   if (!Number.isFinite(flight.lat) || !Number.isFinite(flight.lon)) return false;
   return distanceMiles(flight.lat, flight.lon, origLat, origLon) <= radiusMiles;
+}
+
+export function isNearLandingLocation(flight: Flight, radiusMiles = NEAR_AIRPORT_RADIUS_MILES) {
+  const destLat = Number(flight.dest_lat);
+  const destLon = Number(flight.dest_lon);
+  if (!Number.isFinite(destLat) || !Number.isFinite(destLon)) return false;
+  if (!Number.isFinite(flight.lat) || !Number.isFinite(flight.lon)) return false;
+  return distanceMiles(flight.lat, flight.lon, destLat, destLon) <= radiusMiles;
 }
 
 export function routeLabel(flight: Flight) {

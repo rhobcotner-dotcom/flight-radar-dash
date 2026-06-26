@@ -25,11 +25,11 @@ function applyRegistryFields(flight, registry) {
   }
 
   if (!flight.carrierName) {
-    if (registry.owner) {
+    const icao = flight.operating_as || flight.painted_as || inferAirlineIcaoFromCallsign(flight.callsign || flight.flight);
+    if (icao) {
+      flight.carrierName = airlineNameFromIcao(icao);
+    } else if (registry.owner) {
       flight.carrierName = registry.owner;
-    } else {
-      const icao = flight.operating_as || flight.painted_as || inferAirlineIcaoFromCallsign(flight.callsign || flight.flight);
-      if (icao) flight.carrierName = airlineNameFromIcao(icao);
     }
   }
 }

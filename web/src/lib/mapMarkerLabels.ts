@@ -1,10 +1,15 @@
 import type { Flight } from '../types';
-import { airlineIcao, airlineNameFromIcao } from './airlineNames';
+import { carrierName } from './airlineNames';
 import type { FlightAltitudeTrend } from './flightAltitudeTrend';
-import { flightDepartureLabel, flightDestinationLabel, flightLabel, isNearTakeoffLocation } from './flightUtils';
+import {
+  flightDepartureLabel,
+  flightDestinationLabel,
+  isNearLandingLocation,
+  isNearTakeoffLocation,
+} from './flightUtils';
 
 export const FLIGHT_LABEL_ZOOM_CALLSIGN = 10;
-export const FLIGHT_LABEL_ZOOM_CARRIER = 13;
+export const FLIGHT_LABEL_ZOOM_CARRIER = 10;
 
 type MarkerSubLabel = {
   text: string;
@@ -12,25 +17,37 @@ type MarkerSubLabel = {
 };
 
 function mapFlightCarrierLabel(flight: Flight) {
-  if (flight.carrierName) return flight.carrierName;
-  const icao = airlineIcao(flight);
-  if (!icao) return null;
-  return airlineNameFromIcao(icao);
+  return carrierName(flight);
+}
+
+export function mapFlightMarkerRouteSubLabel(
+  flight: Flight,
+  trend: FlightAltitudeTrend
+): MarkerSubLabel | null {
+  const departure = flightDepartureLabel(flight);
+  const destination = flightDestinationLabel(flight);
+  if (!departure && !destination) return null;
+
+  if (isNearTakeoffLocation(flight) && destination) {
+    return { text: `to ${destination}`, tone: 'to' };
+  }
+  if (isNearLandingLocation(flight) && departure) {
+    return { text: `from ${departure}`, tone: 'from' };
+  }
+  if (trend === 'down' && departure) {
+    return { text: `from ${departure}`, tone: 'from' };
+  }
+  if (trend === 'up' && destination) {
+    return { text: `to ${destination}`, tone: 'to' };
+  }
+  return null;
 }
 
 function mapFlightMarkerLabelsFull(flight: Flight, trend: FlightAltitudeTrend) {
-  const bottomLabel = mapFlightCarrierLabel(flight);
-  let bottomSubLabel: MarkerSubLabel | null = null;
-
-  if (isNearTakeoffLocation(flight)) {
-    const destination = flightDestinationLabel(flight);
-    if (destination) bottomSubLabel = { text: `to ${destination}`, tone: 'to' };
-  } else if (trend === 'down') {
-    const departure = flightDepartureLabel(flight);
-    if (departure) bottomSubLabel = { text: `from ${departure}`, tone: 'from' };
-  }
-
-  return { bottomLabel, bottomSubLabel };
+  return {
+    bottomLabel: mapFlightCarrierLabel(flight),
+    bottomSubLabel: mapFlightMarkerRouteSubLabel(flight, trend),
+  };
 }
 
 export function flightMarkerLabelZoomTier(mapZoom: number) {
@@ -40,8 +57,7 @@ export function flightMarkerLabelZoomTier(mapZoom: number) {
 }
 
 export function flightMarkerLabelMode(mapZoom: number, highlighted: boolean) {
-  if (highlighted || mapZoom >= FLIGHT_LABEL_ZOOM_CARRIER) return 'carrier';
-  if (mapZoom >= FLIGHT_LABEL_ZOOM_CALLSIGN) return 'callsign';
+  if (highlighted || mapZoom >= FLIGHT_LABEL_ZOOM_CALLSIGN) return 'carrier';
   return 'none';
 }
 
@@ -51,11 +67,8 @@ export function mapFlightMarkerLabels(
   mapZoom = 12,
   highlighted = false
 ) {
-  if (highlighted || mapZoom >= FLIGHT_LABEL_ZOOM_CARRIER) {
+  if (highlighted || mapZoom >= FLIGHT_LABEL_ZOOM_CALLSIGN) {
     return mapFlightMarkerLabelsFull(flight, trend);
-  }
-  if (mapZoom >= FLIGHT_LABEL_ZOOM_CALLSIGN) {
-    return { bottomLabel: flightLabel(flight), bottomSubLabel: null };
   }
   return { bottomLabel: null, bottomSubLabel: null };
 }

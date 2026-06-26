@@ -2,7 +2,7 @@ import { getFlightsNearPoint, milesToNauticalMiles } from '../adsb-client.js';
 import { normalizeAdsbResponse } from './adsbNormalize.js';
 import { isOpenSkyAvailable, isOpenSkyConfigured, getStatesInBounds } from './openskyClient.js';
 import { normalizeOpenSkyStates } from './openskyNormalize.js';
-import { getCameraPoolStatus } from './usTrafficCameras.js';
+import { getCameraPoolStatus, warmNationwideCameraPool } from './usTrafficCameras.js';
 import { fetchPassengerTrainsRaw } from './trainTracking.js';
 import { fetchAllRegionalRailTrains } from './gtfsRtRail.js';
 import { countSignificantVesselsInBbox } from './axiomVessels.js';
@@ -70,14 +70,22 @@ export async function fetchTrackingStats() {
     return cache.payload;
   }
 
-  const cameraStatus = getCameraPoolStatus();
-  const cameras = cameraStatus.verifiedCount || cameraStatus.poolCount || 0;
+  const cameraStatusBefore = getCameraPoolStatus();
+  const cameraPoolReady = cameraStatusBefore.poolCount > 0 && !cameraStatusBefore.partial;
+  const cameraPoolPromise = cameraPoolReady
+    ? Promise.resolve()
+    : warmNationwideCameraPool();
+  if (cameraPoolReady) void warmNationwideCameraPool();
 
-  const [flightResult, boatResult, trainResult] = await Promise.allSettled([
+  const [cameraPoolResult, flightResult, boatResult, trainResult] = await Promise.allSettled([
+    cameraPoolPromise,
     fetchConusFlightCount(),
     countSignificantVesselsInBbox(CONUS_BBOX),
     fetchNationwideTrainCount(),
   ]);
+
+  const cameraStatus = getCameraPoolStatus();
+  const cameras = cameraStatus.poolCount || 0;
 
   const flights =
     flightResult.status === 'fulfilled'
@@ -105,7 +113,7 @@ export async function fetchTrackingStats() {
       trains: 'amtrak + gtfs-rt',
     },
     partial: {
-      cameras: Boolean(cameraStatus.partial || cameraStatus.warming),
+      cameras: Boolean(cameraPoolResult.status !== 'fulfilled' || cameraStatus.partial),
       flights: flightResult.status !== 'fulfilled',
       boats: boatResult.status !== 'fulfilled',
       trains: trainResult.status !== 'fulfilled',

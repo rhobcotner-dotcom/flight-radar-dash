@@ -173,6 +173,7 @@ export function isSnapshotUrl(url) {
     if (/traveler\.modot\.org\/traffic_camera_snapshots\//i.test(parsed.href)) return true;
     if (/img\.cdn\.prod\.alertwest\.com\//i.test(parsed.href)) return true;
     if (/[-.]traveler\.modot\.mo\.gov\/rtplive\//i.test(parsed.href)) return true;
+    if (/mdottraffic\.com\/thumbnail/i.test(parsed.href)) return true;
     return /camera|cctv|snapshot|webcam|roadcam|milestone/i.test(parsed.pathname);
   } catch {
     return false;

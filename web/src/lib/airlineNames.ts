@@ -75,10 +75,10 @@ export function carrierLabel(flight: Flight) {
 }
 
 export function carrierName(flight: Flight) {
-  if (flight.carrierName) return flight.carrierName;
   const icao = airlineIcao(flight);
   const resolved = airlineNameFromIcao(icao);
   if (resolved) return resolved;
+  if (flight.carrierName) return flight.carrierName;
   if (icao) return icao;
   return fallbackCarrierLabel(flight);
 }

@@ -96,13 +96,16 @@ async function probeOne(camera) {
     ]);
     manifestCache.set(sourceLiveUrl, { ok: true, at: Date.now() });
     return true;
-  } catch (err) {
-    const timedOut = /timeout|timed out/i.test(err?.message || '');
-    if (!timedOut) {
-      manifestCache.set(sourceLiveUrl, { ok: false, at: Date.now() });
-    }
+  } catch {
+    manifestCache.set(sourceLiveUrl, { ok: false, at: Date.now() });
     return false;
   }
+}
+
+/** Test hook: seed probe cache without network I/O. */
+export function recordStreamProbeResult(url, ok) {
+  if (!url) return;
+  manifestCache.set(url, { ok: Boolean(ok), at: Date.now() });
 }
 
 async function filterBatch(cameras) {

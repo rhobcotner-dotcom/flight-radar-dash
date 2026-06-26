@@ -177,9 +177,9 @@ export async function fetchViewportFlights(viewport, home, { enrich = true } = {
       ...flight,
       reg: flights[index].reg ?? flight.reg,
       type: flights[index].type ?? flight.type,
-      carrierName: flights[index].carrierName ?? flight.carrierName,
-      operating_as: flights[index].operating_as ?? flight.operating_as,
-      painted_as: flights[index].painted_as ?? flight.painted_as,
+      carrierName: flight.carrierName ?? flights[index].carrierName,
+      operating_as: flight.operating_as ?? flights[index].operating_as,
+      painted_as: flight.painted_as ?? flights[index].painted_as,
     }));
   }
   flights = enrichFlightsCarriers(flights);

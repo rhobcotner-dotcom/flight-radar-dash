@@ -88,6 +88,8 @@ const ALLOWED_HLS_HOST_SUFFIXES = [
   'oktraffic.org',
   'mdottraffic.com',
   'api.algotraffic.com',
+  'vdotcameras.com',
+  'trafficwise.org',
 ];
 
 function hostAllowed(hostname) {

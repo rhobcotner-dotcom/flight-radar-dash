@@ -70,7 +70,7 @@ export function enrichFlightCarrier(flight) {
   const icao = airlineIcao(flight);
   const inferredIcao = inferAirlineIcaoFromCallsign(flight.callsign || flight.flight);
   const operatingAs = flight.operating_as || flight.painted_as || inferredIcao || undefined;
-  const carrierName = flight.carrierName || airlineNameFromIcao(icao || inferredIcao) || null;
+  const carrierName = airlineNameFromIcao(icao || inferredIcao) || flight.carrierName || null;
 
   return {
     ...flight,
