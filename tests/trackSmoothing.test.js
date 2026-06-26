@@ -78,3 +78,13 @@ test('TrackSmoothingEngine continues from current visual position on refresh', (
   const jumpMiles = Math.hypot((afterRefresh.lat - mid.lat) * 69, (afterRefresh.lon - mid.lon) * 69);
   assert.ok(jumpMiles < 0.5, `expected small visual correction, got ~${jumpMiles.toFixed(2)} mi`);
 });
+
+test('TrackSmoothingEngine keeps dead reckoning after segment duration', () => {
+  const engine = new TrackSmoothingEngine();
+  engine.register('a', 38.79, -90.6, { speedMph: 360, headingDeg: 90 }, 10_000, 'aircraft', 0);
+  const atEnd = engine.getPosition('a', 10_000);
+  const later = engine.getPosition('a', 20_000);
+  assert.ok(atEnd);
+  assert.ok(later);
+  assert.ok(later.lat !== atEnd.lat || later.lon !== atEnd.lon);
+});

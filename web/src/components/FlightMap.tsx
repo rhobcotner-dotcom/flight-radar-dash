@@ -5,7 +5,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { useHighlight } from '../hooks/useHighlight';
 import type { AreaSettings, Flight, Satellite, Train, WeatherConditions } from '../types';
 import type { TrafficCameraPayload } from '../lib/mapLayers';
-import { flightKey, isSquawk7700, knotsToMph } from '../lib/flightUtils';
+import { flightKey, isSquawk7700 } from '../lib/flightUtils';
 import { trainKey } from '../lib/trainUtils';
 import { satelliteKey } from '../lib/satelliteUtils';
 import { parseTrainHeadingDeg } from '../lib/trackSmoothing';
@@ -64,10 +64,11 @@ import {
   buildFlightMapIconPlaceholder,
   buildTrainMapIcon,
   buildSatelliteMapIcon,
+  flightMarkerLabelZoomTier,
   preloadMapMarkerSprites,
 } from '../lib/mapMarkers';
 import { altitudeTrendForFlight, pruneAltitudeTrends } from '../lib/flightAltitudeTrend';
-import { isGroundLevelFlight } from '../lib/flightGroundLevel';
+import { isGroundLevelFlight, aircraftMotionHint } from '../lib/flightGroundLevel';
 import { speedTrendForFlight, pruneSpeedTrends } from '../lib/flightSpeedTrend';
 
 type MapHighlightHandlers = ReturnType<typeof useHighlight>['mapHandlers'];
@@ -228,28 +229,25 @@ const FlightMarker = memo(function FlightMarker({
   helosEnabled,
   mapHandlers,
   flightRefreshIntervalMs,
-  flightAnchorKey,
+  positionRefreshSeq,
+  mapZoom,
 }: {
   flight: Flight;
   highlighted: boolean;
   helosEnabled: boolean;
   mapHandlers?: MapHighlightHandlers;
   flightRefreshIntervalMs: number;
-  flightAnchorKey?: string | null;
+  positionRefreshSeq: number;
+  mapZoom: number;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
   const smoothedPositionRef = useRef<[number, number]>([flight.lat, flight.lon]);
   const military = isLikelyMilGov(flight);
   const emergency = isSquawk7700(flight);
   const heloKind = helosEnabled ? classifyHelicopter(flight) : null;
-  const motionHint = useMemo(
-    () => ({
-      speedMph: knotsToMph(flight.gspeed),
-      headingDeg: flight.track ?? null,
-    }),
-    [flight.gspeed, flight.track]
-  );
+  const motionHint = useMemo(() => aircraftMotionHint(flight), [flight.alt, flight.gspeed, flight.track]);
   const id = flightKey(flight);
+  const motionAnchorKey = `${flight.lat.toFixed(5)}:${flight.lon.toFixed(5)}:${flight.gspeed ?? ''}:${flight.track ?? ''}:${positionRefreshSeq}`;
   const altitudeTrend = useMemo(
     () => altitudeTrendForFlight(id, flight.alt),
     [id, flight.alt]
@@ -264,7 +262,16 @@ const FlightMarker = memo(function FlightMarker({
       ? smoothedPositionRef.current
       : ([flight.lat, flight.lon] as [number, number]);
   const [icon, setIcon] = useState<L.DivIcon>(() =>
-    buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend)
+    buildFlightMapIconPlaceholder(
+      flight,
+      highlighted,
+      military,
+      emergency,
+      heloKind,
+      altitudeTrend,
+      speedTrend,
+      mapZoom
+    )
   );
   const [tooltipActive, setTooltipActive] = useState(false);
 
@@ -274,14 +281,35 @@ const FlightMarker = memo(function FlightMarker({
     lon: flight.lon,
     motionHint,
     refreshIntervalMs: flightRefreshIntervalMs,
-    anchorKey: flightAnchorKey,
+    anchorKey: motionAnchorKey,
     markerRef,
+    positionRef: flightRefreshIntervalMs > 0 ? smoothedPositionRef : undefined,
   });
 
   useEffect(() => {
     let cancelled = false;
-    setIcon(buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend));
-    void buildFlightMapIcon(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend).then((next) => {
+    setIcon(
+      buildFlightMapIconPlaceholder(
+        flight,
+        highlighted,
+        military,
+        emergency,
+        heloKind,
+        altitudeTrend,
+        speedTrend,
+        mapZoom
+      )
+    );
+    void buildFlightMapIcon(
+      flight,
+      highlighted,
+      military,
+      emergency,
+      heloKind,
+      altitudeTrend,
+      speedTrend,
+      mapZoom
+    ).then((next) => {
       if (!cancelled) setIcon(next);
     });
     return () => {
@@ -306,6 +334,7 @@ const FlightMarker = memo(function FlightMarker({
     emergency,
     heloKind,
     helosEnabled,
+    mapZoom,
   ]);
 
   useEffect(() => {
@@ -360,7 +389,8 @@ const FlightMarker = memo(function FlightMarker({
     prev.flight.dest_city === next.flight.dest_city &&
     prev.flight.dest_lat === next.flight.dest_lat &&
     prev.flight.dest_lon === next.flight.dest_lon &&
-    prev.mapHandlers === next.mapHandlers
+    prev.mapHandlers === next.mapHandlers &&
+    flightMarkerLabelZoomTier(prev.mapZoom) === flightMarkerLabelZoomTier(next.mapZoom)
   );
 });
 
@@ -369,13 +399,11 @@ const TrainMarker = memo(function TrainMarker({
   highlighted,
   mapHandlers,
   trainRefreshIntervalMs,
-  trainAnchorKey,
 }: {
   train: Train;
   highlighted: boolean;
   mapHandlers?: MapHighlightHandlers;
   trainRefreshIntervalMs: number;
-  trainAnchorKey?: string | null;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
   const smoothedPositionRef = useRef<[number, number]>([train.lat, train.lon]);
@@ -402,8 +430,9 @@ const TrainMarker = memo(function TrainMarker({
     lon: train.lon,
     motionHint,
     refreshIntervalMs: trainRefreshIntervalMs,
-    anchorKey: trainAnchorKey,
+    anchorKey: `${train.lat.toFixed(5)}:${train.lon.toFixed(5)}:${train.velocityMph ?? ''}:${train.heading ?? ''}`,
     markerRef,
+    positionRef: trainRefreshIntervalMs > 0 ? smoothedPositionRef : undefined,
     profile: train.trainKind === 'passenger' ? 'passenger-rail' : 'beacon',
   });
 
@@ -516,6 +545,7 @@ const FlightMapInner = memo(function FlightMapInner({
   smoothMovementEnabled = false,
   flightRefreshIntervalMs = 0,
   trainRefreshIntervalMs = 0,
+  positionRefreshSeq = 0,
   mapFetchedAt,
   trainsFetchedAt,
 }: {
@@ -566,6 +596,7 @@ const FlightMapInner = memo(function FlightMapInner({
   smoothMovementEnabled?: boolean;
   flightRefreshIntervalMs?: number;
   trainRefreshIntervalMs?: number;
+  positionRefreshSeq?: number;
   mapFetchedAt?: string | null;
   trainsFetchedAt?: string | null;
 }) {
@@ -573,6 +604,7 @@ const FlightMapInner = memo(function FlightMapInner({
   const fetchMiles = area.radiusMiles;
   const focusMeters = focusMiles * 1609.34;
   const fetchMeters = fetchMiles * 1609.34;
+  const mapZoom = viewportBounds?.zoom ?? 12;
   const homeLabel = area.address || area.name;
   const streamBounds = viewportBounds ?? viewportFromArea(area);
   const activeTrackKey = useMemo(() => {
@@ -686,18 +718,26 @@ const FlightMapInner = memo(function FlightMapInner({
           center={[area.lat, area.lon]}
           radius={fetchMeters}
           pathOptions={{
-            color: '#334155',
+            color: '#475569',
             fillColor: '#1e293b',
-            fillOpacity: 0.04,
+            fillOpacity: 0.02,
             weight: 1,
-            dashArray: '6 8',
+            dashArray: '4 10',
+            opacity: 0.45,
           }}
         />
       ) : null}
       <Circle
         center={[area.lat, area.lon]}
         radius={focusMeters}
-        pathOptions={{ color: '#f87171', fillColor: '#ef4444', fillOpacity: 0.08, weight: 2 }}
+        pathOptions={{
+          color: '#38bdf8',
+          fillColor: '#0ea5e9',
+          fillOpacity: 0.025,
+          weight: 1,
+          dashArray: '10 12',
+          opacity: 0.5,
+        }}
       />
       <Marker position={[area.lat, area.lon]} icon={homeIcon}>
         <Tooltip direction="top" opacity={1}>
@@ -713,7 +753,8 @@ const FlightMapInner = memo(function FlightMapInner({
               helosEnabled={layerToggles.helos}
               mapHandlers={mapHandlers}
               flightRefreshIntervalMs={flightRefreshIntervalMs}
-              flightAnchorKey={mapFetchedAt}
+              positionRefreshSeq={positionRefreshSeq}
+              mapZoom={mapZoom}
             />
           ))
         : null}
@@ -725,7 +766,6 @@ const FlightMapInner = memo(function FlightMapInner({
               highlighted={highlightedId === trainKey(train)}
               mapHandlers={mapHandlers}
               trainRefreshIntervalMs={trainRefreshIntervalMs}
-              trainAnchorKey={trainsFetchedAt}
             />
           ))
         : null}
@@ -766,6 +806,7 @@ interface Props {
   onViewportChange?: (bounds: MapViewportBounds) => void;
   fullPage?: boolean;
   autoRefreshSeconds?: AutoRefreshSeconds;
+  positionRefreshSeq?: number;
   trainsFetchedAt?: string | null;
   trainRefreshSeconds?: number;
 }
@@ -784,6 +825,7 @@ export function FlightMap({
   onViewportChange,
   fullPage = false,
   autoRefreshSeconds = 0,
+  positionRefreshSeq = 0,
   trainsFetchedAt = null,
   trainRefreshSeconds = 10,
 }: Props) {
@@ -1282,6 +1324,7 @@ export function FlightMap({
             fullPage={fullPage}
             smoothMovementEnabled={smoothMovementEnabled}
             flightRefreshIntervalMs={flightRefreshIntervalMs}
+            positionRefreshSeq={positionRefreshSeq}
             trainRefreshIntervalMs={trainRefreshIntervalMs}
             mapFetchedAt={mapFetchedAt}
             trainsFetchedAt={trainsFetchedAt}

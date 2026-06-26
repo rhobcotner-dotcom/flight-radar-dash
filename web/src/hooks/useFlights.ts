@@ -150,11 +150,15 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   const [airportFetchedAt, setAirportFetchedAt] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [trendsKey, setTrendsKey] = useState(0);
+  const [positionRefreshSeq, setPositionRefreshSeq] = useState(0);
   const [autoRefreshSeconds, setAutoRefreshSecondsState] = useState<AutoRefreshSeconds>(readAutoRefreshSeconds);
-  const refreshInFlight = useRef(false);
-  const pendingRefreshRef = useRef<RefreshOptions | null>(null);
+  const fastRefreshInFlight = useRef(false);
+  const enrichRefreshInFlight = useRef(false);
+  const pendingFastRefreshRef = useRef<RefreshOptions | null>(null);
+  const pendingEnrichRefreshRef = useRef<RefreshOptions | null>(null);
   const loadGenerationRef = useRef(0);
   const hasLoadedRef = useRef(false);
+  const enrichViewportKeyRef = useRef<string | null>(null);
   const viewportKey = useMemo(() => stableViewportKey(viewportBounds), [viewportBounds]);
 
   useEffect(() => {
@@ -163,16 +167,19 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
 
   const refreshMap = useCallback(
     async (options: RefreshOptions = {}) => {
-      if (refreshInFlight.current) {
-        pendingRefreshRef.current = options;
+      const enrich = options.enrich !== false;
+      const inFlightRef = enrich ? enrichRefreshInFlight : fastRefreshInFlight;
+      const pendingRef = enrich ? pendingEnrichRefreshRef : pendingFastRefreshRef;
+
+      if (inFlightRef.current) {
+        pendingRef.current = options;
         return;
       }
 
-      refreshInFlight.current = true;
+      inFlightRef.current = true;
       const generation = options.generation ?? loadGenerationRef.current;
-      const enrich = options.enrich !== false;
-      const showLoading = !hasLoadedRef.current;
-      let queueEnrichment = false;
+      const showLoading = !hasLoadedRef.current && !enrich;
+      let scheduleEnrichment = false;
 
       if (showLoading) {
         setLoading(true);
@@ -220,13 +227,21 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
           }
         );
 
-        if (!enrich && incoming.length > 0) {
-          queueEnrichment = true;
+        if (
+          !enrich &&
+          incoming.length > 0 &&
+          enrichViewportKeyRef.current !== viewportKey
+        ) {
+          scheduleEnrichment = true;
+        }
+
+        if (!enrich && !isStale) {
+          setPositionRefreshSeq((seq) => seq + 1);
         }
       } catch (err) {
         if (generation !== loadGenerationRef.current && hasLoadedRef.current) return;
         const message = friendlyApiError(err instanceof Error ? err.message : 'Unknown error');
-        if (!options.silent) {
+        if (!options.silent && !enrich) {
           if (hasLoadedRef.current) {
             setDataWarning(message);
             setError(null);
@@ -236,14 +251,15 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
           }
         }
       } finally {
-        refreshInFlight.current = false;
-        const pending = pendingRefreshRef.current;
-        pendingRefreshRef.current = null;
+        inFlightRef.current = false;
+        const pending = pendingRef.current;
+        pendingRef.current = null;
         if (pending) {
           void refreshMap(pending);
         } else if (showLoading && !hasLoadedRef.current) {
           setLoading(false);
-        } else if (queueEnrichment) {
+        } else if (scheduleEnrichment) {
+          enrichViewportKeyRef.current = viewportKey;
           window.setTimeout(() => {
             void refreshMap({
               snapshot: false,
@@ -255,7 +271,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
         }
       }
     },
-    [queryString, viewportBounds]
+    [queryString, viewportBounds, viewportKey]
   );
 
   const loadAirport = useCallback(async () => {
@@ -288,6 +304,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
 
   useEffect(() => {
     loadGenerationRef.current += 1;
+    enrichViewportKeyRef.current = null;
     const generation = loadGenerationRef.current;
     const delay = hasLoadedRef.current ? 150 : 0;
     const timer = window.setTimeout(() => {
@@ -341,6 +358,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
     airportFetchedAt,
     hasLoaded,
     trendsKey,
+    positionRefreshSeq,
     autoRefreshSeconds,
     setAutoRefreshSeconds,
     refreshMap,

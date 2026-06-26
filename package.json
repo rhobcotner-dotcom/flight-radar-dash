@@ -2,7 +2,7 @@
   "name": "flight-radar-dash",
   "version": "1.0.0",
   "private": true,
-  "description": "Personal FlightRadar24 area dashboard",
+  "description": "HomeScope — personal live map for flights, weather, trains, boats, and cameras",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\"",

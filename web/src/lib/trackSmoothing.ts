@@ -24,6 +24,8 @@ const MAX_JUMP_MILES: Record<TrackSmoothingProfile, number> = {
   beacon: 2,
 };
 
+const MIN_AIRCRAFT_MOTION_MPH = 120;
+
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
@@ -54,6 +56,9 @@ export interface TrackSegment {
 interface TrackRecord {
   samples: PositionSample[];
   segment: TrackSegment | null;
+  hint: TrackMotionHint;
+  profile: TrackSmoothingProfile;
+  intervalMs: number;
 }
 
 const MAX_SAMPLES = 5;
@@ -143,6 +148,66 @@ export function predictNextPosition(
   return { lat: last.lat, lon: last.lon };
 }
 
+function extrapolateFromPoint(
+  lat: number,
+  lon: number,
+  hint: TrackMotionHint,
+  elapsedMs: number,
+  profile: TrackSmoothingProfile
+) {
+  if (profile === 'beacon' || elapsedMs <= 0) {
+    return { lat, lon };
+  }
+
+  const cappedHint = capMotionHint(hint, profile);
+  const speedMph = cappedHint.speedMph ?? null;
+  const headingDeg = cappedHint.headingDeg ?? null;
+  if (speedMph != null && speedMph > 0 && headingDeg != null && Number.isFinite(headingDeg)) {
+    const maxMiles = PROFILE_MAX_SPEED_MPH[profile] * (elapsedMs / 3_600_000);
+    const miles = Math.min(speedMph * (elapsedMs / 3_600_000), maxMiles);
+    return offsetLatLon(lat, lon, Math.max(miles, 0), headingDeg);
+  }
+
+  return { lat, lon };
+}
+
+function motionTarget(
+  startLat: number,
+  startLon: number,
+  samples: PositionSample[],
+  hint: TrackMotionHint,
+  intervalMs: number,
+  profile: TrackSmoothingProfile
+) {
+  const predicted = predictNextPosition(samples, hint, intervalMs, profile);
+  if (distanceMiles(startLat, startLon, predicted.lat, predicted.lon) > 0.0001) {
+    return predicted;
+  }
+
+  const extended = predictNextPosition(samples, hint, intervalMs * 2, profile);
+  if (distanceMiles(startLat, startLon, extended.lat, extended.lon) > 0.0001) {
+    return extended;
+  }
+
+  const cappedHint = capMotionHint(hint, profile);
+  const speedMph = cappedHint.speedMph ?? 0;
+  const headingDeg = cappedHint.headingDeg;
+  if (
+    profile !== 'beacon' &&
+    speedMph > 0 &&
+    headingDeg != null &&
+    Number.isFinite(headingDeg)
+  ) {
+    const miles = Math.max(
+      speedMph * (intervalMs / 3_600_000),
+      profile === 'aircraft' ? MIN_AIRCRAFT_MOTION_MPH * (intervalMs / 3_600_000) : 0.02
+    );
+    return offsetLatLon(startLat, startLon, miles, headingDeg);
+  }
+
+  return predicted;
+}
+
 export function interpolateSegment(segment: TrackSegment, now: number) {
   const rawProgress = Math.min(1, Math.max(0, (now - segment.startTime) / segment.durationMs));
   const progress = rawProgress < 0.5 ? 2 * rawProgress * rawProgress : 1 - (-2 * rawProgress + 2) ** 2 / 2;
@@ -155,7 +220,7 @@ export function interpolateSegment(segment: TrackSegment, now: number) {
 
 export class TrackSmoothingEngine {
   private tracks = new Map<string, TrackRecord>();
-  private markerSinks = new Map<string, () => void>();
+  private markerSinks = new Map<string, (now: number) => void>();
 
   registerMarkerSink(id: string, sink: (now: number) => void) {
     this.markerSinks.set(id, sink);
@@ -179,11 +244,21 @@ export class TrackSmoothingEngine {
     profile: TrackSmoothingProfile = 'aircraft',
     now = Date.now()
   ) {
-    const record = this.tracks.get(id) ?? { samples: [], segment: null };
+    const record = this.tracks.get(id) ?? {
+      samples: [],
+      segment: null,
+      hint: {},
+      profile: 'aircraft',
+      intervalMs,
+    };
     const currentVisual = this.getPosition(id, now);
     const previous = record.samples[record.samples.length - 1];
     const jumpMiles =
       previous != null ? distanceMiles(previous.lat, previous.lon, lat, lon) : 0;
+
+    record.hint = hint;
+    record.profile = profile;
+    record.intervalMs = intervalMs;
 
     if (profile === 'beacon' || jumpMiles > MAX_JUMP_MILES[profile]) {
       record.samples = [{ lat, lon, time: now }];
@@ -207,13 +282,13 @@ export class TrackSmoothingEngine {
       return;
     }
 
-    const predicted = predictNextPosition(record.samples, hint, intervalMs, profile);
     const start = this.segmentStart(lat, lon, currentVisual, profile);
+    const target = motionTarget(start.lat, start.lon, record.samples, hint, intervalMs, profile);
     record.segment = {
       fromLat: start.lat,
       fromLon: start.lon,
-      toLat: predicted.lat,
-      toLon: predicted.lon,
+      toLat: target.lat,
+      toLon: target.lon,
       startTime: now,
       durationMs: Math.max(MIN_SEGMENT_MS, intervalMs),
     };
@@ -236,9 +311,24 @@ export class TrackSmoothingEngine {
   getPosition(id: string, now = Date.now()) {
     const record = this.tracks.get(id);
     if (!record?.segment) return null;
+
     const pos = interpolateSegment(record.segment, now);
     if (!isFiniteCoord(pos.lat, pos.lon)) return null;
-    return pos;
+
+    if (pos.progress < 1) {
+      return pos;
+    }
+
+    const overdueMs = now - (record.segment.startTime + record.segment.durationMs);
+    const extrapolated = extrapolateFromPoint(
+      record.segment.toLat,
+      record.segment.toLon,
+      record.hint,
+      overdueMs,
+      record.profile
+    );
+    if (!isFiniteCoord(extrapolated.lat, extrapolated.lon)) return pos;
+    return extrapolated;
   }
 
   private segmentStart(

@@ -200,7 +200,7 @@ async function ensureAprsFiSession() {
 if (!isServerless) {
   ensureAprsFiSession().finally(() => {
     app.listen(PORT, () => {
-      console.log(`Flight radar API listening on http://localhost:${PORT}`);
+      console.log(`HomeScope API listening on http://localhost:${PORT}`);
       warmNationwideCameraPool().catch((err) => {
         console.warn('Nationwide camera pool warm failed:', err.message);
       });

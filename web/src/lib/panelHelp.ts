@@ -53,7 +53,7 @@ export const PANEL_HELP = {
   nearbyTrains:
     'Amtrak + MetroLink passenger, live freight/crossings, APRS rail (with free aprs.fi key), FRA rail yards, and high-volume freight corridors. Refreshes every 10s.',
   liveMap:
-    'Interactive map centered on your home (red ring = focus area). Pan and zoom anywhere — flights load for the current view, FlightRadar-style. Toggle layers above for weather, rail, cameras, and more.',
+    'Interactive map centered on your home (red ring = focus area). Pan and zoom anywhere — flights load for the current view worldwide. Toggle layers above for weather, rail, cameras, and more.',
   airportBoard:
     'Optional STL airport hub from FlightRadar24 — departures, arrivals, delays. Uses ~300–500 FR24 credits per load. Click "Load STL status" only when you want it.',
   alerts:

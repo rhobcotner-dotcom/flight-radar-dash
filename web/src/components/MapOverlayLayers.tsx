@@ -1,7 +1,7 @@
 import { GeoJSON, CircleMarker, Marker, Popup, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { PathOptions, TooltipOptions } from 'leaflet';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CameraMapSnapshot } from './CameraMapSnapshot';
 import { CameraMapLivePreview } from './CameraMapLivePreview';
 import { MapLocationHeader } from './MapLocationHeader';
@@ -728,14 +728,29 @@ function CameraSnapshotPreview({ cam, className = 'camera-preview-image' }: { ca
 }
 
 function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexOffset?: number }) {
+  const markerRef = useRef<L.Marker>(null);
+  const popupOpenedAtRef = useRef(0);
   const [previewActive, setPreviewActive] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
+  const sourceHref = useMemo(() => cameraSourceSiteHref(cam), [cam]);
   const kind =
     cam.camKind === 'weather' ? 'weather' : cam.camKind === 'rail' ? 'rail' : 'road';
   const icon = useMemo(() => cameraIcon(kind), [kind]);
 
+  const closePopup = () => {
+    markerRef.current?.closePopup();
+  };
+
+  const handlePopupSurfaceClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (Date.now() - popupOpenedAtRef.current < 250) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('.camera-popup-feed')) return;
+    if (target.closest('a')) return;
+    closePopup();
+  };
+
   return (
-    <Marker position={[cam.lat, cam.lon]} icon={icon} zIndexOffset={zIndexOffset}>
+    <Marker ref={markerRef} position={[cam.lat, cam.lon]} icon={icon} zIndexOffset={zIndexOffset}>
       <Tooltip
         {...CAMERA_TOOLTIP_OPTIONS}
         eventHandlers={{
@@ -757,11 +772,14 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
         maxWidth={720}
         minWidth={480}
         eventHandlers={{
-          add: () => setPopupOpen(true),
+          add: () => {
+            popupOpenedAtRef.current = Date.now();
+            setPopupOpen(true);
+          },
           remove: () => setPopupOpen(false),
         }}
       >
-        <div className="camera-popup">
+        <div className="camera-popup" onClick={handlePopupSurfaceClick}>
           <MapLocationHeader lat={cam.lat} lon={cam.lon} />
           <strong>{cam.description}</strong>
           <div className="muted">
@@ -769,17 +787,31 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
               .filter(Boolean)
               .join(' · ')}
           </div>
-          {popupOpen ? <CameraMapLivePreview cam={cam} /> : null}
-          {(() => {
-            const href = cameraSourceSiteHref(cam);
-            if (!href) return null;
-            const modot = /modot/i.test(cam.source || '') || /modot\.(mo\.gov|org)/i.test(href);
-            return (
-              <a href={href} target="_blank" rel="noreferrer">
-                {modot ? 'Open on MoDOT Traveler map ↗' : 'Open on source site'}
+          {popupOpen ? (
+            sourceHref ? (
+              <a
+                className="camera-popup-feed camera-popup-feed-link"
+                href={sourceHref}
+                target="_blank"
+                rel="noreferrer"
+                title="Open on source site"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <CameraMapLivePreview cam={cam} />
               </a>
-            );
-          })()}
+            ) : (
+              <div className="camera-popup-feed">
+                <CameraMapLivePreview cam={cam} />
+              </div>
+            )
+          ) : null}
+          {sourceHref ? (
+            <a href={sourceHref} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
+              {/modot/i.test(cam.source || '') || /modot\.(mo\.gov|org)/i.test(sourceHref)
+                ? 'Open on MoDOT Traveler map ↗'
+                : 'Open on source site'}
+            </a>
+          ) : null}
         </div>
       </Popup>
     </Marker>

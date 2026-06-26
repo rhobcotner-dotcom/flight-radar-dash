@@ -34,6 +34,7 @@ export default function App() {
     fetchedAt,
     hasLoaded,
     autoRefreshSeconds,
+    positionRefreshSeq,
     setAutoRefreshSeconds,
     refreshMap,
   } = useFlights(queryString, flightViewport);
@@ -130,36 +131,55 @@ export default function App() {
           inViewCount={inViewCount}
           onViewportChange={setViewportBounds}
           autoRefreshSeconds={autoRefreshSeconds}
+          positionRefreshSeq={positionRefreshSeq}
           trainsFetchedAt={trainsFetchedAt}
           trainRefreshSeconds={trainRefreshSeconds}
         />
       </div>
 
       <div className="map-overlays">
-        <div className="map-overlay map-overlay-controls">
-          <span className="map-overlay-title">Flight Radar Dash</span>
-          {fetchedAt ? <span className="muted">Map {new Date(fetchedAt).toLocaleTimeString()}</span> : null}
-          {counts?.freight === 0 && freightHints ? (
-            <span className="muted" title={[freightHints.local, ...(freightHints.optional || [])].join('\n')}>
-              {freightHints.summary}
-            </span>
-          ) : null}
-          <label className="auto-refresh-select">
-            <span className="muted">Refresh</span>
-            <select
-              value={autoRefreshSeconds}
-              onChange={(e) => setAutoRefreshSeconds(Number(e.target.value) as typeof autoRefreshSeconds)}
+        <div className="map-overlay map-overlay-topbar">
+          <div className="map-topbar-brand">
+            <span className="map-overlay-title">HomeScope</span>
+            <span className="map-overlay-tagline">Flights · weather · trains · cameras</span>
+          </div>
+          <div className="map-topbar-actions">
+            {fetchedAt ? (
+              <span
+                className="map-topbar-status"
+                title={
+                  counts?.freight === 0 && freightHints
+                    ? [freightHints.local, ...(freightHints.optional || [])].join('\n')
+                    : undefined
+                }
+              >
+                Updated {new Date(fetchedAt).toLocaleTimeString()}
+              </span>
+            ) : null}
+            <label className="auto-refresh-select auto-refresh-select-compact">
+              <span className="sr-only">Auto refresh interval</span>
+              <select
+                value={autoRefreshSeconds}
+                onChange={(e) => setAutoRefreshSeconds(Number(e.target.value) as typeof autoRefreshSeconds)}
+                aria-label="Auto refresh interval"
+              >
+                {AUTO_REFRESH_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="btn-secondary btn-compact"
+              onClick={() => refreshMap({ snapshot: true })}
+              disabled={loading}
+              title="Refresh map and save trend snapshot"
             >
-              {AUTO_REFRESH_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="button" className="btn-secondary" onClick={() => refreshMap({ snapshot: true })} disabled={loading}>
-            {loading ? 'Refreshing…' : 'Refresh map'}
-          </button>
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </button>
+          </div>
         </div>
 
         {error ? <div className="map-overlay map-overlay-banner error">{error}</div> : null}

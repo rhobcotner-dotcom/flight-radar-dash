@@ -59,9 +59,14 @@ function useTrackSmoothingContext() {
 function applyMarkerPosition(
   markerRef: MutableRefObject<Marker | null>,
   lat: number,
-  lon: number
+  lon: number,
+  positionRef?: MutableRefObject<[number, number]>
 ) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+  if (positionRef) {
+    positionRef.current[0] = lat;
+    positionRef.current[1] = lon;
+  }
   markerRef.current?.setLatLng([lat, lon]);
 }
 
@@ -73,6 +78,7 @@ export function useAnimatedMarkerPosition({
   refreshIntervalMs,
   anchorKey,
   markerRef,
+  positionRef,
   profile = 'aircraft',
 }: {
   trackId: string;
@@ -82,6 +88,7 @@ export function useAnimatedMarkerPosition({
   refreshIntervalMs: number;
   anchorKey: string | null | undefined;
   markerRef: MutableRefObject<Marker | null>;
+  positionRef?: MutableRefObject<[number, number]>;
   profile?: TrackSmoothingProfile;
 }) {
   const context = useTrackSmoothingContext();
@@ -96,7 +103,7 @@ export function useAnimatedMarkerPosition({
     if (!smoothingEnabled || !context) return;
     context.engine.register(trackId, lat, lon, motionHint ?? {}, refreshIntervalMs, profile);
     const pos = context.engine.getPosition(trackId) ?? { lat, lon };
-    applyMarkerPosition(markerRef, pos.lat, pos.lon);
+    applyMarkerPosition(markerRef, pos.lat, pos.lon, positionRef);
   }, [
     anchorKey,
     context,
@@ -109,21 +116,22 @@ export function useAnimatedMarkerPosition({
     smoothingEnabled,
     trackId,
     markerRef,
+    positionRef,
   ]);
 
   useEffect(() => {
     if (smoothingEnabled) return;
-    applyMarkerPosition(markerRef, lat, lon);
-  }, [lat, lon, markerRef, smoothingEnabled]);
+    applyMarkerPosition(markerRef, lat, lon, positionRef);
+  }, [lat, lon, markerRef, positionRef, smoothingEnabled]);
 
   useEffect(() => {
     if (!smoothingEnabled || !context) return undefined;
 
     return context.engine.registerMarkerSink(trackId, (now) => {
       const pos = context.engine.getPosition(trackId, now) ?? latestFixRef.current;
-      applyMarkerPosition(markerRef, pos.lat, pos.lon);
+      applyMarkerPosition(markerRef, pos.lat, pos.lon, positionRef);
     });
-  }, [context, markerRef, smoothingEnabled, trackId]);
+  }, [context, markerRef, positionRef, smoothingEnabled, trackId]);
 }
 
 export function useTrackSmoothingCleanup(activeIds: Set<string>) {
