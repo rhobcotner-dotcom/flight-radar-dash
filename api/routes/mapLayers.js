@@ -7,6 +7,7 @@ import { fetchMetroTransit } from '../lib/metroTransit.js';
 import { fetchModotRoadConditions } from '../lib/modotRoadConditions.js';
 import { fetchAirQuality } from '../lib/airQuality.js';
 import { fetchAisVessels } from '../lib/aisVessels.js';
+import { parseViewportBBox } from '../lib/viewportQuery.js';
 import { fetchAreaNotams } from '../lib/notams.js';
 import { fetchEarthquakes } from '../lib/earthquakes.js';
 import { fetchWeatherSondes } from '../lib/sondes.js';
@@ -115,7 +116,13 @@ export async function handleAisVessels(req, res) {
     return res.status(400).json({ error: 'lat and lon query params required' });
   }
 
-  const payload = await fetchAisVessels(point.lat, point.lon, parseRadius(req, 85));
+  const viewport = parseViewportBBox(req.query);
+  const payload = await fetchAisVessels(
+    point.lat,
+    point.lon,
+    parseRadius(req, 85),
+    viewport
+  );
   res.json(payload);
 }
 

@@ -2,7 +2,7 @@ export const MAP_LAYER_HELP = {
   flights:
     'All aircraft in the current map view from OpenSky + ADSB.lol — planes, jets, helicopters, and GA. Turn off to hide every flight marker while keeping other layers.',
   rail:
-    'Live rail traffic: Amtrak and MetroLink passenger trains, freight and crossing activity, APRS rail (with aprs.fi key), and corridor hints. Turn off to hide train markers on the map.',
+    'Live rail traffic for the current map view: Amtrak nationwide, regional GTFS-RT (MBTA, Metra, MetroLink, 511 Bay Area), and freight where APRS/crossing feeds exist. Pan the map to load trains in that region.',
   weatherAlerts:
     'NWS warning polygons on the map: tornado, severe thunderstorm, flood, flash flood, winter, and heat alerts for MO/IL/IA/AR/KS. Refreshes every minute.',
   lightning:
@@ -16,7 +16,7 @@ export const MAP_LAYER_HELP = {
   roads:
     'Missouri DOT road conditions: closures, work zones, traffic delays, and winter impacts from mapping.modot.org. Red = closed, yellow = delay, cyan = winter.',
   aisVessels:
-    'Large ships only (cargo, tanker, river tow) on nearby waterways. Pink boat icons. Live AIS via Axiom Overwatch — no API key required.',
+    'Large ships in the current map view (cargo, tanker, passenger, river tow) from Axiom AIS and optional AISHub. Pan to coasts, Great Lakes, or major rivers — pink boat icons scale with zoom.',
   earthquakes:
     'USGS earthquakes in the last 24 hours within 500 mi. Orange circles scale with magnitude.',
   wildfires:
@@ -96,7 +96,7 @@ export const FUN_TOGGLE_HELP = {
   roulette:
     'Each day picks a random “holy grail” callsign; toasts if that callsign flies overhead.',
   radarNoir:
-    'Black-and-white radar view: dense dark checkerboard basemap and storm echoes as a white-to-black intensity gradient (weak = dark, hail core = white).',
+    'Aged treasure-map chart: burnt parchment, brown ink coastlines, typewriter popups, compass rose, and storm smudges like old cartographer weather notes.',
 } as const;
 
 export function friendlyApiError(message: string) {

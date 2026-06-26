@@ -1,6 +1,7 @@
-import { distanceMiles } from '../../lib/geo.js';
+import { distanceMiles, pointInBoundingBox } from '../../lib/geo.js';
 import { aisShipTypeLabel, aisVesselLengthMeters, isSignificantVessel } from '../../lib/aisVesselFilter.js';
 import { inferVesselPhotoType, vesselPhotoTypeLabel } from '../../lib/vesselPhotoType.js';
+import { bboxCenter } from './viewportQuery.js';
 
 const AXIOM_URL = 'https://axiomoverwatch.io/api/v1/positions/latest';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -79,18 +80,29 @@ function formatAxiomType(type) {
   return value.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export async function fetchAxiomVessels(lat, lon, radiusMiles = 85) {
-  const cacheKey = `${lat.toFixed(2)}:${lon.toFixed(2)}:${radiusMiles}`;
+export async function fetchAxiomVessels(lat, lon, radiusMiles = 85, viewport = null) {
+  const bbox =
+    viewport ||
+    (() => {
+      const pad = radiusMiles / 69;
+      return {
+        west: lon - pad * 1.2,
+        east: lon + pad * 1.2,
+        south: lat - pad,
+        north: lat + pad,
+      };
+    })();
+  const center = viewport ? bboxCenter(viewport) : { lat, lon };
+  const cacheKey = `${bbox.west.toFixed(2)}:${bbox.south.toFixed(2)}:${bbox.east.toFixed(2)}:${bbox.north.toFixed(2)}`;
   if (cache.payload && cache.key === cacheKey && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
     return cache.payload;
   }
 
-  const pad = radiusMiles / 69;
   const params = new URLSearchParams({
-    west: String(lon - pad * 1.2),
-    east: String(lon + pad * 1.2),
-    south: String(lat - pad),
-    north: String(lat + pad),
+    west: String(bbox.west),
+    east: String(bbox.east),
+    south: String(bbox.south),
+    north: String(bbox.north),
   });
 
   const body = await fetchWithTimeout(`${AXIOM_URL}?${params.toString()}`);
@@ -100,11 +112,15 @@ export async function fetchAxiomVessels(lat, lon, radiusMiles = 85) {
     .map(normalizeAxiomFeature)
     .filter(Boolean)
     .filter(isSignificantVessel)
+    .filter((vessel) =>
+      viewport
+        ? pointInBoundingBox(vessel.lat, vessel.lon, viewport)
+        : distanceMiles(center.lat, center.lon, vessel.lat, vessel.lon) <= radiusMiles
+    )
     .map((vessel) => ({
       ...vessel,
-      distanceMiles: Math.round(distanceMiles(lat, lon, vessel.lat, vessel.lon) * 10) / 10,
+      distanceMiles: Math.round(distanceMiles(center.lat, center.lon, vessel.lat, vessel.lon) * 10) / 10,
     }))
-    .filter((vessel) => vessel.distanceMiles <= radiusMiles)
     .sort((a, b) => {
       const sizeDelta = (b.lengthMeters ?? 0) - (a.lengthMeters ?? 0);
       if (sizeDelta !== 0) return sizeDelta;
@@ -116,7 +132,8 @@ export async function fetchAxiomVessels(lat, lon, radiusMiles = 85) {
     source: 'axiomoverwatch.io',
     fetchedAt: body?.meta?.updated_at || new Date().toISOString(),
     count: vessels.length,
-    radiusMiles,
+    radiusMiles: viewport ? null : radiusMiles,
+    viewport: viewport || null,
     filter: 'significant-only',
     vessels,
   };

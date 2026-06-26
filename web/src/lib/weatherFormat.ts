@@ -1,5 +1,6 @@
 import { enrichWeatherConditions, fahrenheitFromCelsius } from '../../../lib/weatherCodes.js';
 import type { WeatherConditions } from '../types';
+import { escapeHtml, mapLocationHeaderHtml } from './mapLocation';
 
 export function formatWindDirection(deg?: number | null) {
   if (deg == null || !Number.isFinite(Number(deg))) return '—';
@@ -40,21 +41,14 @@ export function formatWeatherHover(weather: WeatherConditions) {
   return { temp, condition, wind, headline: `${temp} · ${condition}`, meta };
 }
 
-export function weatherHoverHtml(weather: WeatherConditions) {
+export function weatherHoverHtml(weather: WeatherConditions, locationLabel?: string | null) {
   const { headline, wind, meta } = formatWeatherHover(weather);
   return `
     <div class="map-weather-hover-body">
+      ${mapLocationHeaderHtml(locationLabel)}
       <strong>${escapeHtml(headline)}</strong>
       <span class="muted">${escapeHtml(wind)}</span>
       <span class="muted">${escapeHtml(meta)}</span>
     </div>
   `;
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }

@@ -1,15 +1,15 @@
-import { boundingBox, distanceMiles } from '../../lib/geo.js';
+import { boundingBox, distanceMiles, pointInBoundingBox } from '../../lib/geo.js';
 import {
   aisShipTypeLabel,
   aisVesselLengthMeters,
   isSignificantVessel,
 } from '../../lib/aisVesselFilter.js';
 import { fetchAxiomVessels } from './axiomVessels.js';
+import { bboxCenter, maxAisVesselsForBbox } from './viewportQuery.js';
 
 const AISHUB_URL = 'http://data.aishub.net/ws.php';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
 const CACHE_MS = 60 * 1000;
-const MAX_VESSELS = 80;
 
 let aishubCache = { fetchedAt: 0, data: null };
 
@@ -113,16 +113,16 @@ function flattenAisBody(body) {
   return rows;
 }
 
-async function fetchAishubVessels(lat, lon, radiusMiles) {
+async function fetchAishubVessels(lat, lon, radiusMiles, viewport = null) {
   const username = String(process.env.AISHUB_USERNAME || '').trim();
   if (!username) return { vessels: [], configured: false };
 
-  const cacheKey = `${lat.toFixed(2)}:${lon.toFixed(2)}:${radiusMiles}`;
+  const box = viewport || boundingBox(lat, lon, radiusMiles);
+  const center = viewport ? bboxCenter(viewport) : { lat, lon };
+  const cacheKey = `${box.west.toFixed(2)}:${box.south.toFixed(2)}:${box.east.toFixed(2)}:${box.north.toFixed(2)}`;
   if (aishubCache.data?.cacheKey === cacheKey && Date.now() - aishubCache.fetchedAt < CACHE_MS) {
     return { vessels: aishubCache.data.payload, configured: true };
   }
-
-  const box = boundingBox(lat, lon, radiusMiles);
   const params = new URLSearchParams({
     username,
     format: '1',
@@ -154,11 +154,15 @@ async function fetchAishubVessels(lat, lon, radiusMiles) {
     .map(normalizeAishubRow)
     .filter(Boolean)
     .filter(isSignificantVessel)
+    .filter((vessel) =>
+      viewport
+        ? pointInBoundingBox(vessel.lat, vessel.lon, viewport)
+        : distanceMiles(center.lat, center.lon, vessel.lat, vessel.lon) <= radiusMiles
+    )
     .map((vessel) => ({
       ...vessel,
-      distanceMiles: Math.round(distanceMiles(lat, lon, vessel.lat, vessel.lon) * 10) / 10,
-    }))
-    .filter((vessel) => vessel.distanceMiles <= radiusMiles);
+      distanceMiles: Math.round(distanceMiles(center.lat, center.lon, vessel.lat, vessel.lon) * 10) / 10,
+    }));
 
   aishubCache = { fetchedAt: Date.now(), data: { cacheKey, payload: vessels } };
   return { vessels, configured: true };
@@ -175,10 +179,13 @@ function mergeVessels(...groups) {
   return [...map.values()];
 }
 
-export async function fetchAisVessels(lat, lon, radiusMiles = 85) {
+export async function fetchAisVessels(lat, lon, radiusMiles = 85, viewport = null) {
+  const queryBox = viewport || boundingBox(lat, lon, radiusMiles);
+  const maxVessels = maxAisVesselsForBbox(queryBox);
+
   const [axiomResult, aishubResult] = await Promise.allSettled([
-    fetchAxiomVessels(lat, lon, radiusMiles),
-    fetchAishubVessels(lat, lon, radiusMiles),
+    fetchAxiomVessels(lat, lon, radiusMiles, viewport),
+    fetchAishubVessels(lat, lon, radiusMiles, viewport),
   ]);
 
   const sources = [];
@@ -205,7 +212,7 @@ export async function fetchAisVessels(lat, lon, radiusMiles = 85) {
       if (sizeDelta !== 0) return sizeDelta;
       return a.distanceMiles - b.distanceMiles;
     })
-    .slice(0, MAX_VESSELS);
+    .slice(0, maxVessels);
 
   if (vessels.length === 0 && sources.length === 0) {
     return {
@@ -214,7 +221,9 @@ export async function fetchAisVessels(lat, lon, radiusMiles = 85) {
       message: errors[0] || 'Large-ship AIS feed unavailable',
       fetchedAt: new Date().toISOString(),
       count: 0,
-      radiusMiles,
+      radiusMiles: viewport ? null : radiusMiles,
+      viewport: viewport || null,
+      limit: maxVessels,
       vessels: [],
     };
   }
@@ -224,7 +233,9 @@ export async function fetchAisVessels(lat, lon, radiusMiles = 85) {
     source: sources.join(' + '),
     fetchedAt: new Date().toISOString(),
     count: vessels.length,
-    radiusMiles,
+    radiusMiles: viewport ? null : radiusMiles,
+    viewport: viewport || null,
+    limit: maxVessels,
     filter: 'significant-only',
     vessels,
     errors: errors.length ? errors : undefined,

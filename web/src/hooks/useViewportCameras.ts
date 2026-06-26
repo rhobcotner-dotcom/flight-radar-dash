@@ -16,6 +16,55 @@ const CONUS_BOUNDS: MapViewportBounds = {
 
 const WARM_POLL_MS = 3000;
 
+const WI_VIEWPORT = { west: -92.9, south: 42.5, east: -86.8, north: 47.1 };
+const IL_VIEWPORT = { west: -91.5, south: 37.0, east: -87.5, north: 42.5 };
+const IN_VIEWPORT = { west: -88.1, south: 37.8, east: -84.8, north: 41.8 };
+const OH_VIEWPORT = { west: -84.8, south: 38.4, east: -80.5, north: 42.0 };
+
+function viewportCenterInWisconsin(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= WI_VIEWPORT.south &&
+    lat <= WI_VIEWPORT.north &&
+    lon >= WI_VIEWPORT.west &&
+    lon <= WI_VIEWPORT.east
+  );
+}
+
+function viewportCenterInIllinois(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= IL_VIEWPORT.south &&
+    lat <= IL_VIEWPORT.north &&
+    lon >= IL_VIEWPORT.west &&
+    lon <= IL_VIEWPORT.east
+  );
+}
+
+function viewportCenterInIndiana(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= IN_VIEWPORT.south &&
+    lat <= IN_VIEWPORT.north &&
+    lon >= IN_VIEWPORT.west &&
+    lon <= IN_VIEWPORT.east
+  );
+}
+
+function viewportCenterInOhio(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= OH_VIEWPORT.south &&
+    lat <= OH_VIEWPORT.north &&
+    lon >= OH_VIEWPORT.west &&
+    lon <= OH_VIEWPORT.east
+  );
+}
+
 function isWideBounds(bounds: MapViewportBounds) {
   return bounds.east - bounds.west > 25 || bounds.north - bounds.south > 15;
 }
@@ -29,16 +78,25 @@ function zoomTier(zoom: number) {
 
 function cameraLimitForZoom(zoom: number, bounds: MapViewportBounds) {
   const wide = isWideBounds(bounds);
+  let limit: number;
   if (wide) {
-    if (zoom <= 6) return 144;
-    if (zoom <= 8) return 192;
-    if (zoom <= 10) return 240;
-    return 288;
+    if (zoom <= 6) limit = 144;
+    else if (zoom <= 8) limit = 192;
+    else if (zoom <= 10) limit = 240;
+    else limit = 288;
+  } else if (zoom <= 6) limit = 48;
+  else if (zoom <= 8) limit = 72;
+  else if (zoom <= 10) limit = 96;
+  else limit = 120;
+
+  if (viewportCenterInWisconsin(bounds)) {
+    limit = wide ? Math.min(Math.round(limit * 1.5), 400) : Math.min(Math.round(limit * 1.5), 180);
+  } else if (viewportCenterInIllinois(bounds)) {
+    limit = wide ? Math.min(Math.round(limit * 2), 500) : Math.min(Math.round(limit * 1.5), 180);
+  } else if (viewportCenterInIndiana(bounds) || viewportCenterInOhio(bounds)) {
+    limit = wide ? Math.min(Math.round(limit * 2), 500) : Math.min(Math.round(limit * 1.5), 180);
   }
-  if (zoom <= 6) return 48;
-  if (zoom <= 8) return 72;
-  if (zoom <= 10) return 96;
-  return 120;
+  return limit;
 }
 
 function stableBoundsKey(bounds: MapViewportBounds) {

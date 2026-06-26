@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { boundsFromCenter } from '../lib/bounds.js';
+import { attachViewportToArea } from './viewportQuery.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_AREA_PATH = path.resolve(__dirname, '../../config/area.default.json');
@@ -20,13 +21,16 @@ export function resolveArea(query = {}) {
   const nearbyAirport = query.nearbyAirport ?? defaults.nearbyAirport ?? 'STL';
   const { bounds, north, south, west, east } = boundsFromCenter(lat, lon, radiusMiles);
 
-  return {
-    name,
-    lat: Number(lat),
-    lon: Number(lon),
-    radiusMiles: Number(radiusMiles),
-    nearbyAirport,
-    bounds,
-    box: { north, south, west, east },
-  };
+  return attachViewportToArea(
+    {
+      name,
+      lat: Number(lat),
+      lon: Number(lon),
+      radiusMiles: Number(radiusMiles),
+      nearbyAirport,
+      bounds,
+      box: { north, south, west, east },
+    },
+    query
+  );
 }

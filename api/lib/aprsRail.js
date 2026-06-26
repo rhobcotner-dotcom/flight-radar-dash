@@ -1,8 +1,9 @@
-import { distanceMiles } from '../../lib/geo.js';
+import { distanceMiles, pointInBoundingBox } from '../../lib/geo.js';
 import { fetchAprsStations } from './aprs.js';
 import { fetchAprsFiMapStations } from './aprsFiMap.js';
 import { fetchAprsIsStations, getAprsIsStatus } from './aprsIs.js';
 import { parseTrainSymbol } from './freightSymbolParser.js';
+import { searchCenter } from './viewportQuery.js';
 
 const RAIL_KEYWORDS =
   /\b(loco|locomotive|freight|manifest|train|railroad|rail yard|yard job|bnsf|csx|ns\b|kcs|up\b|cn\b|cp\b|norfolk|union pacific|metra\b|amtrak\b|intermodal|hopper|unit train|stack train|coal train|grain|ethanol|autorack|doublestack|mixed freight|local freight|road freight|dpu\b|sd70|es44|ac44|dash-?9|gevo|tank train|baretable|mty|mt\b|loads|empties|tow|tonnage|rr\b)\b/i;
@@ -132,9 +133,11 @@ async function fetchAprsIsRailStations(area, radiusMiles) {
 }
 
 export async function fetchAprsRailTrains(area, radiusMiles) {
+  const center = searchCenter(area);
+  const queryArea = { ...area, lat: center.lat, lon: center.lon };
   const [fiResult, isResult] = await Promise.allSettled([
-    fetchAprsFiStations(area, radiusMiles),
-    fetchAprsIsRailStations(area, radiusMiles),
+    fetchAprsFiStations(queryArea, radiusMiles),
+    fetchAprsIsRailStations(queryArea, radiusMiles),
   ]);
 
   const merged = [];
@@ -157,7 +160,12 @@ export async function fetchAprsRailTrains(area, radiusMiles) {
     }
   }
 
-  const stations = dedupeStations(merged).filter((station) => station.distanceMiles == null || station.distanceMiles <= radiusMiles);
+  const stations = dedupeStations(merged).filter((station) => {
+    if (area.viewport) {
+      return pointInBoundingBox(station.lat, station.lon, area.viewport);
+    }
+    return station.distanceMiles == null || station.distanceMiles <= radiusMiles;
+  });
 
   const trains = stations
     .map(normalizeAprsRailTrain)
@@ -166,9 +174,13 @@ export async function fetchAprsRailTrains(area, radiusMiles) {
       ...train,
       distanceMiles:
         train.distanceMiles ??
-        Math.round(distanceMiles(area.lat, area.lon, train.lat, train.lon) * 10) / 10,
+        Math.round(distanceMiles(center.lat, center.lon, train.lat, train.lon) * 10) / 10,
     }))
-    .filter((train) => train.distanceMiles <= radiusMiles)
+    .filter((train) =>
+      area.viewport
+        ? pointInBoundingBox(train.lat, train.lon, area.viewport)
+        : train.distanceMiles <= radiusMiles
+    )
     .sort((a, b) => {
       if (Boolean(a.cargoClue) !== Boolean(b.cargoClue)) return a.cargoClue ? -1 : 1;
       return a.distanceMiles - b.distanceMiles;

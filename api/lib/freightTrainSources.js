@@ -2,6 +2,7 @@ import { boundingBox, distanceMiles, pointInBoundingBox } from '../../lib/geo.js
 import { fetchAprsRailTrains } from './aprsRail.js';
 import { getAprsIsStatus } from './aprsIs.js';
 import { fetchHighballTrains } from './highballTrains.js';
+import { filterInSearchRegion, searchBbox, searchCenter } from './viewportQuery.js';
 import bundledCrossingFeeds from '../../config/freight-crossing-feeds.json' with { type: 'json' };
 
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -23,7 +24,12 @@ function freightRadiusMiles(area) {
 }
 
 function areaBbox(area, radiusMiles) {
-  return boundingBox(area.lat, area.lon, radiusMiles);
+  return searchBbox(area, radiusMiles);
+}
+
+function freightSearchRadius(area) {
+  if (area.viewport) return area.queryRadiusMiles;
+  return freightRadiusMiles(area);
 }
 
 function bboxKey(bbox) {
@@ -142,11 +148,15 @@ async function fetchArcgisCrossingFeed(feed, bbox, area, radiusMiles) {
   return (body.features || [])
     .map((feature) => normalizeCrossingFeature(feature, feed))
     .filter(Boolean)
-    .filter((train) =>
-      feed.fetchGlobal !== false
-        ? true
-        : distanceMiles(area.lat, area.lon, train.lat, train.lon) <= radiusMiles
-    );
+    .filter((train) => {
+      if (area.viewport) {
+        return pointInBoundingBox(train.lat, train.lon, area.viewport);
+      }
+      if (feed.fetchGlobal !== false) {
+        return distanceMiles(area.lat, area.lon, train.lat, train.lon) <= radiusMiles;
+      }
+      return distanceMiles(area.lat, area.lon, train.lat, train.lon) <= radiusMiles;
+    });
 }
 
 async function fetchCrossingSensorTrains(area, bbox, radiusMiles) {
@@ -303,17 +313,19 @@ async function fetchRailStateSightings(area, bbox) {
 }
 
 export async function fetchFreightTrains(area) {
-  const radius = freightRadiusMiles(area);
+  const radius = freightSearchRadius(area);
   const bbox = areaBbox(area, radius);
+  const center = searchCenter(area);
+  const queryArea = area.viewport ? { ...area, lat: center.lat, lon: center.lon } : area;
   const sourceCounts = {};
   const sources = [];
   let trains = [];
 
   const [crossingResult, railStateResult, aprsResult, highballResult] = await Promise.allSettled([
-    fetchCrossingSensorTrains(area, bbox, radius),
-    fetchRailStateSightings(area, bbox),
-    fetchAprsRailTrains(area, radius),
-    fetchHighballTrains(area, radius),
+    fetchCrossingSensorTrains(queryArea, bbox, radius),
+    fetchRailStateSightings(queryArea, bbox),
+    fetchAprsRailTrains(queryArea, radius),
+    fetchHighballTrains(queryArea, radius),
   ]);
 
   if (crossingResult.status === 'fulfilled') {
@@ -357,17 +369,12 @@ export async function fetchFreightTrains(area) {
     sources.push('highball');
   }
 
-  const nearby = trains
-    .map((train) => ({
-      ...train,
-      distanceMiles: distanceMiles(area.lat, area.lon, train.lat, train.lon),
-    }))
-    .filter((train) => train.trainKind === 'crossing' || train.distanceMiles <= radius)
-    .sort((a, b) => a.distanceMiles - b.distanceMiles);
+  const nearby = filterInSearchRegion(trains, area, radius);
 
   return {
     trains: nearby,
     radiusMiles: radius,
+    viewport: area.viewport || null,
     sourceCounts,
     sources,
     coverage:

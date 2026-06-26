@@ -32,6 +32,7 @@ import {
   handleWildfires,
 } from './routes/mapLayers.js';
 import { handleGeocode } from './routes/geocode.js';
+import { handleReverseGeocode } from './routes/reverseGeocode.js';
 import { handleRadarFrames } from './routes/radar.js';
 import { handleStormAnalysis } from './routes/stormAnalysis.js';
 import { handleLiveTrains } from './routes/trains.js';
@@ -146,6 +147,7 @@ app.get('/api/weather/air-quality', asyncHandler(handleAirQuality));
 app.get('/api/aviation/notams', asyncHandler(handleNotams));
 app.get('/api/weather/wildfires', asyncHandler(handleWildfires));
 app.get('/api/geocode', asyncHandler(handleGeocode));
+app.get('/api/reverse-geocode', asyncHandler(handleReverseGeocode));
 app.get('/api/radar/frames', asyncHandler(handleRadarFrames));
 app.get('/api/weather/storm-analysis', asyncHandler(handleStormAnalysis));
 app.get('/api/hearing/config', handleHearingConfig);

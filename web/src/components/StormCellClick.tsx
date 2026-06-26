@@ -18,6 +18,7 @@ import type { TrafficCameraPayload } from '../lib/mapLayers';
 import type { WeatherConditions } from '../types';
 import { isMapDeadSpaceClick, isStormRadarClick } from '../lib/mapClick';
 import { weatherHoverHtml } from '../lib/weatherFormat';
+import { resolveMapPlaceLabel } from '../lib/mapLocation';
 import { StormBriefingPopup } from './StormBriefingPopup';
 
 const HOVER_CACHE_TTL_MS = 60 * 1000;
@@ -55,7 +56,7 @@ function showStormMissHint(map: L.Map, latlng: L.LatLng, radarNoir = false) {
   })
     .setLatLng(latlng)
     .setContent(
-      `<div class="storm-click-hint">No storm echo here — click a ${radarNoir ? 'bright' : 'colored'} radar cell</div>`
+      `<div class="storm-click-hint">No storm echo here — click a ${radarNoir ? 'brown ink' : 'colored'} radar smudge</div>`
     );
   hint.addTo(map);
   window.setTimeout(() => {
@@ -83,6 +84,7 @@ interface BriefingState {
   analysis: StormAnalysis;
   glowCenter: [number, number];
   glowRadiusMiles: number;
+  locationLabel?: string | null;
 }
 
 interface Props {
@@ -164,7 +166,7 @@ export function StormCellClick({
   }, [map]);
 
   const publishBriefing = useCallback(
-    (key: string, position: [number, number], analysis: StormAnalysis) => {
+    (key: string, position: [number, number], analysis: StormAnalysis, locationLabel?: string | null) => {
       const previousPool = briefingPoolRef.current.get(key) ?? [];
       const cameraPool = mergeStormCameraPool(analysis, viewportCamerasRef.current, previousPool);
       if (cameraPool.length) {
@@ -191,14 +193,22 @@ export function StormCellClick({
           cameraIds === lastCameraIdsRef.current &&
           current.analysis.loading === merged.loading &&
           Boolean(current.analysis.radar) === Boolean(merged.radar) &&
-          current.analysis.summary === merged.summary
+          current.analysis.summary === merged.summary &&
+          (locationLabel ?? current.locationLabel) === current.locationLabel
         ) {
           return current;
         }
         lastCameraIdsRef.current = cameraIds;
         openBriefingKeyRef.current = key;
         openBriefingPositionRef.current = position;
-        return { key, position, analysis: merged, glowCenter, glowRadiusMiles };
+        return {
+          key,
+          position,
+          analysis: merged,
+          glowCenter,
+          glowRadiusMiles,
+          locationLabel: locationLabel ?? current?.locationLabel ?? null,
+        };
       });
     },
     []
@@ -219,6 +229,7 @@ export function StormCellClick({
       nearCamerasPendingRef.current = true;
       onStormCameraPriority?.(clickLat, clickLon);
 
+      const locationPromise = resolveMapPlaceLabel(clickLat, clickLon).catch(() => null);
       const nearCamerasPromise = fetchNearStormCameras(clickLat, clickLon);
 
       const instantPool = nearestStormCamerasFromViewport(
@@ -242,7 +253,7 @@ export function StormCellClick({
         cameraPool: instantPool,
       };
 
-      publishBriefing(key, position, loadingShell);
+      publishBriefing(key, position, loadingShell, (await locationPromise)?.label ?? null);
 
       void nearCamerasPromise
         .then((nearCameras) => {
@@ -317,6 +328,7 @@ export function StormCellClick({
       const snapLon = snapCoordinate(latlng.lng);
       const key = `${snapLat.toFixed(2)}:${snapLon.toFixed(2)}`;
       const reqId = ++weatherRequestRef.current;
+      const locationPromise = resolveMapPlaceLabel(latlng.lat, latlng.lng).catch(() => null);
 
       weatherTooltip
         .setLatLng(latlng)
@@ -339,7 +351,9 @@ export function StormCellClick({
       }
 
       if (reqId !== weatherRequestRef.current) return;
-      weatherTooltip.setContent(weatherHoverHtml(weather));
+      const place = await locationPromise;
+      if (reqId !== weatherRequestRef.current) return;
+      weatherTooltip.setContent(weatherHoverHtml(weather, place?.label));
     },
     [map]
   );
@@ -432,6 +446,7 @@ export function StormCellClick({
           <StormBriefingPopup
             position={briefing.position}
             analysis={briefing.analysis}
+            locationLabel={briefing.locationLabel}
             onClose={closeBriefing}
           />
         </>

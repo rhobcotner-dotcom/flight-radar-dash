@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { AreaSettingsPanel } from './components/AreaSettings';
 import { FlightList } from './components/FlightList';
 import { FlightMap } from './components/FlightMap';
+import { FunZonePanel } from './components/FunZonePanel';
 import { HearingToastStack } from './components/HearingToastStack';
 import { useWeather } from './hooks/useWeather';
 import { useWeatherAlerts } from './hooks/useWeatherAlerts';
@@ -40,7 +41,7 @@ export default function App() {
     [flights, area.radiusMiles]
   );
   const { trains, counts, freightHints, fetchedAt: trainsFetchedAt, refreshSeconds: trainRefreshSeconds } =
-    useTrains(queryString, true);
+    useTrains(queryString, true, 10, viewportBounds ?? viewportFromArea(area));
   const { weather } = useWeather(area.lat, area.lon);
   const {
     toasts,
@@ -107,6 +108,7 @@ export default function App() {
     [dismissB52Toast, dismissHearingToast, dismissWeatherToast, fun.dismissFunToast]
   );
   const { highlightedId, setHighlight, clearHighlightNow, mapHandlers, listHandlers } = useHighlight();
+  const [funPanelOpen, setFunPanelOpen] = useState(false);
 
   return (
     <div
@@ -157,6 +159,14 @@ export default function App() {
           <button type="button" className="btn-secondary" onClick={() => refreshMap({ snapshot: true })} disabled={loading}>
             {loading ? 'Refreshing…' : 'Refresh map'}
           </button>
+          <button
+            type="button"
+            className={`btn-secondary${funPanelOpen ? ' btn-active' : ''}`}
+            onClick={() => setFunPanelOpen((open) => !open)}
+            title="Loony layers, games, and treasure-chart radar"
+          >
+            Fun zone
+          </button>
         </div>
 
         {error ? <div className="map-overlay map-overlay-banner error">{error}</div> : null}
@@ -177,6 +187,12 @@ export default function App() {
             listHandlers={listHandlers}
           />
         </div>
+
+        {funPanelOpen ? (
+          <div className="map-overlay map-overlay-fun">
+            <FunZonePanel fun={fun} />
+          </div>
+        ) : null}
       </div>
 
       <HearingToastStack

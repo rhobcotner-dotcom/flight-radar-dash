@@ -24,6 +24,12 @@ import { fetchRoad511Cameras, hasRoad511Key } from './cameraSources/road511.js';
 export const CONUS_BBOX = { west: -125, south: 24, east: -66, north: 50 };
 const VERIFIED_HLS_PER_STATE = 24;
 const VERIFIED_SNAP_PER_STATE = 24;
+/** Wisconsin has ~480 live HLS feeds — keep a larger verified slice for map + storm reliability. */
+const VERIFIED_HLS_OVERRIDES = { WI: 96 };
+/** Illinois is snapshot-only via Travel Midwest — verify more working feeds for dense map coverage. */
+const VERIFIED_SNAP_OVERRIDES = { IL: 96, IN: 96, OH: 96 };
+/** States where snapshots are the primary inventory (no public HLS). */
+const SNAPSHOT_PRIMARY_STATES = new Set(['IL', 'IN', 'OH', 'HI', 'WY']);
 const LOCAL_POOL_RADIUS_MILES = 120;
 const DEFAULT_WARM = {
   lat: Number(process.env.HOME_LAT) || 38.787,
@@ -49,7 +55,7 @@ function cacheKeyForRequest(bbox, limit, centerLat, centerLon) {
   const poolBucket = nationwidePool.partial ? 'p0' : nationwidePool.cameras.length ? 'p1' : 'p-';
   const verifiedBucket = verifiedPool.cameras.length ? 'v1' : 'v0';
   return [
-    'snap5',
+    'snap8',
     quantize(bbox.west, 2),
     quantize(bbox.south, 2),
     quantize(bbox.east, 2),
@@ -184,12 +190,61 @@ function regionalPoolFromRaw(pool, bbox, centerLat, centerLon) {
   return [...live, ...snapshots];
 }
 
+/** Snapshot-primary state under the viewport center (IL vs IN vs OH, etc.). */
+function viewportSnapshotPrimaryState(centerLat, centerLon) {
+  if (!Number.isFinite(centerLat) || !Number.isFinite(centerLon)) return null;
+  for (const code of ['IL', 'IN', 'OH', 'WI', 'WY', 'HI']) {
+    if (!SNAPSHOT_PRIMARY_STATES.has(code)) continue;
+    const bounds = STATE_BOUNDS[code];
+    if (!bounds) continue;
+    if (
+      centerLat >= bounds.south &&
+      centerLat <= bounds.north &&
+      centerLon >= bounds.west &&
+      centerLon <= bounds.east
+    ) {
+      return code;
+    }
+  }
+  return null;
+}
+
 function selectCamerasForRequest({ verified, pool, bbox, limit, centerLat, centerLon }) {
   const regionalPool = regionalPoolFromRaw(pool, bbox, centerLat, centerLon);
   const mappedRegional = mapPlaybackCameras(regionalPool);
 
   const snapshots = mappedRegional.filter((cam) => cam.mediaType === 'snapshot');
   const liveCount = mappedRegional.filter((cam) => cam.mediaType === 'hls').length;
+  const viewportStates = statesInBbox(bbox);
+  const snapshotPrimaryStates = viewportStates.filter((code) => SNAPSHOT_PRIMARY_STATES.has(code));
+
+  // Snapshot-only states fill the viewport from their DOT feeds first. When the bbox spans
+  // several (e.g. Indiana includes IL overlap), prefer the state at the viewport center.
+  if (snapshotPrimaryStates.length) {
+    const focusState = viewportSnapshotPrimaryState(centerLat, centerLon);
+    const primarySnaps = focusState
+      ? snapshots.filter((cam) => cam.state === focusState)
+      : snapshots.filter((cam) => snapshotPrimaryStates.includes(cam.state));
+    let picked = selectForViewport(primarySnaps, bbox, limit, centerLat, centerLon);
+    const remaining = Math.max(0, limit - picked.length);
+    if (remaining > 0) {
+      const hlsPool = mappedRegional.filter(
+        (cam) =>
+          cam.mediaType === 'hls' &&
+          (!isModotRtplexStreamUrl(cam.sourceLiveUrl || cam.liveUrl) ||
+            isWestOfStLouisMississippi(cam.lon))
+      );
+      const otherSnaps = focusState
+        ? snapshots.filter((cam) => cam.state !== focusState)
+        : snapshots.filter((cam) => !snapshotPrimaryStates.includes(cam.state));
+      picked = [
+        ...picked,
+        ...selectForViewport([...otherSnaps, ...hlsPool], bbox, remaining, centerLat, centerLon),
+      ];
+    }
+    return dedupeCameras(picked).slice(0, limit);
+  }
+
   const snapQuota =
     liveCount >= limit
       ? 0
@@ -281,6 +336,7 @@ async function buildVerifiedPool() {
 
     const center = stateCenter(state);
     const stateBbox = STATE_BOUNDS[state] || CONUS_BBOX;
+    const hlsLimit = VERIFIED_HLS_OVERRIDES[state] ?? VERIFIED_HLS_PER_STATE;
     const hlsCams = stateCams.filter(
       (cam) => cam.mediaType === 'hls' && !isModotRtplexStreamUrl(cam.liveUrl)
     );
@@ -290,22 +346,23 @@ async function buildVerifiedPool() {
       const hlsSpread = thinCameras(
         hlsCams,
         stateBbox,
-        VERIFIED_HLS_PER_STATE * 5,
+        hlsLimit * 5,
         center.lat,
         center.lon
       );
-      working.push(...(await selectWorkingLiveCameras(hlsSpread, VERIFIED_HLS_PER_STATE)));
+      working.push(...(await selectWorkingLiveCameras(hlsSpread, hlsLimit)));
     }
 
     if (snapCams.length) {
+      const snapLimit = VERIFIED_SNAP_OVERRIDES[state] ?? VERIFIED_SNAP_PER_STATE;
       const snapSpread = thinCameras(
         snapCams,
         stateBbox,
-        VERIFIED_SNAP_PER_STATE * 5,
+        snapLimit * 5,
         center.lat,
         center.lon
       );
-      working.push(...(await selectWorkingLiveCameras(snapSpread, VERIFIED_SNAP_PER_STATE)));
+      working.push(...(await selectWorkingLiveCameras(snapSpread, snapLimit)));
     }
   }
 

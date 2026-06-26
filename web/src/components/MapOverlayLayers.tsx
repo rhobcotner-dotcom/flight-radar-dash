@@ -4,6 +4,7 @@ import type { PathOptions, TooltipOptions } from 'leaflet';
 import { useEffect, useMemo, useState } from 'react';
 import { CameraMapSnapshot } from './CameraMapSnapshot';
 import { CameraMapLivePreview } from './CameraMapLivePreview';
+import { MapLocationHeader } from './MapLocationHeader';
 import { cameraHasMapMarker, cameraSourceSiteHref } from '../lib/cameraSnapshot';
 import { VesselDetails } from './VesselDetails';
 import {
@@ -214,6 +215,7 @@ function VesselMarker({ vessel }: { vessel: AisVesselPayload['vessels'][number] 
         <VesselDetails vessel={vessel} compact showVisual={tooltipActive} />
       </Tooltip>
       <Popup maxWidth={360} minWidth={280}>
+        <MapLocationHeader lat={vessel.lat} lon={vessel.lon} />
         <VesselDetails vessel={vessel} />
       </Popup>
     </Marker>
@@ -398,6 +400,7 @@ export function MetarLayer({ payload }: { payload: MetarPayload | null }) {
             {station.icaoId} · {station.flightCategory} · {station.temperatureF ?? '—'}°F
           </Tooltip>
           <Popup maxWidth={360}>
+            <MapLocationHeader lat={station.lat} lon={station.lon} />
             <div dangerouslySetInnerHTML={{ __html: formatMetarPopup(station) }} />
           </Popup>
         </Marker>
@@ -422,6 +425,7 @@ export function RiverGaugeLayer({ payload }: { payload: RiverGaugePayload | null
             {gauge.name} · {gauge.stageFt ?? '—'} ft
           </Tooltip>
           <Popup maxWidth={320}>
+            <MapLocationHeader lat={gauge.lat} lon={gauge.lon} />
             <div dangerouslySetInnerHTML={{ __html: formatRiverPopup(gauge) }} />
           </Popup>
         </Marker>
@@ -458,6 +462,7 @@ export function TransitLayer({
             eventHandlers={mapHandlers?.(id)}
           >
             <Popup maxWidth={280}>
+              <MapLocationHeader lat={vehicle.lat} lon={vehicle.lon} />
               <div dangerouslySetInnerHTML={{ __html: formatTransitPopup(vehicle) }} />
             </Popup>
           </Marker>
@@ -501,6 +506,7 @@ export function AirQualityLayer({ payload }: { payload: AirQualityPayload | null
         AQI {payload.usAqi} · {payload.category}
       </Tooltip>
       <Popup maxWidth={320}>
+        <MapLocationHeader lat={payload.lat} lon={payload.lon} />
         <div dangerouslySetInnerHTML={{ __html: formatAqiPopup(payload) }} />
       </Popup>
     </Marker>
@@ -572,6 +578,7 @@ export function EarthquakeLayer({ payload }: { payload: EarthquakePayload | null
               M{event.magnitude ?? '?'} · {event.distanceMiles} mi
             </Tooltip>
             <Popup maxWidth={320}>
+              <MapLocationHeader lat={event.lat} lon={event.lon} />
               <div dangerouslySetInnerHTML={{ __html: formatEarthquakePopup(event) }} />
             </Popup>
           </CircleMarker>
@@ -597,6 +604,7 @@ export function SondeLayer({ payload }: { payload: SondePayload | null }) {
             {sonde.type} · {sonde.altitudeM ?? '—'} m
           </Tooltip>
           <Popup maxWidth={300}>
+            <MapLocationHeader lat={sonde.lat} lon={sonde.lon} />
             <div dangerouslySetInnerHTML={{ __html: formatSondePopup(sonde) }} />
           </Popup>
         </Marker>
@@ -626,6 +634,7 @@ export function WildfireLayer({ payload }: { payload: WildfirePayload | null }) 
             Fire hotspot · {hotspot.distanceMiles} mi
           </Tooltip>
           <Popup maxWidth={280}>
+            <MapLocationHeader lat={hotspot.lat} lon={hotspot.lon} />
             <div dangerouslySetInnerHTML={{ __html: formatWildfirePopup(hotspot) }} />
           </Popup>
         </CircleMarker>
@@ -644,7 +653,7 @@ function cameraIcon(kind: 'road' | 'rail' | 'weather' = 'road') {
     });
   }
   const dotClass = kind === 'rail' ? 'camera-dot rail-camera-dot' : 'camera-dot';
-  const size = kind === 'rail' ? 20 : 12;
+  const size = kind === 'rail' ? 20 : 9;
   const anchor = size / 2;
   return L.divIcon({
     className: kind === 'rail' ? 'camera-marker rail-camera-marker' : 'camera-marker',
@@ -753,6 +762,7 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
         }}
       >
         <div className="camera-popup">
+          <MapLocationHeader lat={cam.lat} lon={cam.lon} />
           <strong>{cam.description}</strong>
           <div className="muted">
             {[cam.railroad, cam.source, cam.state, cam.distanceMiles != null ? `${cam.distanceMiles} mi away` : null]
@@ -832,6 +842,7 @@ export function RiverForecastLayer({ payload }: { payload: RiverForecastPayload 
             {gauge.name} · {gauge.observedStageFt ?? '—'} ft
           </Tooltip>
           <Popup maxWidth={340}>
+            <MapLocationHeader lat={gauge.lat} lon={gauge.lon} />
             <div className="nwps-popup">
               <strong>{gauge.name}</strong>
               <div className="muted">{gauge.lid}</div>
@@ -867,6 +878,7 @@ export function EbirdLayer({ payload }: { payload: EbirdPayload | null }) {
             {obs.commonName}
           </Tooltip>
           <Popup maxWidth={300}>
+            <MapLocationHeader lat={obs.lat} lon={obs.lon} />
             <div>
               <strong>{obs.commonName}</strong>
               <div className="muted">{obs.locationName}</div>
@@ -889,6 +901,7 @@ export function INaturalistLayer({ payload }: { payload: INaturalistPayload | nu
             {obs.commonName}
           </Tooltip>
           <Popup maxWidth={300}>
+            <MapLocationHeader lat={obs.lat} lon={obs.lon} />
             <div>
               <strong>{obs.commonName}</strong>
               <div className="muted">{obs.observedOn}</div>
@@ -918,6 +931,7 @@ export function AprsLayer({ payload }: { payload: AprsPayload | null }) {
             {station.callsign} · {station.comment.slice(0, 40)}
           </Tooltip>
           <Popup maxWidth={280}>
+            <MapLocationHeader lat={station.lat} lon={station.lon} />
             <div>
               <strong>{station.callsign}</strong>
               <div>{station.comment}</div>

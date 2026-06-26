@@ -1,6 +1,6 @@
 import bundledFeeds from '../../config/gtfs-rt-rail-feeds.json' with { type: 'json' };
 import bundled511 from '../../config/511-rail-agencies.json' with { type: 'json' };
-import { distanceMiles } from '../../lib/geo.js';
+import { filterInSearchRegion } from './viewportQuery.js';
 
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
 const FETCH_TIMEOUT_MS = 15000;
@@ -360,13 +360,7 @@ export async function fetchRegionalRailTrains(area, radiusMiles) {
     sources.push('511-rail');
   }
 
-  const nearby = trains
-    .map((train) => ({
-      ...train,
-      distanceMiles: distanceMiles(area.lat, area.lon, train.lat, train.lon),
-    }))
-    .filter((train) => train.distanceMiles <= radiusMiles)
-    .sort((a, b) => a.distanceMiles - b.distanceMiles);
+  const nearby = filterInSearchRegion(trains, area, radiusMiles);
 
   const nearbyCounts = {};
   for (const train of nearby) {

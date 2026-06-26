@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Train } from '../types';
+import type { MapViewportBounds } from '../lib/mapViewport';
+import { stableViewportKey, viewportSearchParams } from '../lib/mapViewport';
 
 const DEFAULT_REFRESH_SECONDS = 10;
 
@@ -23,8 +25,14 @@ export interface FreightHints {
 export function useTrains(
   queryString: string,
   enabled = true,
-  refreshSeconds = DEFAULT_REFRESH_SECONDS
+  refreshSeconds = DEFAULT_REFRESH_SECONDS,
+  viewportBounds: MapViewportBounds | null = null
 ) {
+  const viewportKey = viewportBounds ? stableViewportKey(viewportBounds) : 'home';
+  const requestQuery = useMemo(
+    () => viewportSearchParams(queryString, viewportBounds).toString(),
+    [queryString, viewportKey, viewportBounds]
+  );
   const [trains, setTrains] = useState<Train[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +49,7 @@ export function useTrains(
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/live/trains?${queryString}`);
+      const res = await fetch(`/api/live/trains?${requestQuery}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load trains');
 
@@ -58,7 +66,7 @@ export function useTrains(
       setLoading(false);
       loadInFlight.current = false;
     }
-  }, [queryString]);
+  }, [requestQuery]);
 
   useEffect(() => {
     if (!enabled) return undefined;

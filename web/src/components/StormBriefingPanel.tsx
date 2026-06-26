@@ -5,8 +5,10 @@ import { StormCameraGrid } from './StormCameraGrid';
 
 export const StormBriefingPanel = memo(function StormBriefingPanel({
   analysis,
+  locationLabel,
 }: {
   analysis: StormAnalysis;
+  locationLabel?: string | null;
 }) {
   const loading = analysis.loading || !analysis.radar;
   const radar = analysis.radar;
@@ -38,6 +40,7 @@ export const StormBriefingPanel = memo(function StormBriefingPanel({
 
   return (
     <div className="storm-analysis-popup">
+      {locationLabel ? <div className="map-popup-location">{locationLabel}</div> : null}
       <div className="storm-analysis-kicker">Storm cell briefing</div>
       <strong className="storm-analysis-title">{title}</strong>
       {meta ? <div className="storm-analysis-meta muted">{meta}</div> : null}

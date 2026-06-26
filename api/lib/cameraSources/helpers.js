@@ -364,7 +364,7 @@ function shouldPreferCamera(existing, candidate) {
 export function dedupeCameras(cameras) {
   const byCell = new Map();
   for (const cam of cameras) {
-    const key = `${roundCoord(cam.lat, 2)}:${roundCoord(cam.lon, 2)}`;
+    const key = cam?.id ? String(cam.id) : `${roundCoord(cam.lat, 2)}:${roundCoord(cam.lon, 2)}`;
     const existing = byCell.get(key);
     if (!existing) {
       byCell.set(key, cam);
@@ -415,7 +415,8 @@ export function thinCameras(cameras, bbox, limit, centerLat, centerLon) {
   for (const cam of cameras) {
     const col = Math.min(cols - 1, Math.max(0, Math.floor((cam.lon - bbox.west) / lonStep)));
     const row = Math.min(rows - 1, Math.max(0, Math.floor((cam.lat - bbox.south) / latStep)));
-    const key = `${col}:${row}`;
+    // Keep distinct directional views (Travel Midwest, 511WI, etc.) at the same intersection.
+    const key = cam?.id ? `${col}:${row}:${cam.id}` : `${col}:${row}`;
     const existing = picked.get(key);
     if (!existing || rank(cam) < rank(existing) || (rank(cam) === rank(existing) && cam.id < existing.id)) {
       picked.set(key, cam);

@@ -6,10 +6,16 @@ import { StormBriefingPanel } from './StormBriefingPanel';
 interface Props {
   position: [number, number];
   analysis: StormAnalysis;
+  locationLabel?: string | null;
   onClose: () => void;
 }
 
-export const StormBriefingPopup = memo(function StormBriefingPopup({ position, analysis, onClose }: Props) {
+export const StormBriefingPopup = memo(function StormBriefingPopup({
+  position,
+  analysis,
+  locationLabel,
+  onClose,
+}: Props) {
   return (
     <Popup
       position={position}
@@ -21,7 +27,7 @@ export const StormBriefingPopup = memo(function StormBriefingPopup({ position, a
       keepInView={false}
       eventHandlers={{ remove: onClose }}
     >
-      <StormBriefingPanel analysis={analysis} />
+      <StormBriefingPanel analysis={analysis} locationLabel={locationLabel} />
     </Popup>
   );
 });

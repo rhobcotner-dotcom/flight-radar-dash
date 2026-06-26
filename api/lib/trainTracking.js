@@ -1,4 +1,8 @@
 import { distanceMiles } from '../../lib/geo.js';
+import {
+  filterInSearchRegion,
+  searchCenter,
+} from './viewportQuery.js';
 import { fetchFreightTrains, trainRadiusMiles as passengerRadiusMiles } from './freightTrainSources.js';
 import { fetchRegionalRailTrains } from './gtfsRtRail.js';
 
@@ -128,7 +132,7 @@ function dedupeTrains(trains) {
 }
 
 export async function fetchAreaTrains(area) {
-  const radius = trainRadiusMiles(area);
+  const radius = area.viewport ? area.queryRadiusMiles : trainRadiusMiles(area);
   const [passengerResult, freightResult, regionalResult] = await Promise.allSettled([
     fetchPassengerTrainsRaw(),
     fetchFreightTrains(area),
@@ -138,12 +142,7 @@ export async function fetchAreaTrains(area) {
   let passengerTrains = [];
   let passengerError = null;
   if (passengerResult.status === 'fulfilled') {
-    passengerTrains = passengerResult.value
-      .map((train) => ({
-        ...train,
-        distanceMiles: distanceMiles(area.lat, area.lon, train.lat, train.lon),
-      }))
-      .filter((train) => train.distanceMiles <= radius);
+    passengerTrains = filterInSearchRegion(passengerResult.value, area, radius);
   } else {
     passengerError = passengerResult.reason?.message;
   }
@@ -180,6 +179,9 @@ export async function fetchAreaTrains(area) {
   };
 
   let coverage = 'Amtrak nationwide + regional GTFS-RT rail (MBTA, MetroLink, Metra, 511)';
+  if (area.viewport) {
+    coverage = `${coverage}; filtered to current map viewport`;
+  }
   if (freightCount || crossingCount) {
     coverage = `${coverage}; freight via crossing sensors, APRS rail, and RailState`;
   } else if (freightMeta?.coverage) {
@@ -191,6 +193,8 @@ export async function fetchAreaTrains(area) {
   return {
     trains,
     radiusMiles: Math.max(radius, freightMeta?.radiusMiles || radius),
+    viewport: area.viewport || null,
+    searchCenter: searchCenter(area),
     source: sources.join(' + '),
     sources,
     sourceCounts,

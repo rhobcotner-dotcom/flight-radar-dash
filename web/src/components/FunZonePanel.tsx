@@ -195,7 +195,7 @@ export function FunZonePanel({ fun }: Props) {
           onChange={(v) => setSetting('roulette', v)}
         />
         <FunToggle
-          label="Radar noir"
+          label="Treasure chart"
           tip={FUN_TOGGLE_HELP.radarNoir}
           checked={settings.radarNoir}
           onChange={(v) => setSetting('radarNoir', v)}

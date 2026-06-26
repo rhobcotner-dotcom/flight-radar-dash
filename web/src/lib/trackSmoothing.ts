@@ -9,6 +9,39 @@ export interface TrackMotionHint {
   headingDeg?: number | null;
 }
 
+/** aircraft = ADSB-style motion; passenger-rail = capped rail speeds; beacon = fixed/snap (freight, crossings). */
+export type TrackSmoothingProfile = 'aircraft' | 'passenger-rail' | 'beacon';
+
+const PROFILE_MAX_SPEED_MPH: Record<TrackSmoothingProfile, number> = {
+  aircraft: 600,
+  'passenger-rail': 125,
+  beacon: 0,
+};
+
+const MAX_JUMP_MILES: Record<TrackSmoothingProfile, number> = {
+  aircraft: 80,
+  'passenger-rail': 18,
+  beacon: 2,
+};
+
+function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 3958.8 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function capMotionHint(hint: TrackMotionHint, profile: TrackSmoothingProfile): TrackMotionHint {
+  const maxSpeed = PROFILE_MAX_SPEED_MPH[profile];
+  const speedMph = hint.speedMph;
+  if (speedMph == null || !Number.isFinite(Number(speedMph))) return hint;
+  const capped = Math.max(0, Math.min(Number(speedMph), maxSpeed));
+  return capped === speedMph ? hint : { ...hint, speedMph: capped };
+}
+
 export interface TrackSegment {
   fromLat: number;
   fromLon: number;
@@ -58,19 +91,28 @@ function velocityFromSamples(samples: PositionSample[]) {
 export function predictNextPosition(
   samples: PositionSample[],
   hint: TrackMotionHint,
-  horizonMs: number
+  horizonMs: number,
+  profile: TrackSmoothingProfile = 'aircraft'
 ): { lat: number; lon: number } {
   const last = samples[samples.length - 1];
   if (!last) return { lat: 0, lon: 0 };
+
+  if (profile === 'beacon') {
+    return { lat: last.lat, lon: last.lon };
+  }
+
+  const cappedHint = capMotionHint(hint, profile);
+  const maxMiles =
+    PROFILE_MAX_SPEED_MPH[profile] * Math.max(horizonMs / 3_600_000, 0);
 
   const history = velocityFromSamples(samples);
   const historyLat = history ? last.lat + history.latPerMs * horizonMs : last.lat;
   const historyLon = history ? last.lon + history.lonPerMs * horizonMs : last.lon;
 
-  const speedMph = hint.speedMph ?? null;
-  const headingDeg = hint.headingDeg ?? null;
+  const speedMph = cappedHint.speedMph ?? null;
+  const headingDeg = cappedHint.headingDeg ?? null;
   if (speedMph != null && speedMph > 0 && headingDeg != null && Number.isFinite(headingDeg)) {
-    const miles = speedMph * (horizonMs / 3_600_000);
+    const miles = Math.min(speedMph * (horizonMs / 3_600_000), maxMiles);
     const deadReckoning = offsetLatLon(last.lat, last.lon, miles, headingDeg);
     if (history) {
       return {
@@ -82,6 +124,13 @@ export function predictNextPosition(
   }
 
   if (history) {
+    const latDelta = historyLat - last.lat;
+    const lonDelta = historyLon - last.lon;
+    const historyMiles = distanceMiles(last.lat, last.lon, historyLat, historyLon);
+    if (historyMiles > maxMiles && historyMiles > 0) {
+      const scale = maxMiles / historyMiles;
+      return { lat: last.lat + latDelta * scale, lon: last.lon + lonDelta * scale };
+    }
     return { lat: historyLat, lon: historyLon };
   }
 
@@ -106,15 +155,37 @@ export class TrackSmoothingEngine {
     lon: number,
     hint: TrackMotionHint,
     intervalMs: number,
+    profile: TrackSmoothingProfile = 'aircraft',
     now = Date.now()
   ) {
     const record = this.tracks.get(id) ?? { samples: [], segment: null };
-    record.samples.push({ lat, lon, time: now });
-    if (record.samples.length > MAX_SAMPLES) {
-      record.samples.splice(0, record.samples.length - MAX_SAMPLES);
+    const previous = record.samples[record.samples.length - 1];
+    const jumpMiles =
+      previous != null ? distanceMiles(previous.lat, previous.lon, lat, lon) : 0;
+
+    if (profile === 'beacon' || jumpMiles > MAX_JUMP_MILES[profile]) {
+      record.samples = [{ lat, lon, time: now }];
+    } else {
+      record.samples.push({ lat, lon, time: now });
+      if (record.samples.length > MAX_SAMPLES) {
+        record.samples.splice(0, record.samples.length - MAX_SAMPLES);
+      }
     }
 
-    const predicted = predictNextPosition(record.samples, hint, intervalMs);
+    if (profile === 'beacon') {
+      record.segment = {
+        fromLat: lat,
+        fromLon: lon,
+        toLat: lat,
+        toLon: lon,
+        startTime: now,
+        durationMs: intervalMs,
+      };
+      this.tracks.set(id, record);
+      return;
+    }
+
+    const predicted = predictNextPosition(record.samples, hint, intervalMs, profile);
     record.segment = {
       fromLat: lat,
       fromLon: lon,

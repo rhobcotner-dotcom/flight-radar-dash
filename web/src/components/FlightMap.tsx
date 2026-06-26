@@ -18,6 +18,7 @@ import { isLikelyMilGov } from '../lib/military';
 import { FlightDetails } from './FlightDetails';
 import { TrainDetails } from './TrainDetails';
 import { SatelliteDetails } from './SatelliteDetails';
+import { MapLocationHeader } from './MapLocationHeader';
 import { RadarOverlay } from './RadarOverlay';
 import { StormCellClick } from './StormCellClick';
 import {
@@ -43,13 +44,13 @@ import { useMapLayers } from '../hooks/useMapLayers';
 import { useViewportCameras, type StormCameraPriority } from '../hooks/useViewportCameras';
 import { useViewportRailCameras } from '../hooks/useViewportRailCameras';
 import type { MapViewportBounds } from '../lib/mapViewport';
-import { stableViewportKey, viewportFromArea } from '../lib/mapViewport';
-import { CameraStreamSchedulerProvider } from '../hooks/useCameraStreamScheduler';
+import { stableViewportKey, viewportFromArea, viewportSearchParams } from '../lib/mapViewport';
+import { ChartMapDecor } from './ChartMapDecor';
 import { useSatellites } from '../hooks/useSatellites';
 import { DEFAULT_RADAR_OPACITY } from '../lib/radar';
 import { weatherAlertCollectionKey } from '../lib/mapLayers';
 import { classifyHelicopter } from '../lib/helicopters';
-import { MAP_LAYER_HELP, PANEL_HELP } from '../lib/panelHelp';
+import { MAP_LAYER_HELP, PANEL_HELP, FUN_TOGGLE_HELP } from '../lib/panelHelp';
 import { LayerToggle, PanelTip } from './PanelTip';
 import { FunMapLayers } from './FunMapLayers';
 import type { useFunMode } from '../hooks/useFunMode';
@@ -306,6 +307,7 @@ const FlightMarker = memo(function FlightMarker({
         <FlightDetails flight={flight} compact showVisual={tooltipActive} />
       </Tooltip>
       <Popup maxWidth={360} minWidth={280}>
+        <MapLocationHeader lat={flight.lat} lon={flight.lon} />
         <FlightDetails flight={flight} />
       </Popup>
     </Marker>
@@ -362,7 +364,8 @@ const TrainMarker = memo(function TrainMarker({
     refreshIntervalMs: trainRefreshIntervalMs,
     anchorKey: trainAnchorKey,
     markerRef,
-  }  );
+    profile: train.trainKind === 'passenger' ? 'passenger-rail' : 'beacon',
+  });
 
   useEffect(() => {
     markerRef.current?.setIcon(icon);
@@ -377,6 +380,7 @@ const TrainMarker = memo(function TrainMarker({
       eventHandlers={mapHandlers?.(id)}
     >
       <Popup maxWidth={420} minWidth={300}>
+        <MapLocationHeader lat={train.lat} lon={train.lon} />
         <TrainDetails train={train} />
       </Popup>
     </Marker>
@@ -428,6 +432,7 @@ const SatelliteMarker = memo(function SatelliteMarker({
       eventHandlers={mapHandlers?.(id)}
     >
       <Popup maxWidth={320} minWidth={240}>
+        <MapLocationHeader lat={satellite.lat} lon={satellite.lon} />
         <SatelliteDetails satellite={satellite} />
       </Popup>
     </Marker>
@@ -553,13 +558,31 @@ const FlightMapInner = memo(function FlightMapInner({
       <MapViewportReporter onViewportChange={onViewportChange} />
       <CameraStreamSchedulerProvider bounds={streamBounds} boundsKey={cameraStreamBoundsKey}>
       {clearHighlightNow ? <MapHighlightExit onExit={clearHighlightNow} /> : null}
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      />
+      {fun.settings.radarNoir ? (
+        <>
+          <TileLayer
+            className="map-basemap-tiles"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png"
+          />
+          <TileLayer
+            className="map-basemap-labels"
+            attribution=""
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+            zIndex={250}
+          />
+          <ChartMapDecor />
+        </>
+      ) : (
+        <TileLayer
+          className="map-basemap-tiles"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
+      )}
       <RadarOverlay
         enabled={radarEnabled}
-        opacity={radarOpacity}
+        opacity={fun.settings.radarNoir ? 0.68 : radarOpacity}
         onFrameLabel={onRadarFrameLabel}
         onAttribution={onRadarAttribution}
         onError={onRadarError}
@@ -752,10 +775,19 @@ export function FlightMap({
   );
   const [radarError, setRadarError] = useState<string | null>(null);
   const radarOpacity = DEFAULT_RADAR_OPACITY;
-  const queryString = useMemo(
-    () => new URLSearchParams({ lat: String(area.lat), lon: String(area.lon) }).toString(),
-    [area.lat, area.lon]
+  const [viewportBounds, setViewportBounds] = useState<MapViewportBounds | null>(null);
+  const viewportKey = useMemo(
+    () => (viewportBounds ? stableViewportKey(viewportBounds) : 'initial'),
+    [viewportBounds]
   );
+  const queryString = useMemo(() => {
+    const homeParams = new URLSearchParams({
+      lat: String(area.lat),
+      lon: String(area.lon),
+      radiusMiles: String(area.radiusMiles ?? 85),
+    });
+    return viewportSearchParams(homeParams.toString(), viewportBounds ?? viewportFromArea(area)).toString();
+  }, [area.lat, area.lon, area.radiusMiles, viewportKey, viewportBounds]);
   const layerToggles = useMemo(
     () => ({
       flights: flightsEnabled,
@@ -803,12 +835,7 @@ export function FlightMap({
     }),
     [layerToggles, camerasEnabled, weatherCamerasEnabled, railCamerasEnabled]
   );
-  const [viewportBounds, setViewportBounds] = useState<MapViewportBounds | null>(null);
   const [stormCameraPriority, setStormCameraPriority] = useState<StormCameraPriority | null>(null);
-  const cameraStreamBoundsKey = useMemo(
-    () => (viewportBounds ? stableViewportKey(viewportBounds) : 'initial'),
-    [viewportBounds]
-  );
   const handleViewportChange = useCallback(
     (bounds: MapViewportBounds) => {
       setViewportBounds(bounds);
@@ -1053,6 +1080,12 @@ export function FlightMap({
             onChange={setRadarEnabled}
             storageKey={RADAR_ENABLED_KEY}
           />
+          <LayerToggle
+            label="Treasure chart"
+            tip={FUN_TOGGLE_HELP.radarNoir}
+            checked={fun.settings.radarNoir}
+            onChange={(checked) => fun.setSetting('radarNoir', checked)}
+          />
         </div>
       </div>
       {!mounted ? (
@@ -1077,7 +1110,7 @@ export function FlightMap({
             cameras={viewportCameras}
             railCameras={viewportRailCameras}
             viewportBounds={viewportBounds}
-            cameraStreamBoundsKey={cameraStreamBoundsKey}
+            cameraStreamBoundsKey={viewportKey}
             onViewportChange={handleViewportChange}
             onStormCameraPriority={handleStormCameraPriority}
             weather={weather}

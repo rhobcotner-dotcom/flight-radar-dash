@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Marker } from 'leaflet';
-import { TrackSmoothingEngine, type TrackMotionHint } from '../lib/trackSmoothing';
+import { TrackSmoothingEngine, type TrackMotionHint, type TrackSmoothingProfile } from '../lib/trackSmoothing';
 
 interface TrackSmoothingContextValue {
   engine: TrackSmoothingEngine;
@@ -51,6 +51,7 @@ export function useAnimatedMarkerPosition({
   refreshIntervalMs,
   anchorKey,
   markerRef,
+  profile = 'aircraft',
 }: {
   trackId: string;
   lat: number;
@@ -59,13 +60,14 @@ export function useAnimatedMarkerPosition({
   refreshIntervalMs: number;
   anchorKey: string | null | undefined;
   markerRef: MutableRefObject<Marker | null>;
+  profile?: TrackSmoothingProfile;
 }) {
   const context = useTrackSmoothingContext();
   const smoothingEnabled = Boolean(context?.enabled && refreshIntervalMs > 0);
 
   useEffect(() => {
     if (!smoothingEnabled || !context) return;
-    context.engine.register(trackId, lat, lon, motionHint ?? {}, refreshIntervalMs);
+    context.engine.register(trackId, lat, lon, motionHint ?? {}, refreshIntervalMs, profile);
   }, [
     anchorKey,
     context,
@@ -73,6 +75,7 @@ export function useAnimatedMarkerPosition({
     lon,
     motionHint?.headingDeg,
     motionHint?.speedMph,
+    profile,
     refreshIntervalMs,
     smoothingEnabled,
     trackId,
@@ -99,7 +102,7 @@ export function useAnimatedMarkerPosition({
     marker.setLatLng([lat, lon]);
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [anchorKey, context, lat, lon, markerRef, refreshIntervalMs, smoothingEnabled, trackId]);
+  }, [anchorKey, context, lat, lon, markerRef, profile, refreshIntervalMs, smoothingEnabled, trackId]);
 }
 
 export function useTrackSmoothingCleanup(activeIds: Set<string>) {

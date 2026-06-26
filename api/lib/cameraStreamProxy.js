@@ -69,6 +69,7 @@ function fetchHeaders(urlString) {
 /** Host suffixes used by state DOT / 511 live camera HLS feeds. */
 const ALLOWED_HLS_HOST_SUFFIXES = [
   'dot.ca.gov',
+  'dot.wi.gov',
   'modot.mo.gov',
   'modot.org',
   'ozarkstrafficoneview.com',

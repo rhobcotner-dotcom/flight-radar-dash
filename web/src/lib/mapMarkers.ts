@@ -8,8 +8,8 @@ import { formatSpeedMph } from './flightUtils';
 
 const MAP_PLANE_SIZE = 38;
 const MAP_PLANE_ACTIVE = 48;
-const MAP_TRAIN_SIZE = 32;
-const MAP_TRAIN_ACTIVE = 40;
+const MAP_TRAIN_SIZE = 16;
+const MAP_TRAIN_ACTIVE = 20;
 const MAP_SATELLITE_SIZE = 24;
 const MAP_SATELLITE_ACTIVE = 30;
 
