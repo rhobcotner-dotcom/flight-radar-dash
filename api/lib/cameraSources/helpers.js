@@ -255,9 +255,8 @@ export function isUsableCamera(cam) {
   return Boolean(cam?.liveUrl && (cam.mediaType === 'hls' || cam.mediaType === 'snapshot'));
 }
 
-/** MoDOT Wowza rtplive feeds fail outside traveler.modot.org — hide from map markers, except west STL suburbs where they are the only local inventory. */
+/** MoDOT Wowza rtplive feeds fail outside traveler.modot.org — hide from map markers. */
 export function isBrokenModotRtplexCamera(cam) {
-  if (isWestOfStLouisMississippi(cam?.lon)) return false;
   if (cam?.mediaType !== 'hls') return false;
   const raw = cam.sourceLiveUrl || cam.liveUrl;
   if (typeof raw !== 'string') return false;
@@ -273,7 +272,7 @@ export function isBrokenModotRtplexCamera(cam) {
 }
 
 export function isMapVisibleCamera(cam) {
-  return isUsableCamera(cam) && !isBrokenModotRtplexCamera(cam);
+  return isUsableCamera(cam);
 }
 
 function cameraUrlStrings(cam) {
@@ -293,9 +292,8 @@ function cameraUrlStrings(cam) {
   return urls;
 }
 
-/** Any MoDOT-sourced feed — excluded from storm briefing east of the river; west STL relies on MoDOT. */
+/** Any MoDOT-sourced feed — excluded from storm briefing and Missouri map inventory. */
 export function isModotTrafficCamera(cam) {
-  if (isWestOfStLouisMississippi(cam?.lon)) return false;
   if (/modot/i.test(String(cam?.source || ''))) return true;
   if (/^modot[-_]/i.test(String(cam?.id || ''))) return true;
   for (const url of cameraUrlStrings(cam)) {
@@ -343,9 +341,9 @@ export function arcGisEnvelopeParams(bbox, extra = {}) {
 function cameraPickScore(cam) {
   if (!cam?.liveUrl) return -1;
   if (cam.camKind === 'weather') return 4;
-  if (cam.mediaType === 'snapshot') return 3;
-  if (cam.mediaType === 'youtube') return 2;
-  if (cam.mediaType === 'hls') return 1;
+  if (cam.mediaType === 'hls') return 5;
+  if (cam.mediaType === 'youtube') return 4;
+  if (cam.mediaType === 'snapshot') return 1;
   return 0;
 }
 

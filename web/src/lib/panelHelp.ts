@@ -16,13 +16,13 @@ export const MAP_LAYER_HELP = {
   roads:
     'Missouri DOT road conditions: closures, work zones, traffic delays, and winter impacts from mapping.modot.org. Red = closed, yellow = delay, cyan = winter.',
   aisVessels:
-    'Large ships in the current map view (cargo, tanker, passenger, river tow) from Axiom AIS and optional AISHub. Pan to coasts, Great Lakes, or major rivers — pink boat icons scale with zoom.',
+    'Large ships in the current map view (cargo, tanker, passenger, river tow) from Axiom AIS and optional AISHub. Pan to coasts, Great Lakes, or major rivers — light grey boat icons scale with zoom.',
   earthquakes:
     'USGS earthquakes in the last 24 hours within 500 mi. Orange circles scale with magnitude.',
   wildfires:
     'NASA FIRMS VIIRS wildfire hotspots within 200 mi. Requires free NASA_FIRMS_MAP_KEY from firms.modaps.eosdis.nasa.gov.',
   cameras:
-    'US highway traffic cameras from state DOT feeds (Travel Midwest GTIS in MO/IL/IA/IN/WI/KY/MN, Iowa DOT, MoDOT west of the Mississippi near St. Louis, etc.). Hover for a snapshot; click for live video.',
+    'US highway traffic cameras from state DOT feeds (Missouri DOT, ALDOT, MDOT, FL511, 511GA, AZ511, NVRoads, UDOT 511, CDOT, Idaho 511, NMRoads, Travel Midwest GTIS, OKTraffic, etc.). Hover for a snapshot; click for live video.',
   weatherCameras:
     'Sky- and landscape-facing weather cameras (ALERTWest, Wyoming scenic, optional Windy). Teal sun icons — hover for a snapshot, click for details and live view when available.',
   railCameras:
@@ -41,6 +41,8 @@ export const MAP_LAYER_HELP = {
     'Satellites above 5° elevation at your location (ISS, GPS, weather sats, etc.). Positions computed from CelesTrak TLEs — not ground tracks.',
   radar:
     'NEXRAD base reflectivity overlay (IEM, ~3–5 min scan lag). Composite tiles scale above zoom 9; with Radar on, click a storm cell for a meteorologist-style briefing (clear sky clicks do nothing). Between refreshes, recent frames are blended so echoes drift smoothly instead of jumping.',
+  stormLiveOnly:
+    'Storm cell briefings: when on, only verified live HLS/YouTube cameras are shown. Turn off to also allow DOT snapshot previews where live streams are unavailable (FL511, 511GA, AZ511, etc.).',
 } as const;
 
 export const PANEL_HELP = {

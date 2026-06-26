@@ -112,14 +112,14 @@ async function fetchTilePixel(lat, lon, zoom = SAMPLE_ZOOM) {
   return { dbz, rgb: [pixel.r, pixel.g, pixel.b], alpha: pixel.a, source, zoom };
 }
 
-export async function sampleRadarField(lat, lon, radiusMiles = 12) {
+export async function sampleRadarField(lat, lon, radiusMiles = 16) {
   const latStep = radiusMiles / 69 / 2;
   const lonStep = radiusMiles / (69 * Math.cos((lat * Math.PI) / 180) || 1) / 2;
   const clickSample = await fetchTilePixel(lat, lon);
 
   const neighborJobs = [];
-  for (let row = -1; row <= 1; row += 1) {
-    for (let col = -1; col <= 1; col += 1) {
+  for (let row = -2; row <= 2; row += 1) {
+    for (let col = -2; col <= 2; col += 1) {
       if (row === 0 && col === 0) continue;
       const point = offsetLatLon(lat, lon, row * latStep, col * lonStep);
       neighborJobs.push(
@@ -146,13 +146,17 @@ export async function sampleRadarField(lat, lon, radiusMiles = 12) {
       ? 3
       : Math.min(40, Math.max(3, Math.round(Math.sqrt(coreSamples.length) * (radiusMiles / 2))));
 
+  const hasAdjacentStorm = neighbors.some((sample) => sample.dbz >= STORM_MIN_DBZ);
+
   return {
     clickDbz,
     peakDbz,
     sampleCount: samples.length,
     coreSampleCount: coreSamples.length,
     approxDiameterMiles,
-    hasStorm: clickDbz != null && peakDbz >= STORM_MIN_DBZ,
+    hasStorm:
+      peakDbz >= STORM_MIN_DBZ &&
+      (clickDbz != null || hasAdjacentStorm),
     source: clickSample.source,
   };
 }

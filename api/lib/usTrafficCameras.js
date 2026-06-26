@@ -8,12 +8,10 @@ import {
   isModotRtplexStreamUrl,
   isMapVisibleCamera,
   isStormEligibleCamera,
-  isWestOfStLouisMississippi,
   isWideViewport,
   modotRtplexSnapshotUrl,
   STATE_BOUNDS,
   statesInBbox,
-  STL_MISSISSIPPI_LON,
   thinCameras,
   thinCamerasByState,
 } from './cameraSources/helpers.js';
@@ -25,11 +23,56 @@ export const CONUS_BBOX = { west: -125, south: 24, east: -66, north: 50 };
 const VERIFIED_HLS_PER_STATE = 24;
 const VERIFIED_SNAP_PER_STATE = 24;
 /** Wisconsin has ~480 live HLS feeds — keep a larger verified slice for map + storm reliability. */
-const VERIFIED_HLS_OVERRIDES = { WI: 96, OK: 96 };
+const VERIFIED_HLS_OVERRIDES = { WI: 96, OK: 96, MO: 96, AL: 96, MS: 96, NV: 96, CO: 96, CA: 96 };
 /** Illinois is snapshot-only via Travel Midwest — verify more working feeds for dense map coverage. */
-const VERIFIED_SNAP_OVERRIDES = { IL: 96, IN: 96, OH: 96 };
+const VERIFIED_SNAP_OVERRIDES = {
+  IL: 96,
+  IN: 96,
+  OH: 96,
+  NE: 96,
+  FL: 96,
+  GA: 96,
+  AZ: 96,
+  UT: 96,
+  ID: 96,
+  NM: 96,
+  WA: 96,
+  AK: 96,
+  HI: 96,
+  SC: 96,
+  SD: 96,
+  PA: 96,
+  ME: 96,
+  VT: 96,
+  VA: 96,
+  TX: 96,
+  KY: 96,
+};
 /** States where snapshots are the primary inventory (no public HLS). */
-const SNAPSHOT_PRIMARY_STATES = new Set(['IL', 'IN', 'OH', 'HI', 'WY']);
+const SNAPSHOT_PRIMARY_STATES = new Set([
+  'IL',
+  'IN',
+  'OH',
+  'NE',
+  'FL',
+  'GA',
+  'AZ',
+  'UT',
+  'ID',
+  'NM',
+  'HI',
+  'WY',
+  'WA',
+  'AK',
+  'SC',
+  'SD',
+  'PA',
+  'ME',
+  'VT',
+  'VA',
+  'TX',
+  'KY',
+]);
 const LOCAL_POOL_RADIUS_MILES = 120;
 const DEFAULT_WARM = {
   lat: Number(process.env.HOME_LAT) || 38.787,
@@ -106,8 +149,7 @@ function mapPlaybackCameras(cameras) {
   return cameras.map((cam) => {
     const sourceLiveUrl = cam.liveUrl;
     if (cam.mediaType === 'hls') {
-      const modotDirect =
-        isModotRtplexStreamUrl(sourceLiveUrl) && isWestOfStLouisMississippi(cam.lon);
+      const modotDirect = isModotRtplexStreamUrl(sourceLiveUrl);
       const playbackUrl = modotDirect ? sourceLiveUrl : cameraHlsPlaybackUrl(cam.liveUrl);
       const rawPreview =
         cam.previewUrl || modotRtplexSnapshotUrl(hlsSourceUrl({ ...cam, sourceLiveUrl: cam.liveUrl }));
@@ -164,16 +206,8 @@ function sortCamerasStable(cameras, centerLat, centerLon) {
     });
 }
 
-function preferWestOfMississippi(cameras, centerLon) {
-  if (!Number.isFinite(centerLon) || centerLon >= STL_MISSISSIPPI_LON) return cameras;
-  const west = cameras.filter((cam) => isWestOfStLouisMississippi(cam.lon));
-  if (!west.length) return cameras;
-  const east = cameras.filter((cam) => !isWestOfStLouisMississippi(cam.lon));
-  return [...west, ...east];
-}
-
 function selectForViewport(cameras, bbox, limit, centerLat, centerLon) {
-  const sorted = sortCamerasStable(preferWestOfMississippi(cameras, centerLon), centerLat, centerLon);
+  const sorted = sortCamerasStable(cameras, centerLat, centerLon);
   if (isWideViewport(bbox)) {
     return thinCamerasByState(sorted, bbox, limit, centerLat, centerLon);
   }
@@ -193,7 +227,7 @@ function regionalPoolFromRaw(pool, bbox, centerLat, centerLon) {
 /** Snapshot-primary state under the viewport center (IL vs IN vs OH, etc.). */
 function viewportSnapshotPrimaryState(centerLat, centerLon) {
   if (!Number.isFinite(centerLat) || !Number.isFinite(centerLon)) return null;
-  for (const code of ['IL', 'IN', 'OH', 'WI', 'WY', 'HI']) {
+  for (const code of ['IL', 'IN', 'OH', 'NE', 'FL', 'GA', 'AZ', 'NV', 'UT', 'CO', 'ID', 'NM', 'WI', 'WY', 'HI']) {
     if (!SNAPSHOT_PRIMARY_STATES.has(code)) continue;
     const bounds = STATE_BOUNDS[code];
     if (!bounds) continue;
@@ -228,12 +262,7 @@ function selectCamerasForRequest({ verified, pool, bbox, limit, centerLat, cente
     let picked = selectForViewport(primarySnaps, bbox, limit, centerLat, centerLon);
     const remaining = Math.max(0, limit - picked.length);
     if (remaining > 0) {
-      const hlsPool = mappedRegional.filter(
-        (cam) =>
-          cam.mediaType === 'hls' &&
-          (!isModotRtplexStreamUrl(cam.sourceLiveUrl || cam.liveUrl) ||
-            isWestOfStLouisMississippi(cam.lon))
-      );
+      const hlsPool = mappedRegional.filter((cam) => cam.mediaType === 'hls');
       const otherSnaps = focusState
         ? snapshots.filter((cam) => cam.state !== focusState)
         : snapshots.filter((cam) => !snapshotPrimaryStates.includes(cam.state));
@@ -248,7 +277,7 @@ function selectCamerasForRequest({ verified, pool, bbox, limit, centerLat, cente
   const snapQuota =
     liveCount >= limit
       ? 0
-      : Math.min(snapshots.length, Math.max(3, Math.ceil(limit * 0.15)));
+      : Math.min(snapshots.length, Math.max(1, Math.ceil(limit * 0.08)));
   const verifiedInView = verified.length
     ? selectForViewport(camerasInBbox(verified, bbox), bbox, limit, centerLat, centerLon)
     : [];
@@ -256,12 +285,7 @@ function selectCamerasForRequest({ verified, pool, bbox, limit, centerLat, cente
   let hlsPick = [];
   const hlsRemaining = Math.max(0, limit - verifiedInView.length);
   if (hlsRemaining > 0) {
-    const hlsPool = mappedRegional.filter(
-      (cam) =>
-        cam.mediaType === 'hls' &&
-        (!isModotRtplexStreamUrl(cam.sourceLiveUrl || cam.liveUrl) ||
-          isWestOfStLouisMississippi(cam.lon))
-    );
+    const hlsPool = mappedRegional.filter((cam) => cam.mediaType === 'hls');
     hlsPick = selectForViewport(hlsPool, bbox, hlsRemaining, centerLat, centerLon);
   }
 
@@ -452,19 +476,24 @@ export function getCameraPoolStatus() {
   };
 }
 
-const STORM_CAMERA_MIN_RADIUS_MILES = 15;
+const STORM_CAMERA_MIN_RADIUS_MILES = 22;
+const STORM_CAMERA_MAX_RADIUS_MILES = 60;
 
 function stormReliabilityScore(cam) {
   let score = 0;
-  if (cam.mediaType === 'snapshot') score -= 100;
+  if (cam.mediaType === 'snapshot') score -= 500;
   if (cam.camKind === 'weather') score -= 1;
-  else if (cam.mediaType === 'hls') score += 10;
-  else if (cam.mediaType === 'youtube') score += 8;
+  else if (cam.mediaType === 'hls') score += 100;
+  else if (cam.mediaType === 'youtube') score += 80;
   return score;
 }
 
 function isLivePlaybackCamera(cam) {
   return cam.mediaType === 'hls' || cam.mediaType === 'youtube';
+}
+
+function liveCamerasNearPointFromPool(lat, lon, radiusMiles, limit, mapped) {
+  return camerasNearPointFromPool(lat, lon, radiusMiles, limit, mapped).filter(isLivePlaybackCamera);
 }
 
 function camerasNearPointFromPool(lat, lon, radiusMiles, limit, mapped) {
@@ -532,7 +561,7 @@ function countLiveCameras(cameras) {
   return cameras.filter(isLivePlaybackCamera).length;
 }
 
-export async function fetchCamerasNearPoint(lat, lon, radiusMiles, limit = 8) {
+export async function fetchCamerasNearPoint(lat, lon, radiusMiles, limit = 8, { liveOnly = true } = {}) {
   const searchRadius = Math.max(radiusMiles, STORM_CAMERA_MIN_RADIUS_MILES);
   const bbox = boundingBox(lat, lon, Math.max(searchRadius * 1.35, STORM_CAMERA_MIN_RADIUS_MILES));
   const direct = await fetchDirectCameras(bbox);
@@ -540,16 +569,20 @@ export async function fetchCamerasNearPoint(lat, lon, radiusMiles, limit = 8) {
     mapPlaybackCameras(dedupeCameras(direct.cameras.filter(isStormEligibleCamera)))
   );
 
-  let cameras = camerasNearPointFromPool(lat, lon, searchRadius, limit, mapped);
+  async function pickVerified(searchR, pickLimit) {
+    const candidateLimit = Math.max(pickLimit * 24, 72);
+    const candidates = liveOnly
+      ? liveCamerasNearPointFromPool(lat, lon, searchR, candidateLimit, mapped)
+      : camerasNearPointFromPool(lat, lon, searchR, candidateLimit, mapped);
+    return selectWorkingLiveCameras(candidates, pickLimit);
+  }
 
-  if (searchRadius < 45) {
-    const widerRadius = Math.min(45, searchRadius * 2);
-    const wider = camerasNearPointFromPool(lat, lon, widerRadius, limit, mapped);
-    const widerLive = countLiveCameras(wider);
-    const currentLive = countLiveCameras(cameras);
-    if (widerLive > currentLive || (cameras.length < limit && wider.length > cameras.length)) {
-      cameras = wider;
-    }
+  let cameras = await pickVerified(searchRadius, limit);
+
+  if (cameras.length < limit && searchRadius < STORM_CAMERA_MAX_RADIUS_MILES) {
+    const widerRadius = Math.min(STORM_CAMERA_MAX_RADIUS_MILES, Math.round(searchRadius * 1.75));
+    const wider = await pickVerified(widerRadius, limit);
+    if (wider.length > cameras.length) cameras = wider;
   }
 
   return cameras;

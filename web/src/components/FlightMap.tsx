@@ -53,6 +53,7 @@ import { DEFAULT_RADAR_OPACITY } from '../lib/radar';
 import { weatherAlertCollectionKey } from '../lib/mapLayers';
 import { classifyHelicopter } from '../lib/helicopters';
 import { MAP_LAYER_HELP, PANEL_HELP, FUN_TOGGLE_HELP } from '../lib/panelHelp';
+import { readStormCameraMode, writeStormCameraMode, type StormCameraMode } from '../lib/stormCellCameras';
 import { PanelTip } from './PanelTip';
 import { MapLayerFilterBox, type MapLayerFilterSection } from './MapLayerFilterBox';
 import { FunMapLayers } from './FunMapLayers';
@@ -66,6 +67,8 @@ import {
   preloadMapMarkerSprites,
 } from '../lib/mapMarkers';
 import { altitudeTrendForFlight, pruneAltitudeTrends } from '../lib/flightAltitudeTrend';
+import { isGroundLevelFlight } from '../lib/flightGroundLevel';
+import { speedTrendForFlight, pruneSpeedTrends } from '../lib/flightSpeedTrend';
 
 type MapHighlightHandlers = ReturnType<typeof useHighlight>['mapHandlers'];
 
@@ -250,8 +253,13 @@ const FlightMarker = memo(function FlightMarker({
     () => altitudeTrendForFlight(id, flight.alt),
     [id, flight.alt]
   );
+  const ground = isGroundLevelFlight(flight);
+  const speedTrend = useMemo(
+    () => speedTrendForFlight(id, flight.gspeed, !ground),
+    [id, flight.gspeed, ground]
+  );
   const [icon, setIcon] = useState<L.DivIcon>(() =>
-    buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend)
+    buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend)
   );
   const [tooltipActive, setTooltipActive] = useState(false);
 
@@ -267,8 +275,8 @@ const FlightMarker = memo(function FlightMarker({
 
   useEffect(() => {
     let cancelled = false;
-    setIcon(buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend));
-    void buildFlightMapIcon(flight, highlighted, military, emergency, heloKind, altitudeTrend).then((next) => {
+    setIcon(buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend));
+    void buildFlightMapIcon(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend).then((next) => {
       if (!cancelled) setIcon(next);
     });
     return () => {
@@ -287,6 +295,7 @@ const FlightMarker = memo(function FlightMarker({
     flight.alt,
     flight.gspeed,
     altitudeTrend,
+    speedTrend,
     highlighted,
     military,
     emergency,
@@ -480,6 +489,7 @@ const FlightMapInner = memo(function FlightMapInner({
   cameraStreamBoundsKey,
   onViewportChange,
   onStormCameraPriority,
+  stormCameraMode,
   weather,
   fun,
   fullPage = false,
@@ -529,6 +539,7 @@ const FlightMapInner = memo(function FlightMapInner({
   cameraStreamBoundsKey: string;
   onViewportChange: (bounds: MapViewportBounds) => void;
   onStormCameraPriority: (lat: number, lon: number) => void;
+  stormCameraMode: StormCameraMode;
   weather: WeatherConditions | null;
   fun: ReturnType<typeof useFunMode>;
   fullPage?: boolean;
@@ -602,6 +613,7 @@ const FlightMapInner = memo(function FlightMapInner({
       <StormCellClick
         radarEnabled={radarEnabled}
         radarNoir={fun.settings.radarNoir}
+        stormCameraMode={stormCameraMode}
         viewportCameras={cameras}
         onStormCameraPriority={onStormCameraPriority}
       />
@@ -705,6 +717,7 @@ function FlightMapTrackCleanup({ activeTrackIds }: { activeTrackIds: Set<string>
   useTrackSmoothingCleanup(activeTrackIds);
   useEffect(() => {
     pruneAltitudeTrends(activeTrackIds);
+    pruneSpeedTrends(activeTrackIds);
   }, [activeTrackIds]);
   return null;
 }
@@ -746,6 +759,7 @@ export function FlightMap({
 }: Props) {
   const [mounted, setMounted] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState(() => readRadarFlag(RADAR_ENABLED_KEY, true));
+  const [stormCameraMode, setStormCameraMode] = useState<StormCameraMode>(() => readStormCameraMode());
   const [satellitesEnabled, setSatellitesEnabled] = useState(() => readRadarFlag(SATELLITES_ENABLED_KEY, false));
   const [flightsEnabled, setFlightsEnabled] = useState(() => readLayerFlag(LAYER_KEYS.flights, true));
   const [railEnabled, setRailEnabled] = useState(() => readLayerFlag(LAYER_KEYS.rail, true));
@@ -985,6 +999,17 @@ export function FlightMap({
             storageKey: RADAR_ENABLED_KEY,
           },
           {
+            id: 'stormLiveOnly',
+            label: 'Live storm cams',
+            tip: MAP_LAYER_HELP.stormLiveOnly,
+            checked: stormCameraMode === 'live-only',
+            onChange: (checked) => {
+              const mode: StormCameraMode = checked ? 'live-only' : 'live-and-snapshots';
+              writeStormCameraMode(mode);
+              setStormCameraMode(mode);
+            },
+          },
+          {
             id: 'radarNoir',
             label: 'Treasure chart',
             tip: FUN_TOGGLE_HELP.radarNoir,
@@ -1143,6 +1168,7 @@ export function FlightMap({
       weatherAlertsEnabled,
       lightningEnabled,
       radarEnabled,
+      stormCameraMode,
       fun,
       droughtEnabled,
       riversEnabled,
@@ -1211,6 +1237,7 @@ export function FlightMap({
             cameraStreamBoundsKey={viewportKey}
             onViewportChange={handleViewportChange}
             onStormCameraPriority={handleStormCameraPriority}
+            stormCameraMode={stormCameraMode}
             weather={weather}
             fun={fun}
             fullPage={fullPage}

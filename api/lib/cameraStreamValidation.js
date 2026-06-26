@@ -49,12 +49,35 @@ async function probeSnapshot(sourceUrl) {
   }
 }
 
+function probeUrlForCamera(camera) {
+  if (camera.sourceLiveUrl?.startsWith('http')) return camera.sourceLiveUrl;
+  const live = camera.liveUrl;
+  if (typeof live === 'string' && live.startsWith('http')) return live;
+  if (typeof live === 'string' && live.startsWith('/api/live/camera-image?')) {
+    try {
+      const raw = new URL(live, 'http://localhost').searchParams.get('url');
+      if (raw) return decodeURIComponent(raw);
+    } catch {
+      /* ignore */
+    }
+  }
+  if (typeof live === 'string' && live.startsWith('/api/live/camera-hls?')) {
+    try {
+      const raw = new URL(live, 'http://localhost').searchParams.get('url');
+      if (raw) return decodeURIComponent(raw);
+    } catch {
+      /* ignore */
+    }
+  }
+  return live;
+}
+
 async function probeOne(camera) {
   if (camera.mediaType === 'snapshot') {
-    return probeSnapshot(camera.liveUrl);
+    return probeSnapshot(probeUrlForCamera(camera));
   }
 
-  const sourceLiveUrl = camera.liveUrl;
+  const sourceLiveUrl = probeUrlForCamera(camera);
   if (isModotRtplexStreamUrl(sourceLiveUrl)) {
     // Wowza rtplive CDN is often unreachable outside traveler.modot.org — do not mark verified.
     manifestCache.set(sourceLiveUrl, { ok: false, at: Date.now() });

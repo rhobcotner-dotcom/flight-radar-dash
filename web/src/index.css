@@ -897,7 +897,7 @@ body {
 
 .vessel-type-line {
   font-size: 0.9rem;
-  color: #f472b6;
+  color: #d1d5db;
   margin-bottom: 0.15rem;
 }
 
@@ -2195,7 +2195,7 @@ body {
 .vessel-ship {
   width: 22px;
   height: 22px;
-  color: #f472b6;
+  color: #d1d5db;
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.55));
   transform-origin: center center;
 }
@@ -2362,16 +2362,17 @@ body {
 .map-aircraft-marker-wrap {
   position: relative;
   display: block;
+  overflow: visible;
 }
 
 .map-aircraft-trend {
   position: absolute;
-  right: -6px;
-  top: 50%;
-  width: 18px;
-  height: 18px;
-  transform: translateY(-50%);
-  z-index: 3;
+  left: 50%;
+  top: -11px;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%);
+  z-index: 4;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
   pointer-events: none;
 }
@@ -2385,9 +2386,9 @@ body {
 }
 
 .map-aircraft-marker-wrap:has(.map-aircraft-active) .map-aircraft-trend {
-  width: 22px;
-  height: 22px;
-  right: -7px;
+  width: 16px;
+  height: 16px;
+  top: -12px;
 }
 
 .map-aircraft-cloud {
@@ -2406,6 +2407,138 @@ body {
 .map-aircraft-marker-wrap .map-rotating-marker {
   position: relative;
   z-index: 2;
+}
+
+.map-aircraft-rotating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.map-aircraft-body {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+
+.map-aircraft-exhaust {
+  position: absolute;
+  left: 50%;
+  top: 72%;
+  width: 7px;
+  height: 30px;
+  transform: translateX(-50%);
+  transform-origin: top center;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.map-aircraft-exhaust-glow,
+.map-aircraft-exhaust-core,
+.map-aircraft-exhaust-wisp {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.map-aircraft-exhaust-glow {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 145, 55, 0.42) 0%,
+    rgba(255, 110, 30, 0.22) 28%,
+    rgba(255, 80, 15, 0.08) 55%,
+    transparent 100%
+  );
+  border-radius: 45% 45% 50% 50% / 18% 18% 82% 82%;
+  filter: blur(2px);
+}
+
+.map-aircraft-exhaust-core {
+  left: 22%;
+  width: 56%;
+  height: 42%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 230, 180, 0.92) 0%,
+    rgba(255, 175, 80, 0.55) 45%,
+    rgba(255, 120, 35, 0.12) 78%,
+    transparent 100%
+  );
+  border-radius: 50% 50% 40% 40% / 35% 35% 65% 65%;
+  filter: blur(0.35px);
+}
+
+.map-aircraft-exhaust-accel {
+  animation: map-exhaust-pulse 1.35s ease-in-out infinite;
+}
+
+.map-aircraft-exhaust-decel {
+  top: 74%;
+  width: 6px;
+  height: 18px;
+  opacity: 0.82;
+}
+
+.map-aircraft-exhaust-wisp {
+  background: linear-gradient(
+    to bottom,
+    rgba(203, 213, 225, 0.55) 0%,
+    rgba(148, 163, 184, 0.28) 40%,
+    transparent 100%
+  );
+  filter: blur(1.2px);
+  border-radius: 45% 45% 50% 50% / 20% 20% 80% 80%;
+}
+
+@keyframes map-exhaust-pulse {
+  0%,
+  100% {
+    opacity: 0.62;
+  }
+  50% {
+    opacity: 0.92;
+  }
+}
+
+.map-aircraft-marker-wrap:has(.map-aircraft-active) .map-aircraft-exhaust-accel {
+  width: 8px;
+  height: 36px;
+  top: 70%;
+}
+
+.flight-map-radar-noir .map-aircraft-exhaust-glow {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 120, 35, 0.38) 0%,
+    rgba(180, 70, 10, 0.18) 30%,
+    rgba(120, 45, 5, 0.06) 55%,
+    transparent 100%
+  );
+}
+
+.flight-map-radar-noir .map-aircraft-exhaust-core {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 205, 130, 0.88) 0%,
+    rgba(220, 130, 50, 0.48) 45%,
+    rgba(160, 70, 10, 0.1) 78%,
+    transparent 100%
+  );
+}
+
+.flight-map-radar-noir .map-aircraft-exhaust-wisp {
+  background: linear-gradient(
+    to bottom,
+    rgba(180, 170, 150, 0.5) 0%,
+    rgba(120, 110, 95, 0.24) 42%,
+    transparent 100%
+  );
 }
 
 .flight-map-radar-noir .map-aircraft-cloud {
@@ -2427,7 +2560,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4ade80;
+  color: #f8fafc;
 }
 
 .map-aircraft-mask {
@@ -2435,12 +2568,12 @@ body {
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   transform-origin: center center;
-  background-color: #4ade80;
-  filter: drop-shadow(0 0 2px rgba(34, 197, 94, 0.55));
+  background-color: #f8fafc;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 4px rgba(15, 23, 42, 0.65));
 }
 
 .map-aircraft-civil .map-aircraft-mask {
-  background-color: #4ade80;
+  background-color: #f8fafc;
 }
 
 .map-aircraft-ground,
@@ -2637,7 +2770,7 @@ body {
 }
 
 .map-marker-label-civil {
-  color: #bbf7d0;
+  color: #f8fafc;
 }
 
 .map-marker-label-military {
@@ -3673,15 +3806,15 @@ th button {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #9ca3af;
-  border: 1px solid #6b7280;
-  box-shadow: 0 0 0 1px rgba(156, 163, 175, 0.2), 0 1px 2px rgba(0, 0, 0, 0.35);
+  background: #2e1065;
+  border: 1px solid #1e0a42;
+  box-shadow: 0 0 0 1px rgba(46, 16, 101, 0.32), 0 1px 2px rgba(0, 0, 0, 0.45);
   cursor: pointer;
 }
 
 .camera-marker:hover .camera-dot {
-  background: #d1d5db;
-  border-color: #9ca3af;
+  background: #3b0764;
+  border-color: #2e1065;
   transform: scale(1.12);
 }
 

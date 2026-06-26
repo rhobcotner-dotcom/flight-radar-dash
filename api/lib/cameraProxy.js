@@ -31,9 +31,13 @@ const DIRECT_IMAGE_HOST_SUFFIXES = [
   '511ga.org',
   '511wi.gov',
   '511.alaska.gov',
+  '511.idaho.gov',
   'webapps.arlingtontx.gov',
   'cotrip.org',
   'carsprogram.org',
+  'api.algotraffic.com',
+  'dot.ca.gov',
+  'iteris-atis.com',
 ];
 
 export function cameraNeedsProxy(url) {

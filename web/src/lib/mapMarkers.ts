@@ -5,6 +5,7 @@ import { aircraftSpriteSheet, getAircraftSpriteMap } from './aircraftSprites';
 import { resolveAircraftTypeCandidates } from '../../../lib/aircraftTypeFallback.js';
 import { aircraftIconScale } from './aircraftIconScale';
 import type { FlightAltitudeTrend } from './flightAltitudeTrend';
+import type { FlightSpeedTrend } from './flightSpeedTrend';
 import { isHighAltitudeFlight } from './flightAltitudeTrend';
 import { isGroundLevelFlight } from './flightGroundLevel';
 
@@ -115,10 +116,10 @@ function planeFallbackSvg() {
 
 function altitudeTrendHtml(trend: FlightAltitudeTrend) {
   if (trend === 'up') {
-    return `<svg class="map-aircraft-trend map-aircraft-trend-up" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" role="presentation" title="Climbing"><path fill="currentColor" d="M8 2.5 13.5 12.5H2.5L8 2.5z"/></svg>`;
+    return `<svg class="map-aircraft-trend map-aircraft-trend-up" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" role="presentation" title="Climbing"><path fill="currentColor" d="M8 2.5 13.5 12.5H2.5L8 2.5z"/></svg>`;
   }
   if (trend === 'down') {
-    return `<svg class="map-aircraft-trend map-aircraft-trend-down" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" role="presentation" title="Descending"><path fill="currentColor" d="M8 13.5 2.5 3.5h11L8 13.5z"/></svg>`;
+    return `<svg class="map-aircraft-trend map-aircraft-trend-down" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" role="presentation" title="Descending"><path fill="currentColor" d="M8 13.5 2.5 3.5h11L8 13.5z"/></svg>`;
   }
   return '';
 }
@@ -134,24 +135,38 @@ function highAltitudeCloudHtml() {
   `;
 }
 
+function speedPlumeHtml(speedTrend: FlightSpeedTrend) {
+  if (speedTrend === 'accel') {
+    return `<div class="map-aircraft-exhaust map-aircraft-exhaust-accel" aria-hidden="true" role="presentation" title="Accelerating"><span class="map-aircraft-exhaust-glow"></span><span class="map-aircraft-exhaust-core"></span></div>`;
+  }
+  if (speedTrend === 'decel') {
+    return `<div class="map-aircraft-exhaust map-aircraft-exhaust-decel" aria-hidden="true" role="presentation" title="Decelerating"><span class="map-aircraft-exhaust-wisp"></span></div>`;
+  }
+  return '';
+}
+
 function flightMarkerBodyHtml(options: {
   inner: string;
   size: number;
   rotation: number;
   trend: FlightAltitudeTrend;
+  speedTrend: FlightSpeedTrend;
   highAltitude: boolean;
   ground: boolean;
 }) {
-  const { inner, size, rotation, trend, highAltitude, ground } = options;
+  const { inner, size, rotation, trend, speedTrend, highAltitude, ground } = options;
   const cloudPad = highAltitude && !ground ? 8 : 0;
-  const wrapHeight = size + cloudPad;
+  const tailPad = speedTrend && !ground ? 20 : 0;
+  const wrapHeight = size + cloudPad + tailPad;
+  const plume = ground ? '' : speedPlumeHtml(speedTrend);
 
   return `
     <div class="map-aircraft-marker-wrap${ground ? ' map-aircraft-marker-wrap-ground' : ''}" style="width:${size}px;height:${wrapHeight}px;">
       ${highAltitude && !ground ? highAltitudeCloudHtml() : ''}
       ${ground ? '' : altitudeTrendHtml(trend)}
-      <div class="map-rotating-marker" style="width:${size}px;height:${size}px;transform:rotate(${rotation}deg);">
-        ${inner}
+      <div class="map-rotating-marker map-aircraft-rotating" style="width:${size}px;height:${size}px;transform:rotate(${rotation}deg);">
+        <div class="map-aircraft-body">${inner}</div>
+        ${plume}
       </div>
     </div>
   `;
@@ -234,15 +249,17 @@ function buildFlightRotatedMarkerIcon(options: {
   bottomLabel?: string | null;
   bottomLabelClass?: string;
   trend: FlightAltitudeTrend;
+  speedTrend: FlightSpeedTrend;
   highAltitude: boolean;
   ground: boolean;
 }) {
-  const { inner, size, rotation, bottomLabel, bottomLabelClass, trend, highAltitude, ground } = options;
+  const { inner, size, rotation, bottomLabel, bottomLabelClass, trend, speedTrend, highAltitude, ground } = options;
   const cloudPad = highAltitude && !ground ? 8 : 0;
-  const bodyHeight = size + cloudPad;
+  const tailPad = speedTrend && !ground ? 20 : 0;
+  const bodyHeight = size + cloudPad + tailPad;
 
   return buildRotatedMarkerIcon({
-    html: flightMarkerBodyHtml({ inner, size, rotation, trend, highAltitude, ground }),
+    html: flightMarkerBodyHtml({ inner, size, rotation, trend, speedTrend, highAltitude, ground }),
     size,
     rotation,
     className: 'map-aircraft-marker',
@@ -259,7 +276,8 @@ export async function buildFlightMapIcon(
   military: boolean,
   emergency = false,
   heloKind: string | null = null,
-  altitudeTrend: FlightAltitudeTrend = null
+  altitudeTrend: FlightAltitudeTrend = null,
+  speedTrend: FlightSpeedTrend = null
 ): Promise<L.DivIcon> {
   const typeScale = aircraftIconScale(flight.type);
   const size = (highlighted ? MAP_PLANE_ACTIVE : MAP_PLANE_SIZE) * typeScale;
@@ -281,6 +299,7 @@ export async function buildFlightMapIcon(
     bottomLabel: mapFlightCarrierLabel(flight),
     bottomLabelClass: markerLabelClass(military, emergency, heloKind, ground),
     trend: altitudeTrend,
+    speedTrend,
     highAltitude,
     ground,
   });
@@ -339,7 +358,8 @@ export function buildFlightMapIconPlaceholder(
   military: boolean,
   emergency = false,
   heloKind: string | null = null,
-  altitudeTrend: FlightAltitudeTrend = null
+  altitudeTrend: FlightAltitudeTrend = null,
+  speedTrend: FlightSpeedTrend = null
 ): L.DivIcon {
   const typeScale = aircraftIconScale(flight.type);
   const size = (highlighted ? MAP_PLANE_ACTIVE : MAP_PLANE_SIZE) * typeScale;
@@ -354,6 +374,7 @@ export function buildFlightMapIconPlaceholder(
     bottomLabel: mapFlightCarrierLabel(flight),
     bottomLabelClass: markerLabelClass(military, emergency, heloKind, ground),
     trend: altitudeTrend,
+    speedTrend,
     highAltitude,
     ground,
   });

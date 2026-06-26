@@ -18,9 +18,123 @@ const WARM_POLL_MS = 3000;
 
 const WI_VIEWPORT = { west: -92.9, south: 42.5, east: -86.8, north: 47.1 };
 const OK_VIEWPORT = { west: -103.0, south: 33.6, east: -94.4, north: 37.0 };
+const NE_VIEWPORT = { west: -104.1, south: 40.0, east: -95.3, north: 43.0 };
 const IL_VIEWPORT = { west: -91.5, south: 37.0, east: -87.5, north: 42.5 };
 const IN_VIEWPORT = { west: -88.1, south: 37.8, east: -84.8, north: 41.8 };
 const OH_VIEWPORT = { west: -84.8, south: 38.4, east: -80.5, north: 42.0 };
+
+const MO_VIEWPORT = { west: -95.8, south: 36.0, east: -89.1, north: 40.6 };
+const AL_VIEWPORT = { west: -88.5, south: 30.1, east: -84.9, north: 35.0 };
+const MS_VIEWPORT = { west: -91.7, south: 30.2, east: -88.1, north: 35.0 };
+const FL_VIEWPORT = { west: -87.6, south: 24.5, east: -80.0, north: 31.0 };
+const GA_VIEWPORT = { west: -85.6, south: 30.4, east: -80.8, north: 35.0 };
+const AZ_VIEWPORT = { west: -114.8, south: 31.3, east: -109.0, north: 37.0 };
+const NV_VIEWPORT = { west: -120.0, south: 35.0, east: -114.0, north: 42.0 };
+const NM_VIEWPORT = { west: -109.1, south: 31.3, east: -103.0, north: 37.0 };
+const UT_VIEWPORT = { west: -114.1, south: 37.0, east: -109.0, north: 42.0 };
+const CO_VIEWPORT = { west: -109.1, south: 37.0, east: -102.0, north: 41.0 };
+const ID_VIEWPORT = { west: -117.2, south: 42.0, east: -111.0, north: 49.0 };
+const CA_VIEWPORT = { west: -124.5, south: 32.5, east: -114.1, north: 42.0 };
+const WA_VIEWPORT = { west: -124.8, south: 45.5, east: -116.9, north: 49.0 };
+const AK_VIEWPORT = { west: -179.0, south: 51.0, east: -130.0, north: 71.5 };
+const HI_VIEWPORT = { west: -160.3, south: 18.9, east: -154.8, north: 22.3 };
+const TX_VIEWPORT = { west: -106.7, south: 25.8, east: -93.5, north: 36.5 };
+const SD_VIEWPORT = { west: -104.1, south: 42.5, east: -96.4, north: 46.0 };
+const SC_VIEWPORT = { west: -83.4, south: 32.0, east: -78.5, north: 35.2 };
+const PA_VIEWPORT = { west: -80.5, south: 39.7, east: -74.7, north: 42.3 };
+const ME_VIEWPORT = { west: -71.1, south: 43.1, east: -66.9, north: 47.5 };
+const VT_VIEWPORT = { west: -73.4, south: 42.7, east: -71.5, north: 45.0 };
+const KY_VIEWPORT = { west: -89.6, south: 36.5, east: -82.0, north: 39.2 };
+const VA_VIEWPORT = { west: -83.7, south: 36.5, east: -75.2, north: 39.5 };
+
+function viewportCenterInRegion(bounds: MapViewportBounds, region: { west: number; south: number; east: number; north: number }) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return lat >= region.south && lat <= region.north && lon >= region.west && lon <= region.east;
+}
+
+function viewportCenterInExpandedCameraStates(bounds: MapViewportBounds) {
+  const regions = [
+    CA_VIEWPORT,
+    WA_VIEWPORT,
+    AK_VIEWPORT,
+    HI_VIEWPORT,
+    TX_VIEWPORT,
+    SD_VIEWPORT,
+    SC_VIEWPORT,
+    PA_VIEWPORT,
+    ME_VIEWPORT,
+    VT_VIEWPORT,
+    KY_VIEWPORT,
+    VA_VIEWPORT,
+  ];
+  return regions.some((region) => viewportCenterInRegion(bounds, region));
+}
+
+function viewportCenterInMissouri(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= MO_VIEWPORT.south &&
+    lat <= MO_VIEWPORT.north &&
+    lon >= MO_VIEWPORT.west &&
+    lon <= MO_VIEWPORT.east
+  );
+}
+
+function viewportCenterInAlabama(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= AL_VIEWPORT.south &&
+    lat <= AL_VIEWPORT.north &&
+    lon >= AL_VIEWPORT.west &&
+    lon <= AL_VIEWPORT.east
+  );
+}
+
+function viewportCenterInMississippi(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= MS_VIEWPORT.south &&
+    lat <= MS_VIEWPORT.north &&
+    lon >= MS_VIEWPORT.west &&
+    lon <= MS_VIEWPORT.east
+  );
+}
+
+function viewportCenterInFlorida(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= FL_VIEWPORT.south &&
+    lat <= FL_VIEWPORT.north &&
+    lon >= FL_VIEWPORT.west &&
+    lon <= FL_VIEWPORT.east
+  );
+}
+
+function viewportCenterInGeorgia(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= GA_VIEWPORT.south &&
+    lat <= GA_VIEWPORT.north &&
+    lon >= GA_VIEWPORT.west &&
+    lon <= GA_VIEWPORT.east
+  );
+}
+
+function viewportCenterInMountainWest(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  const regions = [AZ_VIEWPORT, NV_VIEWPORT, NM_VIEWPORT, UT_VIEWPORT, CO_VIEWPORT, ID_VIEWPORT];
+  return regions.some(
+    (region) =>
+      lat >= region.south && lat <= region.north && lon >= region.west && lon <= region.east
+  );
+}
 
 function viewportCenterInWisconsin(bounds: MapViewportBounds) {
   const lat = (bounds.south + bounds.north) / 2;
@@ -41,6 +155,17 @@ function viewportCenterInOklahoma(bounds: MapViewportBounds) {
     lat <= OK_VIEWPORT.north &&
     lon >= OK_VIEWPORT.west &&
     lon <= OK_VIEWPORT.east
+  );
+}
+
+function viewportCenterInNebraska(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= NE_VIEWPORT.south &&
+    lat <= NE_VIEWPORT.north &&
+    lon >= NE_VIEWPORT.west &&
+    lon <= NE_VIEWPORT.east
   );
 }
 
@@ -101,11 +226,21 @@ function cameraLimitForZoom(zoom: number, bounds: MapViewportBounds) {
   else if (zoom <= 10) limit = 96;
   else limit = 120;
 
-  if (viewportCenterInWisconsin(bounds) || viewportCenterInOklahoma(bounds)) {
+  if (
+    viewportCenterInWisconsin(bounds) ||
+    viewportCenterInOklahoma(bounds) ||
+    viewportCenterInMissouri(bounds) ||
+    viewportCenterInAlabama(bounds) ||
+    viewportCenterInMississippi(bounds) ||
+    viewportCenterInFlorida(bounds) ||
+    viewportCenterInGeorgia(bounds) ||
+    viewportCenterInMountainWest(bounds) ||
+    viewportCenterInExpandedCameraStates(bounds)
+  ) {
     limit = wide ? Math.min(Math.round(limit * 1.5), 400) : Math.min(Math.round(limit * 1.5), 180);
   } else if (viewportCenterInIllinois(bounds)) {
     limit = wide ? Math.min(Math.round(limit * 2), 500) : Math.min(Math.round(limit * 1.5), 180);
-  } else if (viewportCenterInIndiana(bounds) || viewportCenterInOhio(bounds)) {
+  } else if (viewportCenterInIndiana(bounds) || viewportCenterInOhio(bounds) || viewportCenterInNebraska(bounds)) {
     limit = wide ? Math.min(Math.round(limit * 2), 500) : Math.min(Math.round(limit * 1.5), 180);
   }
   return limit;

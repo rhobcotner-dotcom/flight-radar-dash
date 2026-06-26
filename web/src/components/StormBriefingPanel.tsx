@@ -1,14 +1,20 @@
 import { memo } from 'react';
-import type { StormAnalysis } from '../lib/stormCellCameras';
-import { STORM_CAM_LIMIT } from '../lib/stormCellCameras';
+import type { StormAnalysis, StormCameraMode } from '../lib/stormCellCameras';
+import {
+  STORM_CAM_LIMIT,
+  stormCameraLoadingDetail,
+  stormCameraSectionTitle,
+} from '../lib/stormCellCameras';
 import { StormCameraGrid } from './StormCameraGrid';
 
 export const StormBriefingPanel = memo(function StormBriefingPanel({
   analysis,
   locationLabel,
+  stormCameraMode = 'live-only',
 }: {
   analysis: StormAnalysis;
   locationLabel?: string | null;
+  stormCameraMode?: StormCameraMode;
 }) {
   const loading = analysis.loading || !analysis.radar;
   const radar = analysis.radar;
@@ -53,9 +59,9 @@ export const StormBriefingPanel = memo(function StormBriefingPanel({
       ) : null}
       {showCameras ? (
         <div className="storm-analysis-cameras">
-          <h4 className="storm-analysis-cameras-title">Live views near this cell</h4>
+          <h4 className="storm-analysis-cameras-title">{stormCameraSectionTitle(stormCameraMode)}</h4>
           {pool.length ? (
-            <StormCameraGrid pool={pool} />
+            <StormCameraGrid pool={pool} stormCameraMode={stormCameraMode} />
           ) : (
             <div className="storm-analysis-camera-grid">
               {Array.from({ length: STORM_CAM_LIMIT }, (_, index) => (
@@ -63,8 +69,8 @@ export const StormBriefingPanel = memo(function StormBriefingPanel({
                   <div className="storm-analysis-cam-label muted">Scanning nearby cameras…</div>
                   <div className="storm-analysis-cam-video camera-preview-media">
                     <div className="camera-preview-loading muted">
-                    {analysis.camerasLoading ? 'Finding live views…' : 'Finding a working view…'}
-                  </div>
+                      {stormCameraLoadingDetail(stormCameraMode, Boolean(analysis.camerasLoading))}
+                    </div>
                   </div>
                 </div>
               ))}

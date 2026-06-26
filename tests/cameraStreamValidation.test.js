@@ -31,7 +31,7 @@ test('MoDOT rtplive host variants keep feed host first', () => {
   assert.equal(variants[0], RTPLIVE);
 });
 
-test('isMapVisibleCamera hides MoDOT rtplive but keeps snapshots', () => {
+test('isMapVisibleCamera keeps MoDOT rtplive markers visible', () => {
   const rtpliveCam = {
     id: 'modot-1',
     liveUrl: RTPLIVE,
@@ -62,10 +62,10 @@ test('isMapVisibleCamera hides MoDOT rtplive but keeps snapshots', () => {
     lon: -90.15,
   };
   assert.equal(isBrokenModotRtplexCamera(rtpliveCam), true);
-  assert.equal(isMapVisibleCamera(rtpliveCam), false);
-  assert.equal(isBrokenModotRtplexCamera(westRtplexCam), false);
+  assert.equal(isMapVisibleCamera(rtpliveCam), true);
+  assert.equal(isBrokenModotRtplexCamera(westRtplexCam), true);
   assert.equal(isMapVisibleCamera(westRtplexCam), true);
-  assert.equal(isModotTrafficCamera(westRtplexCam), false);
+  assert.equal(isModotTrafficCamera(westRtplexCam), true);
   assert.equal(isMapVisibleCamera(snapshotCam), true);
   assert.equal(isModotTrafficCamera(modotSnapshotCam), true);
   assert.equal(isStormEligibleCamera(modotSnapshotCam), false);

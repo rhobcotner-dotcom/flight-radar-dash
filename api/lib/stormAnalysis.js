@@ -75,13 +75,13 @@ function buildHazardLine(alerts, lightningCount, peakDbz) {
   return bits.join(' · ');
 }
 
-const STORM_CAMERA_RADIUS_MILES = 15;
+const STORM_CAMERA_RADIUS_MILES = 22;
 
-async function camerasInStormCell(lat, lon) {
-  return fetchCamerasNearPoint(lat, lon, STORM_CAMERA_RADIUS_MILES, 3);
+async function camerasInStormCell(lat, lon, { liveOnly = true } = {}) {
+  return fetchCamerasNearPoint(lat, lon, STORM_CAMERA_RADIUS_MILES, 3, { liveOnly });
 }
 
-export async function analyzeStormCell(lat, lon) {
+export async function analyzeStormCell(lat, lon, { liveOnly = true } = {}) {
   const radar = await sampleRadarField(lat, lon);
   if (!radar.hasStorm) {
     return { hasStorm: false, lat, lon };

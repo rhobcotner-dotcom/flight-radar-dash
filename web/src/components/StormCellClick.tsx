@@ -9,10 +9,12 @@ import {
   nearestStormCamerasFromViewport,
   STORM_CAMERA_POOL_LIMIT,
   STORM_CAMERA_RADIUS_MILES,
+  stormCameraModeParam,
   stormCameraPoolIds,
   stormPoolHasCameras,
   type StormAnalysis,
   type StormCamera,
+  type StormCameraMode,
 } from '../lib/stormCellCameras';
 import type { TrafficCameraPayload } from '../lib/mapLayers';
 import type { WeatherConditions } from '../types';
@@ -64,12 +66,17 @@ function showStormMissHint(map: L.Map, latlng: L.LatLng, radarNoir = false) {
   }, 2800);
 }
 
-async function fetchNearStormCameras(clickLat: number, clickLon: number): Promise<StormCamera[]> {
+async function fetchNearStormCameras(
+  clickLat: number,
+  clickLon: number,
+  cameraMode: StormCameraMode
+): Promise<StormCamera[]> {
   const params = new URLSearchParams({
     lat: String(clickLat),
     lon: String(clickLon),
     radiusMiles: String(STORM_CAMERA_RADIUS_MILES),
     limit: String(STORM_CAMERA_POOL_LIMIT),
+    cameraMode: stormCameraModeParam(cameraMode),
   });
   const data = await fetchJson<{ cameras?: StormCamera[] }>(`/api/live/cameras-near?${params.toString()}`);
   return (data.cameras ?? []).map((cam) => ({
@@ -90,6 +97,7 @@ interface BriefingState {
 interface Props {
   radarEnabled: boolean;
   radarNoir?: boolean;
+  stormCameraMode?: StormCameraMode;
   viewportCameras?: TrafficCameraPayload | null;
   onStormCameraPriority?: (lat: number, lon: number) => void;
 }
@@ -133,6 +141,7 @@ function StormCellGlow({ center, radiusMiles }: { center: [number, number]; radi
 export function StormCellClick({
   radarEnabled,
   radarNoir = false,
+  stormCameraMode = 'live-only',
   viewportCameras = null,
   onStormCameraPriority,
 }: Props) {
@@ -151,8 +160,10 @@ export function StormCellClick({
   const openBriefingPositionRef = useRef<[number, number] | null>(null);
   const radarEnabledRef = useRef(radarEnabled);
   const radarNoirRef = useRef(radarNoir);
+  const stormCameraModeRef = useRef(stormCameraMode);
   radarEnabledRef.current = radarEnabled;
   radarNoirRef.current = radarNoir;
+  stormCameraModeRef.current = stormCameraMode;
   viewportCamerasRef.current = viewportCameras;
 
   const closeBriefing = useCallback(() => {
@@ -167,8 +178,9 @@ export function StormCellClick({
 
   const publishBriefing = useCallback(
     (key: string, position: [number, number], analysis: StormAnalysis, locationLabel?: string | null) => {
+      const mode = stormCameraModeRef.current;
       const previousPool = briefingPoolRef.current.get(key) ?? [];
-      const cameraPool = mergeStormCameraPool(analysis, viewportCamerasRef.current, previousPool);
+      const cameraPool = mergeStormCameraPool(analysis, viewportCamerasRef.current, previousPool, mode);
       if (cameraPool.length) {
         briefingPoolRef.current.set(key, cameraPool);
       }
@@ -179,7 +191,7 @@ export function StormCellClick({
         cameraPool,
         camerasLoading:
           analysis.camerasLoading ??
-          (nearCamerasPendingRef.current && !stormPoolHasCameras(cameraPool)),
+          (nearCamerasPendingRef.current && !stormPoolHasCameras(cameraPool, mode)),
       };
       const glowCenter: [number, number] = [
         merged.clickLat ?? position[0],
@@ -230,14 +242,16 @@ export function StormCellClick({
       onStormCameraPriority?.(clickLat, clickLon);
 
       const locationPromise = resolveMapPlaceLabel(clickLat, clickLon).catch(() => null);
-      const nearCamerasPromise = fetchNearStormCameras(clickLat, clickLon);
+      const cameraMode = stormCameraModeRef.current;
+      const nearCamerasPromise = fetchNearStormCameras(clickLat, clickLon, cameraMode);
 
       const instantPool = nearestStormCamerasFromViewport(
         clickLat,
         clickLon,
         viewportCamerasRef.current,
         STORM_CAMERA_RADIUS_MILES,
-        STORM_CAMERA_POOL_LIMIT
+        STORM_CAMERA_POOL_LIMIT,
+        cameraMode
       );
 
       const loadingShell: StormAnalysis = {
@@ -249,7 +263,7 @@ export function StormCellClick({
         summary: 'Analyzing storm cell…',
         brief: '',
         loading: true,
-        camerasLoading: !stormPoolHasCameras(instantPool),
+        camerasLoading: !stormPoolHasCameras(instantPool, cameraMode),
         cameraPool: instantPool,
       };
 
@@ -268,7 +282,7 @@ export function StormCellClick({
             clickLat,
             clickLon,
             loading: cached?.analysis?.radar ? undefined : true,
-            camerasLoading: !stormPoolHasCameras(nearCameras),
+            camerasLoading: !stormPoolHasCameras(nearCameras, cameraMode),
             cameras: nearCameras,
           });
         })
@@ -285,7 +299,11 @@ export function StormCellClick({
 
       if (!analysis) {
         try {
-          const params = new URLSearchParams({ lat: String(snapLat), lon: String(snapLon) });
+          const params = new URLSearchParams({
+            lat: String(snapLat),
+            lon: String(snapLon),
+            cameraMode: stormCameraModeParam(cameraMode),
+          });
           analysis = await fetchJson<StormAnalysis>(`/api/weather/storm-analysis?${params.toString()}`);
           if (analysis.hasStorm) {
             stormCacheRef.current.set(key, { analysis, fetchedAt: Date.now() });
@@ -313,7 +331,7 @@ export function StormCellClick({
         cameras: analysis.cameras?.length ? analysis.cameras : undefined,
         camerasLoading:
           nearCamerasPendingRef.current &&
-          !stormPoolHasCameras(briefingPoolRef.current.get(key)),
+          !stormPoolHasCameras(briefingPoolRef.current.get(key), cameraMode),
       });
     },
     [closeBriefing, map, onStormCameraPriority, publishBriefing]
@@ -434,6 +452,53 @@ export function StormCellClick({
   }, [viewportCameras, publishBriefing]);
 
   useEffect(() => {
+    const key = openBriefingKeyRef.current;
+    const position = openBriefingPositionRef.current;
+    if (!key || !position) return;
+    const cached = stormCacheRef.current.get(key);
+    if (!cached?.analysis?.hasStorm) return;
+
+    const clickLat = position[0];
+    const clickLon = position[1];
+    briefingPoolRef.current.delete(key);
+    lastCameraIdsRef.current = '';
+    nearCamerasPendingRef.current = true;
+
+    const instantPool = nearestStormCamerasFromViewport(
+      clickLat,
+      clickLon,
+      viewportCamerasRef.current,
+      STORM_CAMERA_RADIUS_MILES,
+      STORM_CAMERA_POOL_LIMIT,
+      stormCameraMode
+    );
+
+    publishBriefing(key, position, {
+      ...cached.analysis,
+      clickLat,
+      clickLon,
+      cameras: undefined,
+      cameraPool: instantPool,
+      camerasLoading: !stormPoolHasCameras(instantPool, stormCameraMode),
+    });
+
+    void fetchNearStormCameras(clickLat, clickLon, stormCameraMode)
+      .then((nearCameras) => {
+        nearCamerasPendingRef.current = false;
+        publishBriefing(key, position, {
+          ...cached.analysis,
+          clickLat,
+          clickLon,
+          cameras: nearCameras,
+          camerasLoading: !stormPoolHasCameras(nearCameras, stormCameraMode),
+        });
+      })
+      .catch(() => {
+        nearCamerasPendingRef.current = false;
+      });
+  }, [stormCameraMode, publishBriefing]);
+
+  useEffect(() => {
     map.getContainer().classList.toggle('storm-analysis-cursor', radarEnabled);
     return () => map.getContainer().classList.remove('storm-analysis-cursor');
   }, [map, radarEnabled]);
@@ -447,6 +512,7 @@ export function StormCellClick({
             position={briefing.position}
             analysis={briefing.analysis}
             locationLabel={briefing.locationLabel}
+            stormCameraMode={stormCameraMode}
             onClose={closeBriefing}
           />
         </>

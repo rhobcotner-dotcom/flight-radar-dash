@@ -48,6 +48,14 @@ function parseLimit(req, fallback = 120) {
   return Math.min(360, Math.max(20, Math.round(limit)));
 }
 
+function parseStormCameraMode(req) {
+  const mode = String(req.query.cameraMode || '').trim().toLowerCase();
+  if (mode === 'all' || mode === 'live-and-snapshots' || mode === 'snapshots') {
+    return { liveOnly: false };
+  }
+  return { liveOnly: true };
+}
+
 export async function handleCamerasNear(req, res) {
   const point = parseLatLon(req);
   if (!point) {
@@ -56,7 +64,13 @@ export async function handleCamerasNear(req, res) {
 
   const limit = Math.min(30, Math.max(1, Number(req.query.limit) || 3));
   const radiusMiles = Math.min(60, Math.max(5, Number(req.query.radiusMiles) || 20));
-  const cameras = await fetchCamerasNearPoint(point.lat, point.lon, radiusMiles, limit);
+  const cameras = await fetchCamerasNearPoint(
+    point.lat,
+    point.lon,
+    radiusMiles,
+    limit,
+    parseStormCameraMode(req)
+  );
   primeCameraPoolAtPoint(point.lat, point.lon);
   res.json({ lat: point.lat, lon: point.lon, radiusMiles, limit, count: cameras.length, cameras });
 }

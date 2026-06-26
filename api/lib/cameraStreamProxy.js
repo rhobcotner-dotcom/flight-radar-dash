@@ -83,8 +83,11 @@ const ALLOWED_HLS_HOST_SUFFIXES = [
   'dot.ga.gov',
   'cotrip.org',
   'carsprogram.org',
+  'its.nv.gov',
   'road511.com',
   'oktraffic.org',
+  'mdottraffic.com',
+  'api.algotraffic.com',
 ];
 
 function hostAllowed(hostname) {

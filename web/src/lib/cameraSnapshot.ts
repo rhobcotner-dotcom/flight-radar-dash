@@ -68,7 +68,6 @@ function isModotRtplexThumbnailUrl(url: string) {
 }
 
 export function isModotRtplexCamera(cam: TrafficCamera) {
-  if (isWestOfStLouisMississippi(cam.lon)) return false;
   if (cam.mediaType !== 'hls') return false;
   const src = hlsSourceUrl(cam);
   return Boolean(src && /[-.]traveler\.modot\.mo\.gov\/rtplive\//i.test(src));
@@ -91,7 +90,6 @@ function stormCameraUrlStrings(cam: Pick<TrafficCamera, 'liveUrl' | 'sourceLiveU
 export function isModotTrafficCamera(
   cam: Pick<TrafficCamera, 'id' | 'source' | 'liveUrl' | 'sourceLiveUrl' | 'lon'>
 ) {
-  if (isWestOfStLouisMississippi(cam.lon)) return false;
   if (/modot/i.test(cam.source || '')) return true;
   if (/^modot[-_]/i.test(cam.id || '')) return true;
   for (const url of stormCameraUrlStrings(cam)) {
@@ -149,6 +147,5 @@ export function cameraMapPreviewMode(cam: TrafficCamera): 'static' | 'capture' |
 
 export function cameraHasMapMarker(cam: TrafficCamera) {
   if (!Number.isFinite(cam.lat) || !Number.isFinite(cam.lon)) return false;
-  if (isModotRtplexCamera(cam)) return false;
   return Boolean(cam.liveUrl || cam.previewUrl);
 }

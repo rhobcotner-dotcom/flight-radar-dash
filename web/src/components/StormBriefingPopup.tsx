@@ -1,12 +1,13 @@
 import { memo } from 'react';
 import { Popup } from 'react-leaflet';
-import type { StormAnalysis } from '../lib/stormCellCameras';
+import type { StormAnalysis, StormCameraMode } from '../lib/stormCellCameras';
 import { StormBriefingPanel } from './StormBriefingPanel';
 
 interface Props {
   position: [number, number];
   analysis: StormAnalysis;
   locationLabel?: string | null;
+  stormCameraMode?: StormCameraMode;
   onClose: () => void;
 }
 
@@ -14,6 +15,7 @@ export const StormBriefingPopup = memo(function StormBriefingPopup({
   position,
   analysis,
   locationLabel,
+  stormCameraMode = 'live-only',
   onClose,
 }: Props) {
   return (
@@ -27,7 +29,11 @@ export const StormBriefingPopup = memo(function StormBriefingPopup({
       keepInView={false}
       eventHandlers={{ remove: onClose }}
     >
-      <StormBriefingPanel analysis={analysis} locationLabel={locationLabel} />
+      <StormBriefingPanel
+        analysis={analysis}
+        locationLabel={locationLabel}
+        stormCameraMode={stormCameraMode}
+      />
     </Popup>
   );
 });

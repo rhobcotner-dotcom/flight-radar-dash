@@ -23,6 +23,22 @@ import { fetchWeatherCameras } from './weatherCamSources.js';
 
 const CONUS_BBOX = { west: -125, south: 24, east: -66, north: 50 };
 
+function filterCamerasByBbox(cameras, bbox) {
+  return cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
+}
+
+async function refreshCameraPoolCache(cacheRef, buildCameras) {
+  const now = Date.now();
+  if (cacheRef.cameras.length && now - cacheRef.fetchedAt < CACHE_MS) return;
+  cacheRef.fetchedAt = now;
+  cacheRef.cameras = dedupeCameras((await buildCameras()).filter(Boolean));
+}
+
+async function fetchCamerasFromPoolCache(cacheRef, bbox, buildCameras) {
+  await refreshCameraPoolCache(cacheRef, buildCameras);
+  return filterCamerasByBbox(cacheRef.cameras, bbox);
+}
+
 function httpsUrl(url) {
   return typeof url === 'string' ? url.replace(/^http:\/\//i, 'https://') : url;
 }
@@ -148,6 +164,148 @@ async function fetchModotCameras(bbox) {
     seen.add(key);
     return true;
   });
+}
+
+const MO_TRAFFIC_ARCGIS =
+  'https://mapping.modot.org/arcgis/rest/services/TravelerInformation/NWSDATA/MapServer/0/query';
+
+/** True when a stream URL is served from MoDOT-owned hosts (excluded from Missouri inventory). */
+export function isModotHostedStreamUrl(url) {
+  if (typeof url !== 'string' || !url) return true;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (/modot\.(mo\.gov|org)$/i.test(host) || host.endsWith('.modot.org')) return true;
+    if (/traveler\.modot/i.test(host)) return true;
+    if (/^sfs\d+-traveler\.modot\.mo\.gov$/i.test(host)) return true;
+  } catch {
+    return true;
+  }
+  return false;
+}
+
+/** Map one Missouri ArcGIS camera row. */
+export function mapMissouriTrafficCamera(props, geometry) {
+  if (props?.STREAM_ERROR === 'Y') return null;
+
+  const lat = geometry?.y ?? geometry?.coordinates?.[1];
+  const lon = geometry?.x ?? geometry?.coordinates?.[0];
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+  const hls = normalizeHlsUrl(props?.URL2);
+  if (!hls) return null;
+
+  const thirdParty = !isModotHostedStreamUrl(hls);
+  return normalizeCamera({
+    id: thirdParty ? `mo-${props.CAM_ID}` : `mo-dot-${props.CAM_ID}`,
+    description: props.DESCRIPTION,
+    lat,
+    lon,
+    streamUrl: hls,
+    liveUrl: hls,
+    source: thirdParty ? 'Missouri Traffic' : 'Missouri DOT',
+    state: 'MO',
+  });
+}
+
+function mapMissouriSnapshotCamera(cam) {
+  return normalizeCamera({
+    id: `mo-snap-${cam.id}`,
+    description: cam.caption,
+    lat: cam.location?.y,
+    lon: cam.location?.x,
+    streamUrl: String(cam.url || '').startsWith('http') ? cam.url : `https://traveler.modot.org${cam.url}`,
+    source: 'Missouri DOT',
+    state: 'MO',
+  });
+}
+
+function mapMissouriStreamingCamera(cam) {
+  return normalizeCamera({
+    id: `mo-stream-${String(cam.location || 'cam')
+      .slice(0, 36)
+      .replace(/\W+/g, '-')}-${roundCoord(cam.y, 2)}`,
+    description: cam.location,
+    lat: cam.y,
+    lon: cam.x,
+    streamUrl: cam.html,
+    liveUrl: cam.html,
+    source: 'Missouri DOT',
+    state: 'MO',
+  });
+}
+
+let missouriTrafficCache = { fetchedAt: 0, cameras: [] };
+
+async function fetchMissouriSnapshotCameras(bbox) {
+  const data = await fetchCachedJson(
+    'https://traveler.modot.org/map/js/snapshot.json',
+    'missouri-snapshot-cameras'
+  );
+  const cameras = Array.isArray(data?.cameras) ? data.cameras : [];
+  return cameras
+    .filter((cam) => pointInBbox(cam.location?.y, cam.location?.x, bbox))
+    .map((cam) => mapMissouriSnapshotCamera(cam))
+    .filter(Boolean);
+}
+
+async function fetchMissouriStreamingCameras(bbox) {
+  const data = await fetchCachedJson(
+    'https://traveler.modot.org/timconfig/feed/desktop/StreamingCams2.json',
+    'missouri-streaming-cams2'
+  );
+  const cameras = Array.isArray(data) ? data : [];
+  return cameras
+    .filter((cam) => pointInBbox(cam.y, cam.x, bbox) && cam.html)
+    .map((cam) => mapMissouriStreamingCamera(cam))
+    .filter(Boolean);
+}
+
+async function queryMissouriTrafficArcGis(bbox) {
+  const features = [];
+  let offset = 0;
+  const pageSize = 1000;
+
+  while (true) {
+    const params = arcGisEnvelopeParams(bbox, {
+      where: "URL2 IS NOT NULL AND (STREAM_ERROR IS NULL OR STREAM_ERROR <> 'Y')",
+      outFields: 'CAM_ID,DESCRIPTION,URL2,STREAM_ERROR',
+      resultRecordCount: pageSize,
+    });
+    params.set('resultOffset', String(offset));
+    const batch = await queryArcGis(MO_TRAFFIC_ARCGIS, params);
+    if (!batch.length) break;
+    features.push(...batch);
+    offset += batch.length;
+    if (batch.length < pageSize || offset >= 5000) break;
+  }
+
+  return features;
+}
+
+async function fetchMissouriTrafficCameras(bbox) {
+  const now = Date.now();
+  if (!missouriTrafficCache.cameras.length || now - missouriTrafficCache.fetchedAt >= CACHE_MS) {
+    const moBbox = STATE_BOUNDS.MO || bbox;
+    const [features, snapshots, streaming] = await Promise.all([
+      queryMissouriTrafficArcGis(moBbox),
+      fetchMissouriSnapshotCameras(moBbox),
+      fetchMissouriStreamingCameras(moBbox),
+    ]);
+    missouriTrafficCache = {
+      fetchedAt: now,
+      cameras: dedupeCameras(
+        [
+          ...features
+            .map((feature) => mapMissouriTrafficCamera(feature.attributes || {}, feature.geometry))
+            .filter(Boolean),
+          ...snapshots,
+          ...streaming,
+        ]
+      ),
+    };
+  }
+
+  return missouriTrafficCache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
 }
 
 async function fetchTravelMidwestCameras(bbox) {
@@ -294,20 +452,75 @@ async function fetchIndiana511Cameras(bbox) {
   return indiana511Cache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
 }
 
+let nebraska511Cache = { fetchedAt: 0, cameras: [] };
+
+/** Map one Nebraska 511 / CARS camera row (JPEG snapshots via dot511.nebraska.gov). */
+export function mapNebraska511Camera(row) {
+  if (!row || row.active === false || row.public === false) return null;
+  const lat = row.location?.latitude ?? row.location?.lat;
+  const lon = row.location?.longitude ?? row.location?.lon;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+  const views = Array.isArray(row.views) ? row.views : [];
+  return views
+    .map((view, index) => {
+      const preview = httpsUrl(view?.videoPreviewUrl);
+      const hls = normalizeHlsUrl(view?.url);
+      const still = httpsUrl(view?.url);
+      const snapshot = preview || (still && isSnapshotUrl(still) ? still : null);
+      const streamUrl = snapshot || hls;
+      if (!streamUrl) return null;
+      const name = String(view?.name || row.name || 'Traffic camera').trim();
+      const viewKey = views.length > 1 ? `-view-${index + 1}` : '';
+      return normalizeCamera({
+        id: `ne511-${row.id}${viewKey}`,
+        description: name,
+        lat,
+        lon,
+        streamUrl: snapshot || streamUrl,
+        liveUrl: snapshot ? undefined : hls,
+        previewUrl: snapshot || undefined,
+        source: '511NE',
+        state: 'NE',
+      });
+    })
+    .filter(Boolean);
+}
+
+async function fetchNebraska511Cameras(bbox) {
+  const now = Date.now();
+  if (!nebraska511Cache.cameras.length || now - nebraska511Cache.fetchedAt >= CACHE_MS) {
+    const rows = await fetchCachedJson(
+      'https://netg.carsprogram.org/cameras_v1/api/cameras',
+      'nebraska-511-cameras'
+    );
+    nebraska511Cache = {
+      fetchedAt: now,
+      cameras: dedupeCameras(
+        (Array.isArray(rows) ? rows : []).flatMap((row) => mapNebraska511Camera(row)).filter(Boolean)
+      ),
+    };
+  }
+
+  return nebraska511Cache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
+}
+
+let caltransCache = { fetchedAt: 0, cameras: [] };
+
 async function fetchCaltransCameras(bbox) {
-  const params = new URLSearchParams({
-    where: `latitude BETWEEN ${bbox.south} AND ${bbox.north} AND longitude BETWEEN ${bbox.west} AND ${bbox.east} AND streamingVideoURL IS NOT NULL`,
-    outFields: 'locationName,currentImageURL,streamingVideoURL,latitude,longitude',
-    returnGeometry: 'false',
-    resultRecordCount: '2000',
-    f: 'json',
-  });
-  const features = await queryArcGis(
-    'https://gisdata.dot.ca.gov/arcgis/rest/services/CHhighway/CCTV/FeatureServer/0/query',
-    params
-  );
-  return features
-    .map((feature) => {
+  return fetchCamerasFromPoolCache(caltransCache, bbox, async () => {
+    const ca = STATE_BOUNDS.CA;
+    const params = arcGisEnvelopeParams(ca, {
+      where: 'streamingVideoURL IS NOT NULL',
+      outFields: 'locationName,currentImageURL,streamingVideoURL,latitude,longitude',
+      returnGeometry: 'false',
+      resultRecordCount: '2000',
+    });
+    const features = await queryArcGis(
+      'https://gisdata.dot.ca.gov/arcgis/rest/services/CHhighway/CCTV/FeatureServer/0/query',
+      params
+    );
+    return features.map((feature) => {
       const props = feature.attributes || {};
       return normalizeCamera({
         id: `ca-${props.locationName || props.OBJECTID}`,
@@ -320,8 +533,8 @@ async function fetchCaltransCameras(bbox) {
         source: 'Caltrans',
         state: 'CA',
       });
-    })
-    .filter(Boolean);
+    });
+  });
 }
 
 function normalizeTrimarcState(props) {
@@ -364,18 +577,20 @@ async function fetchTrimarcCameras(bbox) {
     .filter(Boolean);
 }
 
+let wsdotCache = { fetchedAt: 0, cameras: [] };
+
 async function fetchWsdotCameras(bbox) {
-  const params = arcGisEnvelopeParams(bbox, {
-    where: 'ImageURL IS NOT NULL',
-    outFields: 'CameraTitle,ImageURL',
-    resultRecordCount: '2000',
-  });
-  const features = await queryArcGis(
-    'https://data.wsdot.wa.gov/arcgis/rest/services/TravelInformation/TravelInfoCamerasWeather/FeatureServer/0/query',
-    params
-  );
-  return features
-    .map((feature) => {
+  return fetchCamerasFromPoolCache(wsdotCache, bbox, async () => {
+    const params = arcGisEnvelopeParams(STATE_BOUNDS.WA, {
+      where: 'ImageURL IS NOT NULL',
+      outFields: 'CameraTitle,ImageURL',
+      resultRecordCount: '2000',
+    });
+    const features = await queryArcGis(
+      'https://data.wsdot.wa.gov/arcgis/rest/services/TravelInformation/TravelInfoCamerasWeather/FeatureServer/0/query',
+      params
+    );
+    return features.map((feature) => {
       const props = feature.attributes || {};
       const coords = feature.geometry;
       const lat = coords?.y;
@@ -389,8 +604,8 @@ async function fetchWsdotCameras(bbox) {
         source: 'WSDOT',
         state: stateFromCoords(lat, lon) || 'WA',
       });
-    })
-    .filter(Boolean);
+    });
+  });
 }
 
 async function fetchIowaCameras(bbox) {
@@ -502,26 +717,37 @@ async function fetchDelawareCameras(bbox) {
     .filter(Boolean);
 }
 
+let nmRoadsCache = { fetchedAt: 0, cameras: [] };
+
+/** Map one NMRoads camera row (snapshot JPEG via GetCameraImage). */
+export function mapNewMexicoCamera(row) {
+  if (!row || !Number.isFinite(row.lat) || !Number.isFinite(row.lon)) return null;
+  return normalizeCamera({
+    id: `nm-${row.name}`,
+    description: row.title || row.name,
+    lat: row.lat,
+    lon: row.lon,
+    streamUrl: `https://servicev4.nmroads.com/RealMapWAR/GetCameraImage?ts=0&cameraName=${encodeURIComponent(row.name)}`,
+    source: 'NMRoads',
+    state: 'NM',
+  });
+}
+
 async function fetchNewMexicoCameras(bbox) {
-  const body = await fetchCachedJson(
-    'https://servicev4.nmroads.com/RealMapWAR//GetCameraInfo',
-    'nmroads-cameras'
-  );
-  const rows = Array.isArray(body?.cameraInfo) ? body.cameraInfo : [];
-  return rows
-    .filter((row) => pointInBbox(row.lat, row.lon, bbox))
-    .map((row) =>
-      normalizeCamera({
-        id: `nm-${row.name}`,
-        description: row.title || row.name,
-        lat: row.lat,
-        lon: row.lon,
-        streamUrl: `https://servicev4.nmroads.com/RealMapWAR/GetCameraImage?ts=0&cameraName=${encodeURIComponent(row.name)}`,
-        source: 'NMRoads',
-        state: 'NM',
-      })
-    )
-    .filter(Boolean);
+  const now = Date.now();
+  if (!nmRoadsCache.cameras.length || now - nmRoadsCache.fetchedAt >= CACHE_MS) {
+    const body = await fetchCachedJson(
+      'https://servicev4.nmroads.com/RealMapWAR//GetCameraInfo',
+      'nmroads-cameras'
+    );
+    const rows = Array.isArray(body?.cameraInfo) ? body.cameraInfo : [];
+    nmRoadsCache = {
+      fetchedAt: now,
+      cameras: dedupeCameras(rows.map((row) => mapNewMexicoCamera(row)).filter(Boolean)),
+    };
+  }
+
+  return nmRoadsCache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
 }
 
 async function fetchMichiganCameras(bbox) {
@@ -635,54 +861,32 @@ async function fetchMarylandCameras(bbox) {
     .filter(Boolean);
 }
 
-async function fetchColoradoCotripCameras(bbox) {
-  const rows = await fetchCachedJson(
-    'https://cotg.carsprogram.org/cameras_v1/api/cameras',
-    'cotrip-cameras-v1'
-  );
-  const cameras = Array.isArray(rows) ? rows : [];
-  return cameras.flatMap((row) => {
-    if (row.active === false || !row.location) return [];
-    const lat = row.location.latitude ?? row.location.lat;
-    const lon = row.location.longitude ?? row.location.lon;
-    if (!pointInBbox(lat, lon, bbox)) return [];
-    const view = (row.views || []).find((entry) => normalizeHlsUrl(entry.url)) || row.views?.[0];
-    if (!view?.url) return [];
-    const cam = normalizeCamera({
-      id: `co-${row.id}`,
-      description: view.name || row.name,
-      lat,
-      lon,
-      streamUrl: view.url,
-      liveUrl: view.url,
-      source: 'CDOT',
-      state: 'CO',
-    });
-    return cam ? [cam] : [];
-  });
-}
+let colorado511Cache = { fetchedAt: 0, cameras: [] };
 
-async function fetchColoradoCameras(bbox) {
-  const params = new URLSearchParams({
-    where: `Latitude BETWEEN ${bbox.south} AND ${bbox.north} AND Longitude BETWEEN ${bbox.west} AND ${bbox.east} AND URL_Cam IS NOT NULL`,
-    outFields: 'CameraName,URL_Cam,Latitude,Longitude',
-    returnGeometry: 'false',
-    resultRecordCount: '2000',
-    f: 'json',
-  });
-  const features = await queryArcGis(
-    'https://services.arcgis.com/DO4gTjwJVIJ7O9Ca/arcgis/rest/services/CDOT_Traffic_Cameras_V2/FeatureServer/0/query',
-    params
-  );
-  return features
-    .map((feature) => {
-      const props = feature.attributes || {};
+/** Map one CDOT / CARS camera row (cotrip.org HLS + carsprogram snapshot previews). */
+export function mapColorado511Camera(row) {
+  if (!row || row.active === false || row.public === false) return null;
+  const lat = row.location?.latitude ?? row.location?.lat;
+  const lon = row.location?.longitude ?? row.location?.lon;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+  const views = Array.isArray(row.views) ? row.views : [];
+  return views
+    .map((view, index) => {
+      const preview = httpsUrl(view?.videoPreviewUrl);
+      const hls = normalizeHlsUrl(view?.url);
+      const streamUrl = hls || preview;
+      if (!streamUrl) return null;
+      const name = String(view?.name || row.name || 'Traffic camera').trim();
+      const viewKey = views.length > 1 ? `-view-${index + 1}` : '';
       return normalizeCamera({
-        id: `co-${props.CameraName || props.CameraId}`,
-        description: props.CameraName,
-        lat: props.Latitude,
-        lon: props.Longitude,
-        streamUrl: httpsUrl(props.URL_Cam),
+        id: `co511-${row.id}${viewKey}`,
+        description: name,
+        lat,
+        lon,
+        streamUrl: hls || preview,
+        liveUrl: hls || undefined,
+        previewUrl: preview || undefined,
         source: 'CDOT',
         state: 'CO',
       });
@@ -690,33 +894,206 @@ async function fetchColoradoCameras(bbox) {
     .filter(Boolean);
 }
 
-async function fetchAlabamaCameras(bbox) {
-  const params = new URLSearchParams({
-    where: `Latitude BETWEEN ${bbox.south} AND ${bbox.north} AND Longitude BETWEEN ${bbox.west} AND ${bbox.east} AND StreamUrl IS NOT NULL`,
-    outFields: 'Name,StreamUrl,ImageUrl,Latitude,Longitude,Id,DeviceId,ObjectId',
-    returnGeometry: 'false',
-    resultRecordCount: '2000',
-    f: 'json',
+async function fetchColorado511Cameras(bbox) {
+  const now = Date.now();
+  if (!colorado511Cache.cameras.length || now - colorado511Cache.fetchedAt >= CACHE_MS) {
+    const rows = await fetchCachedJson(
+      'https://cotg.carsprogram.org/cameras_v1/api/cameras',
+      'cotrip-cameras-v1'
+    );
+    colorado511Cache = {
+      fetchedAt: now,
+      cameras: dedupeCameras(
+        (Array.isArray(rows) ? rows : []).flatMap((row) => mapColorado511Camera(row)).filter(Boolean)
+      ),
+    };
+  }
+
+  return colorado511Cache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
+}
+
+const ALDOT_ARCGIS =
+  'https://services7.arcgis.com/33Tmvrm3G2UZLFK9/arcgis/rest/services/ALDOT_TC_HLS_Public/FeatureServer/0/query';
+
+/** Map one ALDOT ArcGIS camera row (Wowza HLS + ALGO snapshot). */
+export function mapAlabamaCamera(props) {
+  if (!props) return null;
+  const lat = Number(props.Latitude);
+  const lon = Number(props.Longitude);
+  const hls = normalizeHlsUrl(props.StreamUrl);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !hls) return null;
+
+  const preview = httpsUrl(props.ImageUrl);
+  return normalizeCamera({
+    id: `al-${props.Id ?? props.DeviceId ?? props.ObjectId ?? props.Name}`,
+    description: props.Name || props.PrimaryRoad || `Camera ${props.Id ?? props.DeviceId ?? props.ObjectId}`,
+    lat,
+    lon,
+    streamUrl: hls,
+    liveUrl: hls,
+    previewUrl: preview && isSnapshotUrl(preview) ? preview : undefined,
+    source: 'ALDOT',
+    state: 'AL',
   });
-  const features = await queryArcGis(
-    'https://services7.arcgis.com/33Tmvrm3G2UZLFK9/arcgis/rest/services/ALDOT_TC_HLS_Public/FeatureServer/0/query',
-    params
-  );
-  return features
-    .map((feature) => {
-      const props = feature.attributes || {};
-      return normalizeCamera({
-        id: `al-${props.Id ?? props.DeviceId ?? props.ObjectId ?? props.Name}`,
-        description: props.Name || props.PrimaryRoad,
-        lat: props.Latitude,
-        lon: props.Longitude,
-        streamUrl: props.StreamUrl,
-        liveUrl: props.StreamUrl,
-        source: 'ALDOT',
-        state: 'AL',
-      });
+}
+
+let alabamaCache = { fetchedAt: 0, cameras: [] };
+
+async function queryAlabamaArcGis(bbox) {
+  const features = [];
+  let offset = 0;
+  const pageSize = 1000;
+
+  while (true) {
+    const params = arcGisEnvelopeParams(bbox, {
+      where: 'StreamUrl IS NOT NULL AND Latitude IS NOT NULL AND Longitude IS NOT NULL',
+      outFields: 'Name,StreamUrl,ImageUrl,Latitude,Longitude,Id,DeviceId,ObjectId,PrimaryRoad',
+      returnGeometry: 'false',
+      resultRecordCount: pageSize,
+    });
+    params.set('resultOffset', String(offset));
+    const batch = await queryArcGis(ALDOT_ARCGIS, params);
+    if (!batch.length) break;
+    features.push(...batch);
+    offset += batch.length;
+    if (batch.length < pageSize || offset >= 5000) break;
+  }
+
+  return features;
+}
+
+async function fetchAlabama511Cameras(bbox) {
+  const now = Date.now();
+  if (!alabamaCache.cameras.length || now - alabamaCache.fetchedAt >= CACHE_MS) {
+    const alBbox = STATE_BOUNDS.AL || bbox;
+    const features = await queryAlabamaArcGis(alBbox);
+    alabamaCache = {
+      fetchedAt: now,
+      cameras: dedupeCameras(
+        features.map((feature) => mapAlabamaCamera(feature.attributes || {})).filter(Boolean)
+      ),
+    };
+  }
+
+  return alabamaCache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
+}
+
+const MS_TRAFFIC_BASE = 'https://www.mdottraffic.com';
+const MS_LOAD_CAMERAS_URL = `${MS_TRAFFIC_BASE}/default.aspx/LoadCameraData`;
+
+/** Build MDOT Traffic HLS + snapshot URLs from a camerasite switchImage row. */
+export function parseMississippiTrafficStream(thumbnailUrl, streamId) {
+  if (typeof streamId !== 'string' || !streamId) return null;
+  const thumb = httpsUrl(thumbnailUrl);
+  const hostMatch = String(thumbnailUrl || '').match(/(streaming[a-z0-9]+\.mdottraffic\.com)/i);
+  if (!hostMatch) return null;
+  const streamName = streamId.endsWith('.stream') ? streamId : `${streamId}.stream`;
+  return {
+    previewUrl: thumb,
+    liveUrl: `https://${hostMatch[1]}/rtplive/${streamName}/playlist.m3u8`,
+  };
+}
+
+/** Map one MDOT Traffic stream at a camera site. */
+export function mapMississippiTrafficCamera(site, stream) {
+  if (!site || !stream?.liveUrl) return null;
+  return normalizeCamera({
+    id: `ms-${stream.id}`,
+    description: stream.description || site.tooltip || `Camera ${stream.id}`,
+    lat: site.lat,
+    lon: site.lon,
+    streamUrl: stream.liveUrl,
+    liveUrl: stream.liveUrl,
+    previewUrl: stream.previewUrl,
+    source: 'MDOT Traffic',
+    state: 'MS',
+  });
+}
+
+let mississippiTrafficCache = { fetchedAt: 0, cameras: [] };
+
+async function fetchMississippiCameraSites() {
+  const res = await fetch(MS_LOAD_CAMERAS_URL, {
+    method: 'POST',
+    headers: {
+      'User-Agent': USER_AGENT,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: '{}',
+  });
+  if (!res.ok) throw new Error(`MDOT Traffic camera list unavailable (${res.status})`);
+  const body = await res.json();
+  const rows = Array.isArray(body?.d) ? body.d : [];
+  return rows
+    .map((row) => {
+      const siteId = String(row?.markerid || '').replace(/^camsite_/i, '');
+      const lat = Number(row?.lat);
+      const lon = Number(row?.lon);
+      if (!siteId || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+      return {
+        siteId,
+        tooltip: String(row?.tooltip || '').trim() || `Camera site ${siteId}`,
+        lat,
+        lon,
+      };
     })
     .filter(Boolean);
+}
+
+async function fetchMississippiSiteStreams(siteId) {
+  const html = await fetchCachedText(
+    `${MS_TRAFFIC_BASE}/mapbubbles/camerasite.aspx?site=${encodeURIComponent(siteId)}`,
+    `ms-traffic-site-${siteId}`
+  );
+  const streams = [];
+  const pattern =
+    /switchImage\('([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)'/g;
+  let match;
+  while ((match = pattern.exec(html))) {
+    const [, thumbUrl, streamId, title, description] = match;
+    const urls = parseMississippiTrafficStream(thumbUrl, streamId);
+    if (!urls) continue;
+    const label = [title, description].filter(Boolean).join(' — ').trim();
+    streams.push({
+      id: streamId,
+      description: label,
+      previewUrl: urls.previewUrl,
+      liveUrl: urls.liveUrl,
+    });
+  }
+  return streams;
+}
+
+async function buildMississippiTrafficPool(sites) {
+  const cameras = [];
+  const batchSize = 24;
+  for (let start = 0; start < sites.length; start += batchSize) {
+    const batch = sites.slice(start, start + batchSize);
+    const batchCameras = await Promise.all(
+      batch.map(async (site) => {
+        const streams = await fetchMississippiSiteStreams(site.siteId);
+        return streams
+          .map((stream) => mapMississippiTrafficCamera(site, stream))
+          .filter(Boolean);
+      })
+    );
+    cameras.push(...batchCameras.flat());
+  }
+  return dedupeCameras(cameras);
+}
+
+async function fetchMississippiTrafficCameras(bbox) {
+  const now = Date.now();
+  if (!mississippiTrafficCache.cameras.length || now - mississippiTrafficCache.fetchedAt >= CACHE_MS) {
+    const sites = await fetchMississippiCameraSites();
+    mississippiTrafficCache = {
+      fetchedAt: now,
+      cameras: await buildMississippiTrafficPool(sites),
+    };
+  }
+
+  return mississippiTrafficCache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
 }
 
 async function fetchTennesseeCameras(bbox) {
@@ -747,18 +1124,16 @@ async function fetchTennesseeCameras(bbox) {
     .filter(Boolean);
 }
 
+let hawaiiCache = { fetchedAt: 0, cameras: [] };
+
 async function fetchHawaiiCameras(bbox) {
-  const body = await fetchCachedJson(
-    'https://services.arcgis.com/6I1ysurtNWNxkuwd/arcgis/rest/services/HawaiiTrafficCameras/FeatureServer/0/query?where=1%3D1&outFields=Camera_Description,URL&returnGeometry=true&outSR=4326&resultRecordCount=200&f=json',
-    'hi-traffic-cameras'
-  );
-  const features = Array.isArray(body?.features) ? body.features : [];
-  return features
-    .filter((feature) => {
-      const coords = feature.geometry;
-      return pointInBbox(coords?.y, coords?.x, bbox);
-    })
-    .map((feature) => {
+  return fetchCamerasFromPoolCache(hawaiiCache, bbox, async () => {
+    const body = await fetchCachedJson(
+      'https://services.arcgis.com/6I1ysurtNWNxkuwd/arcgis/rest/services/HawaiiTrafficCameras/FeatureServer/0/query?where=1%3D1&outFields=Camera_Description,URL&returnGeometry=true&outSR=4326&resultRecordCount=2000&f=json',
+      'hi-traffic-cameras'
+    );
+    const features = Array.isArray(body?.features) ? body.features : [];
+    return features.map((feature) => {
       const props = feature.attributes || {};
       const lat = feature.geometry?.y;
       const lon = feature.geometry?.x;
@@ -771,15 +1146,21 @@ async function fetchHawaiiCameras(bbox) {
         source: 'HDOT',
         state: 'HI',
       });
-    })
-    .filter(Boolean);
+    });
+  });
 }
 
 const WI511_BASE = 'https://511wi.gov';
-const WI511_LIST_URL = `${WI511_BASE}/list/getdata/cameras`;
+const FL511_BASE = 'https://www.fl511.com';
+const GA511_BASE = 'https://511ga.org';
+const AZ511_BASE = 'https://www.az511.gov';
+const NV511_BASE = 'https://www.nvroads.com';
+const UT511_BASE = 'https://www.udottraffic.utah.gov';
+const ID511_BASE = 'https://511.idaho.gov';
+const LIST511_CAMERAS_PATH = '/list/getdata/cameras';
 
-/** Parse `POINT (lon lat)` from 511WI DataTables feed. */
-export function parseWi511WktPoint(wkt) {
+/** Parse `POINT (lon lat)` from 511 list DataTables feed. */
+export function parse511ListWktPoint(wkt) {
   if (typeof wkt !== 'string') return null;
   const match = wkt.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
   if (!match) return null;
@@ -789,9 +1170,14 @@ export function parseWi511WktPoint(wkt) {
   return { lat, lon };
 }
 
-/** Map one 511WI list row to normalized cameras (one per enabled view). */
-export function mapWi511ListRow(row) {
-  const coords = parseWi511WktPoint(row?.latLng?.geography?.wellKnownText);
+/** @deprecated use parse511ListWktPoint */
+export function parseWi511WktPoint(wkt) {
+  return parse511ListWktPoint(wkt);
+}
+
+/** Map one 511 list row to normalized cameras (one per enabled view). */
+export function map511ListRow(row, { baseUrl, state, source, idPrefix }) {
+  const coords = parse511ListWktPoint(row?.latLng?.geography?.wellKnownText);
   if (!coords) return [];
 
   const description =
@@ -803,84 +1189,153 @@ export function mapWi511ListRow(row) {
   const cameras = [];
   for (const view of views) {
     if (view.disabled || view.blocked || view.videoDisabled) continue;
-    const videoUrl = normalizeHlsUrl(view.videoUrl);
     const imagePath = typeof view.imageUrl === 'string' ? view.imageUrl : null;
     const previewUrl = imagePath
-      ? httpsUrl(imagePath.startsWith('http') ? imagePath : `${WI511_BASE}${imagePath}`)
+      ? httpsUrl(imagePath.startsWith('http') ? imagePath : `${baseUrl}${imagePath}`)
       : null;
+    const videoUrl =
+      !view.isVideoAuthRequired && !view.videoDisabled
+        ? normalizeHlsUrl(view.videoUrl)
+        : null;
     if (!videoUrl && !previewUrl) continue;
 
     const cam = normalizeCamera({
-      id: `wi-${view.id || row.id}`,
+      id: `${idPrefix}-${view.id || row.id}`,
       description,
       lat: coords.lat,
       lon: coords.lon,
       streamUrl: videoUrl || previewUrl,
       liveUrl: videoUrl || undefined,
       previewUrl: previewUrl || undefined,
-      source: '511WI',
-      state: 'WI',
+      source,
+      state,
     });
     if (cam) cameras.push(cam);
   }
   return cameras;
 }
 
-async function fetchAllWi511ListRows() {
-  const first = await fetch(WI511_LIST_URL, {
+/** Map one 511WI list row to normalized cameras (one per enabled view). */
+export function mapWi511ListRow(row) {
+  return map511ListRow(row, { baseUrl: WI511_BASE, state: 'WI', source: '511WI', idPrefix: 'wi' });
+}
+
+/** Map one FL511 list row (auth-gated DIVAS HLS → snapshot previews on fl511.com). */
+export function mapFl511ListRow(row) {
+  return map511ListRow(row, { baseUrl: FL511_BASE, state: 'FL', source: 'FL511', idPrefix: 'fl' });
+}
+
+/** Map one 511GA list row (auth-gated SKYLINE HLS → snapshot previews on 511ga.org). */
+export function mapGa511ListRow(row) {
+  return map511ListRow(row, { baseUrl: GA511_BASE, state: 'GA', source: '511GA', idPrefix: 'ga' });
+}
+
+/** Map one AZ511 list row (snapshot previews on az511.gov). */
+export function mapAz511ListRow(row) {
+  return map511ListRow(row, { baseUrl: AZ511_BASE, state: 'AZ', source: 'AZ511', idPrefix: 'az' });
+}
+
+/** Map one NVRoads list row (public its.nv.gov HLS + nvroads.com snapshots). */
+export function mapNv511ListRow(row) {
+  return map511ListRow(row, { baseUrl: NV511_BASE, state: 'NV', source: 'NVRoads', idPrefix: 'nv' });
+}
+
+/** Map one UDOT 511 list row (snapshot previews on udottraffic.utah.gov). */
+export function mapUt511ListRow(row) {
+  return map511ListRow(row, { baseUrl: UT511_BASE, state: 'UT', source: 'UDOT 511', idPrefix: 'ut' });
+}
+
+/** Map one Idaho 511 list row (snapshot previews on 511.idaho.gov). */
+export function mapId511ListRow(row) {
+  return map511ListRow(row, { baseUrl: ID511_BASE, state: 'ID', source: 'Idaho 511', idPrefix: 'id' });
+}
+
+async function fetch511ListPage(listUrl, start, length, attempt = 0) {
+  const res = await fetch(listUrl, {
     method: 'POST',
     headers: {
       'User-Agent': USER_AGENT,
       Accept: 'application/json',
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({ draw: '1', start: '0', length: '1' }).toString(),
+    body: new URLSearchParams({
+      draw: '1',
+      start: String(start),
+      length: String(length),
+    }).toString(),
   });
-  if (!first.ok) throw new Error(`511WI camera list unavailable (${first.status})`);
-  const firstBody = await first.json();
+  if (res.ok) return res.json();
+  if (res.status >= 500 && attempt < 3) {
+    await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+    return fetch511ListPage(listUrl, start, length, attempt + 1);
+  }
+  throw new Error(`511 camera list unavailable (${res.status})`);
+}
+
+async function fetchAll511ListRows(baseUrl, { pageSize = 100 } = {}) {
+  const listUrl = `${baseUrl}${LIST511_CAMERAS_PATH}`;
+  const firstBody = await fetch511ListPage(listUrl, 0, 1);
   const total = Number(firstBody.recordsTotal) || 0;
   if (!total) return [];
 
-  const pageSize = 100;
-  const rows = [];
-  for (let start = 0; start < total; start += pageSize) {
-    const res = await fetch(WI511_LIST_URL, {
-      method: 'POST',
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        draw: '1',
-        start: String(start),
-        length: String(Math.min(pageSize, total - start)),
-      }).toString(),
-    });
-    if (!res.ok) throw new Error(`511WI camera list unavailable (${res.status})`);
-    const body = await res.json();
+  const rows = Array.isArray(firstBody.data) ? [...firstBody.data] : [];
+  for (let start = rows.length; start < total; start += pageSize) {
+    const body = await fetch511ListPage(listUrl, start, Math.min(pageSize, total - start));
     if (Array.isArray(body.data)) rows.push(...body.data);
   }
   return rows;
 }
 
 let wi511ListCache = { fetchedAt: 0, rows: [] };
+let fl511ListCache = { fetchedAt: 0, rows: [] };
+let ga511ListCache = { fetchedAt: 0, rows: [] };
+let az511ListCache = { fetchedAt: 0, rows: [] };
+let nv511ListCache = { fetchedAt: 0, rows: [] };
+let ut511ListCache = { fetchedAt: 0, rows: [] };
+let id511ListCache = { fetchedAt: 0, rows: [] };
 
-async function fetchWisconsin511Cameras(bbox) {
+async function fetch511ListCameras(bbox, cache, baseUrl, mapRow, listOptions = {}) {
   const now = Date.now();
-  if (!wi511ListCache.rows.length || now - wi511ListCache.fetchedAt >= CACHE_MS) {
-    const rows = await fetchAllWi511ListRows();
-    wi511ListCache = { fetchedAt: now, rows };
+  if (!cache.rows.length || now - cache.fetchedAt >= CACHE_MS) {
+    cache.fetchedAt = now;
+    cache.rows = await fetchAll511ListRows(baseUrl, listOptions);
   }
 
   const cameras = [];
-  for (const row of wi511ListCache.rows) {
-    const mapped = mapWi511ListRow(row);
-    for (const cam of mapped) {
+  for (const row of cache.rows) {
+    for (const cam of mapRow(row)) {
       if (pointInBbox(cam.lat, cam.lon, bbox)) cameras.push(cam);
     }
   }
   return cameras;
+}
+
+async function fetchWisconsin511Cameras(bbox) {
+  return fetch511ListCameras(bbox, wi511ListCache, WI511_BASE, mapWi511ListRow);
+}
+
+async function fetchFlorida511Cameras(bbox) {
+  return fetch511ListCameras(bbox, fl511ListCache, FL511_BASE, mapFl511ListRow);
+}
+
+async function fetchGeorgia511Cameras(bbox) {
+  return fetch511ListCameras(bbox, ga511ListCache, GA511_BASE, mapGa511ListRow, { pageSize: 50 });
+}
+
+async function fetchArizona511Cameras(bbox) {
+  return fetch511ListCameras(bbox, az511ListCache, AZ511_BASE, mapAz511ListRow);
+}
+
+async function fetchNevada511Cameras(bbox) {
+  return fetch511ListCameras(bbox, nv511ListCache, NV511_BASE, mapNv511ListRow);
+}
+
+async function fetchUtah511Cameras(bbox) {
+  return fetch511ListCameras(bbox, ut511ListCache, UT511_BASE, mapUt511ListRow);
+}
+
+async function fetchIdaho511Cameras(bbox) {
+  return fetch511ListCameras(bbox, id511ListCache, ID511_BASE, mapId511ListRow);
 }
 
 const OKTRAFFIC_API = 'https://oktraffic.org/api/cameraPoles';
@@ -949,18 +1404,23 @@ async function fetchOklahomaTrafficCameras(bbox) {
   return okTrafficCache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
 }
 
+const mapIconsPoolCaches = new Map();
+
 async function fetchMapIcons511Cameras(bbox, { baseUrl, stateCode, cacheKey, sourceLabel, assignStateFromCoords = false }) {
-  const body = await fetchCachedJson(`${baseUrl}/map/mapIcons/Cameras`, cacheKey);
-  const items = Array.isArray(body?.item2) ? body.item2 : [];
-  return items
-    .filter((item) => {
-      const coords = item.location;
-      if (!Array.isArray(coords) || coords.length < 2) return false;
-      return pointInBbox(coords[0], coords[1], bbox);
-    })
-    .map((item) => {
-      const lat = item.location[0];
-      const lon = item.location[1];
+  const poolKey = cacheKey;
+  let cache = mapIconsPoolCaches.get(poolKey);
+  if (!cache) {
+    cache = { fetchedAt: 0, cameras: [] };
+    mapIconsPoolCaches.set(poolKey, cache);
+  }
+
+  await refreshCameraPoolCache(cache, async () => {
+    const body = await fetchCachedJson(`${baseUrl}/map/mapIcons/Cameras`, cacheKey);
+    const items = Array.isArray(body?.item2) ? body.item2 : [];
+    return items.map((item) => {
+      const lat = item.location?.[0];
+      const lon = item.location?.[1];
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
       const state = assignStateFromCoords ? stateFromCoords(lat, lon) : stateCode;
       if (!state) return null;
       return normalizeCamera({
@@ -972,23 +1432,27 @@ async function fetchMapIcons511Cameras(bbox, { baseUrl, stateCode, cacheKey, sou
         source: sourceLabel || `${state} 511`,
         state,
       });
-    })
-    .filter(Boolean);
+    });
+  });
+
+  return filterCamerasByBbox(cache.cameras, bbox);
 }
 
+let alaska511Cache = { fetchedAt: 0, cameras: [] };
+
 async function fetchAlaskaCameras(bbox) {
-  const params = arcGisEnvelopeParams(bbox, {
-    where: "Status='Enabled'",
-    outFields: 'Id,Name,Latitude,Longitude',
-    returnGeometry: 'false',
-    resultRecordCount: '2000',
-  });
-  const features = await queryArcGis(
-    'https://services.arcgis.com/fX5IGselyy1TirdY/arcgis/rest/services/511_Cameras/FeatureServer/0/query',
-    params
-  );
-  return features
-    .map((feature) => {
+  return fetchCamerasFromPoolCache(alaska511Cache, bbox, async () => {
+    const params = arcGisEnvelopeParams(STATE_BOUNDS.AK, {
+      where: "Status='Enabled'",
+      outFields: 'Id,Name,Latitude,Longitude',
+      returnGeometry: 'false',
+      resultRecordCount: '2000',
+    });
+    const features = await queryArcGis(
+      'https://services.arcgis.com/fX5IGselyy1TirdY/arcgis/rest/services/511_Cameras/FeatureServer/0/query',
+      params
+    );
+    return features.map((feature) => {
       const props = feature.attributes || {};
       const lat = Number(props.Latitude);
       const lon = Number(props.Longitude);
@@ -1001,8 +1465,8 @@ async function fetchAlaskaCameras(bbox) {
         source: '511 Alaska',
         state: 'AK',
       });
-    })
-    .filter(Boolean);
+    });
+  });
 }
 
 async function fetchArcGisBboxCameras(
@@ -1020,22 +1484,38 @@ async function fetchArcGisBboxCameras(
   return features.map((feature) => mapFeature(feature.attributes || {}, feature)).filter(Boolean);
 }
 
+let virginiaCache = { fetchedAt: 0, cameras: [] };
+
 async function fetchVirginiaCameras(bbox) {
-  return fetchArcGisBboxCameras(bbox, {
-    serviceUrl:
-      'https://services.arcgis.com/hRUr1F8lE8Jq2uJo/arcgis/rest/services/CameraLocationVDOT/FeatureServer/0',
-    where: 'ios_url IS NOT NULL OR image_url IS NOT NULL',
-    outFields: 'descriptio,route,latitude,longitude,ios_url,image_url,id',
-    mapFeature: (props) =>
-      normalizeCamera({
+  return fetchCamerasFromPoolCache(virginiaCache, bbox, async () => {
+    const params = arcGisEnvelopeParams(STATE_BOUNDS.VA, {
+      where: 'ios_url IS NOT NULL OR image_url IS NOT NULL',
+      outFields: 'descriptio,route,latitude,longitude,ios_url,image_url,id',
+      returnGeometry: 'false',
+      resultRecordCount: '2000',
+    });
+    const features = await queryArcGis(
+      'https://services.arcgis.com/hRUr1F8lE8Jq2uJo/arcgis/rest/services/CameraLocationVDOT/FeatureServer/0/query',
+      params
+    );
+    return features.map((feature) => {
+      const props = feature.attributes || {};
+      const snapshot = httpsUrl(props.image_url);
+      const hls = skyvdnStreamUrl(props.ios_url);
+      const streamUrl = snapshot || hls;
+      if (!streamUrl) return null;
+      return normalizeCamera({
         id: `va-${props.id || props.deviceid}`,
         description: props.descriptio || props.route,
         lat: props.latitude,
         lon: props.longitude,
-        streamUrl: skyvdnStreamUrl(props.ios_url),
+        streamUrl,
+        liveUrl: snapshot ? undefined : hls || undefined,
+        previewUrl: snapshot || undefined,
         source: 'VDOT',
         state: 'VA',
-      }),
+      });
+    });
   });
 }
 
@@ -1125,71 +1605,98 @@ async function fetchWyomingCameras(bbox) {
   return [...cheyenne, ...teton];
 }
 
-async function fetchIdahoCameras(bbox) {
-  const params = arcGisEnvelopeParams(bbox, {
-    outFields: 'UniqueID,LocationName,Latitude,Longitude',
-    resultRecordCount: '2000',
+const iterisPoolCaches = new Map();
+
+/** Map one Iteris ATIS geojson camera feature. */
+export function mapIterisCameraFeature(feature, stateCode, sourceLabel = `${stateCode} DOT`) {
+  const props = feature.properties || {};
+  const coords = feature.geometry?.coordinates;
+  if (!Array.isArray(coords) || coords.length < 2) return null;
+  const [lon, lat] = coords;
+  const snapshot = httpsUrl(props.image_url || props.snapshot_url || props.icon_url);
+  const liveUrl = pickLiveFirst(props.https_url, props.stream_url, props.video_url);
+  const streamUrl = snapshot || liveUrl;
+  if (!streamUrl) return null;
+  return normalizeCamera({
+    id: `${stateCode.toLowerCase()}-${props.id || props.description || `${lat}-${lon}`}`,
+    description: props.description || props.name,
+    lat,
+    lon,
+    streamUrl,
+    liveUrl: snapshot ? undefined : liveUrl || undefined,
+    previewUrl: snapshot || undefined,
+    source: sourceLabel,
+    state: stateCode,
   });
-  const features = await queryArcGis(
-    'https://gisp.itd.idaho.gov/server/rest/services/GDWarehouse/IntelligentTransportationSystems/FeatureServer/0/query',
-    params
-  );
-  return features
-    .map((feature) => {
-      const props = feature.attributes || {};
-      const lat = props.Latitude ?? feature.geometry?.y;
-      const lon = props.Longitude ?? feature.geometry?.x;
-      const cameraId = encodeURIComponent(props.UniqueID || '');
+}
+
+/** SD Iteris sites expose nested camera views under properties.cameras[]. */
+export function mapSouthDakotaIterisFeature(feature) {
+  const props = feature.properties || {};
+  const coords = feature.geometry?.coordinates;
+  if (!Array.isArray(coords) || coords.length < 2) return null;
+  const [lon, lat] = coords;
+  const views = Array.isArray(props.cameras) ? props.cameras : [];
+  return views
+    .map((view) => {
+      const snapshot = httpsUrl(view.image);
+      if (!snapshot) return null;
       return normalizeCamera({
-        id: `id-${props.UniqueID}`,
-        description: props.LocationName,
+        id: `sd-${feature.id || props.name}-${view.id}`,
+        description: view.description || `${props.route || props.name} ${view.name || ''}`.trim(),
         lat,
         lon,
-        streamUrl: cameraId ? `https://511.idaho.gov/map/Cctv/${cameraId}` : null,
-        source: 'Idaho DOT',
-        state: 'ID',
+        streamUrl: snapshot,
+        source: 'SD DOT',
+        state: 'SD',
       });
     })
     .filter(Boolean);
 }
 
-async function fetchIterisCameras(bbox, stateCode, cacheKey, url) {
-  const body = await fetchCachedJson(url, cacheKey);
-  const features = Array.isArray(body?.features) ? body.features : [];
-  return features
-    .filter((feature) => {
-      const coords = feature.geometry?.coordinates;
-      if (!Array.isArray(coords) || coords.length < 2) return false;
-      return pointInBbox(coords[1], coords[0], bbox);
-    })
-    .map((feature) => {
-      const props = feature.properties || {};
-      const [lon, lat] = feature.geometry.coordinates;
-      const liveUrl = pickLiveFirst(props.https_url, props.stream_url, props.video_url);
-      if (!liveUrl) return null;
-      return normalizeCamera({
-        id: `${stateCode.toLowerCase()}-${props.id || props.description || lat}`,
-        description: props.description || props.name,
-        lat,
-        lon,
-        streamUrl: liveUrl,
-        liveUrl,
-        source: `${stateCode} DOT`,
-        state: stateCode,
-      });
-    })
-    .filter(Boolean);
+let southDakotaIterisCache = { fetchedAt: 0, cameras: [] };
+
+async function fetchSouthDakotaCameras(bbox) {
+  return fetchCamerasFromPoolCache(southDakotaIterisCache, bbox, async () => {
+    const body = await fetchCachedJson(
+      'https://sd.cdn.iteris-atis.com/geojson/icons/metadata/icons.cameras.geojson',
+      'iteris-sd-cameras'
+    );
+    const features = Array.isArray(body?.features) ? body.features : [];
+    return features.flatMap((feature) => mapSouthDakotaIterisFeature(feature));
+  });
+}
+
+async function fetchIterisCameras(bbox, stateCode, cacheKey, url, sourceLabel) {
+  const poolKey = `${stateCode}:${cacheKey}`;
+  let cache = iterisPoolCaches.get(poolKey);
+  if (!cache) {
+    cache = { fetchedAt: 0, cameras: [] };
+    iterisPoolCaches.set(poolKey, cache);
+  }
+
+  await refreshCameraPoolCache(cache, async () => {
+    const body = await fetchCachedJson(url, cacheKey);
+    const features = Array.isArray(body?.features) ? body.features : [];
+    return features.map((feature) => mapIterisCameraFeature(feature, stateCode, sourceLabel));
+  });
+
+  return filterCamerasByBbox(cache.cameras, bbox);
 }
 
 /** Live HLS + verified snapshot fetchers. */
 export const DIRECT_FETCHERS = [
-  { id: 'modot', region: regionFor('MO'), states: ['MO'], fetch: fetchModotCameras },
+  { id: 'missouri-traffic', region: regionFor('MO'), states: ['MO'], fetch: fetchMissouriTrafficCameras },
+  { id: 'aldot', region: regionFor('AL'), states: ['AL'], fetch: fetchAlabama511Cameras },
+  { id: 'mississippi-traffic', region: regionFor('MS'), states: ['MS'], fetch: fetchMississippiTrafficCameras },
   { id: 'caltrans', region: regionFor('CA'), states: ['CA'], fetch: fetchCaltransCameras },
+  { id: 'hdot', region: regionFor('HI'), states: ['HI'], fetch: fetchHawaiiCameras },
+  { id: 'vdot', region: regionFor('VA'), states: ['VA'], fetch: fetchVirginiaCameras },
   { id: 'ny511', region: regionFor('NY'), states: ['NY'], fetch: fetchNy511Cameras },
   { id: 'tdot', region: regionFor('TN'), states: ['TN'], fetch: fetchTennesseeCameras },
   { id: 'deldot', region: regionFor('DE'), states: ['DE'], fetch: fetchDelawareCameras },
   { id: 'iowa', region: regionFor('IA'), states: ['IA'], fetch: fetchIowaCameras },
-  { id: 'cotrip', region: regionFor('CO'), states: ['CO'], fetch: fetchColoradoCotripCameras },
+  { id: 'cotrip', region: regionFor('CO'), states: ['CO'], fetch: fetchColorado511Cameras },
   {
     id: 'scdot',
     region: regionFor('SC'),
@@ -1199,32 +1706,27 @@ export const DIRECT_FETCHERS = [
         bbox,
         'SC',
         'iteris-sc-cameras',
-        'https://sc.cdn.iteris-atis.com/geojson/icons/metadata/icons.cameras.geojson'
+        'https://sc.cdn.iteris-atis.com/geojson/icons/metadata/icons.cameras.geojson',
+        'SC DOT'
       ),
+  },
+  {
+    id: 'sddot',
+    region: regionFor('SD'),
+    states: ['SD'],
+    fetch: fetchSouthDakotaCameras,
   },
   {
     id: 'fl511',
     region: regionFor('FL'),
     states: ['FL'],
-    fetch: (bbox) =>
-      fetchMapIcons511Cameras(bbox, {
-        baseUrl: 'https://www.fl511.com',
-        stateCode: 'FL',
-        cacheKey: 'fl511-cameras',
-        sourceLabel: 'FL511',
-      }),
+    fetch: fetchFlorida511Cameras,
   },
   {
     id: 'ut511',
     region: regionFor('UT'),
     states: ['UT'],
-    fetch: (bbox) =>
-      fetchMapIcons511Cameras(bbox, {
-        baseUrl: 'https://www.udottraffic.utah.gov',
-        stateCode: 'UT',
-        cacheKey: 'ut511-cameras',
-        sourceLabel: 'UDOT 511',
-      }),
+    fetch: fetchUtah511Cameras,
   },
   {
     id: 'pa511',
@@ -1242,25 +1744,13 @@ export const DIRECT_FETCHERS = [
     id: 'az511',
     region: regionFor('AZ'),
     states: ['AZ'],
-    fetch: (bbox) =>
-      fetchMapIcons511Cameras(bbox, {
-        baseUrl: 'https://www.az511.gov',
-        stateCode: 'AZ',
-        cacheKey: 'az511-cameras',
-        sourceLabel: 'AZ511',
-      }),
+    fetch: fetchArizona511Cameras,
   },
   {
     id: 'nv511',
     region: regionFor('NV'),
     states: ['NV'],
-    fetch: (bbox) =>
-      fetchMapIcons511Cameras(bbox, {
-        baseUrl: 'https://www.nvroads.com',
-        stateCode: 'NV',
-        cacheKey: 'nv511-cameras',
-        sourceLabel: 'NVRoads',
-      }),
+    fetch: fetchNevada511Cameras,
   },
   {
     id: 'la511',
@@ -1303,19 +1793,13 @@ export const DIRECT_FETCHERS = [
   { id: 'or-dot', region: regionFor('OR'), states: ['OR'], fetch: fetchOregonCameras },
   { id: 'wsdot', region: regionFor('WA'), states: ['WA'], fetch: fetchWsdotCameras },
   { id: 'trimarc', region: regionFor('KY', 'IN'), states: ['KY', 'IN'], fetch: fetchTrimarcCameras },
-  { id: 'idaho', region: regionFor('ID'), states: ['ID'], fetch: fetchIdahoCameras },
+  { id: 'idaho', region: regionFor('ID'), states: ['ID'], fetch: fetchIdaho511Cameras },
   { id: 'tx-local', region: regionFor('TX'), states: ['TX'], fetch: fetchTexasCameras },
   {
     id: 'ga511',
     region: regionFor('GA'),
     states: ['GA'],
-    fetch: (bbox) =>
-      fetchMapIcons511Cameras(bbox, {
-        baseUrl: 'https://511ga.org',
-        stateCode: 'GA',
-        cacheKey: 'ga511-cameras',
-        sourceLabel: '511GA',
-      }),
+    fetch: fetchGeorgia511Cameras,
   },
   {
     id: 'wi511',
@@ -1343,6 +1827,12 @@ export const DIRECT_FETCHERS = [
     region: regionFor('IN'),
     states: ['IN'],
     fetch: fetchIndiana511Cameras,
+  },
+  {
+    id: 'nebraska-511',
+    region: regionFor('NE'),
+    states: ['NE'],
+    fetch: fetchNebraska511Cameras,
   },
   {
     id: 'travelmidwest',
@@ -1381,27 +1871,43 @@ export const DIRECT_STATE_COVERAGE = [
 /** States with no working free public feed found after exhaustive probing. */
 export const STATE_FEED_GAPS = {
   AR: 'iDrive Arkansas has no public mapIcons/getcameras API',
-  AL: 'ALDOT Wowza HLS feeds fail manifest validation from public networks',
+  AL: 'ALDOT ArcGIS serves ~560 Wowza HLS views (cdn3.wowza.com) plus api.algotraffic.com snapshots',
   DC: 'DDOT publishes CCTV locations in ArcGIS but no free snapshot/stream URLs',
-  HI: 'Hawaii DOT ArcGIS URLs are snapshot JPGs only',
+  CA: 'Caltrans ArcGIS serves live HLS (streamingVideoURL) plus currentImageURL snapshots statewide',
+  WA: 'WSDOT TravelInfoCamerasWeather serves snapshot images statewide (images.wsdot.wa.gov)',
+  AK: '511 Alaska ArcGIS serves snapshot previews on 511.alaska.gov/map/Cctv statewide',
+  SC: 'SC DOT Iteris geojson serves snapshot camera icons statewide',
+  PA: '511PA mapIcons serves snapshot previews on 511pa.com/map/Cctv statewide',
+  ME: 'New England 511 mapIcons serves ME snapshot previews (newengland511.org)',
+  VT: 'New England 511 mapIcons serves VT snapshot previews (newengland511.org)',
+  TX: 'Austin Mobility + Arlington ArcGIS serve local snapshot feeds (no statewide TxDOT pool yet)',
+  KY: 'Trimarc/KY-IN DOT corridor snapshots plus Travel Midwest on some routes',
+  HI: 'HDOT ArcGIS serves snapshot JPG URLs statewide',
   IL: 'Travel Midwest GTIS serves ~3,500 IL snapshot views (all directions); live HLS not published',
   IN: '511IN CARS serves ~740 INDOT snapshot previews statewide (intg.carsprogram.org)',
   OH: 'OHGO serves ~1,160 ODOT snapshot views (all directions at multi-view sites)',
-  MO: 'West St. Louis County uses MoDOT rtplive; app rotates sfs01–sfs03 CDN hosts. Open Traveler map if the CDN is offline.',
+  MO: 'Missouri DOT ArcGIS (~700+ views statewide) plus Springfield Ozarks HLS; MoDOT rtplive uses browser-direct playback',
   KS: 'KanDrive has no public camera JSON feed',
   MD: 'CHART ArcGIS camera video.php feeds return 404 (legacy DIVAS snapshot URLs)',
   MI: 'MiDrive camera list exposes HTML snapshot URLs only',
   MN: '511MN mapIcons endpoint unavailable; Travel Midwest covers some MN corridor cameras',
-  MS: 'MDOT map app has no mapIcons API; no public ArcGIS media layer found',
+  MS: 'MDOTtraffic LoadCameraData + regional Wowza servers (~1,000+ HLS views statewide)',
   MT: 'Iteris MT geojson serves snapshot images only',
   NC: 'NCDOT retired camera image API (May 2026); ArcGIS links are stale duplicates',
   ND: 'ND Roads has no public camera JSON feed',
-  NE: '511 Nebraska has no public camera JSON feed',
+  NE: '511NE CARS serves ~1,000 NDOR snapshot views statewide (netg.carsprogram.org)',
   NJ: '511NJ mapIcons blocked; Turnpike ArcGIS layers are not publicly queryable',
-  NM: 'NMRoads GetCameraInfo serves snapshot images only',
+  NM: 'NMRoads GetCameraInfo serves ~180 snapshot images statewide (servicev4.nmroads.com)',
   OK: 'OKTraffic cameraPoles API serves ~388 live HLS views via stream.oktraffic.org',
-  SD: 'Iteris SD geojson serves snapshot images only',
-  VA: 'VDOT ArcGIS skyvdn HLS endpoints time out / unreachable from public networks',
+  AZ: 'AZ511 list feed serves ~640 snapshot views statewide (az511.gov/map/Cctv)',
+  NV: 'NVRoads list feed serves ~650 views with public its.nv.gov HLS plus nvroads.com snapshots',
+  UT: 'UDOT 511 list feed serves ~2,050 snapshot views statewide (udottraffic.utah.gov/map/Cctv)',
+  CO: 'CDOT CARS cotrip.org serves ~1,030 live HLS views with carsprogram snapshot previews',
+  ID: 'Idaho 511 list feed serves ~460 snapshot views statewide (511.idaho.gov/map/Cctv)',
+  FL: 'FL511 list feed serves ~4,800 snapshot views statewide (DIVAS HLS is auth-gated on fl511.com)',
+  GA: '511GA list feed serves ~4,000 snapshot views statewide (SKYLINE HLS is auth-gated on 511ga.org)',
+  SD: 'Iteris SD geojson serves snapshot images statewide (sd.cdn.iteris-atis.com)',
+  VA: 'VDOT ArcGIS image_url snapshots statewide; skyvdn HLS endpoints often unreachable from public networks',
   WI: '511WI list feed provides live HLS (cctv.dot.wi.gov) plus view snapshots; developer API key optional for v2',
   WV: 'WV511 uses dynamic CameraListing page with no public JSON/snapshot pattern',
   WY: 'WYDOT ArcGIS Camera_Link fields are snapshot JPEGs only',
