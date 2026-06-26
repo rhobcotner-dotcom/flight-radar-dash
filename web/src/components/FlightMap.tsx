@@ -45,6 +45,7 @@ import { useViewportCameras, type StormCameraPriority } from '../hooks/useViewpo
 import { useViewportRailCameras } from '../hooks/useViewportRailCameras';
 import type { MapViewportBounds } from '../lib/mapViewport';
 import { stableViewportKey, viewportFromArea, viewportSearchParams } from '../lib/mapViewport';
+import { CameraStreamSchedulerProvider } from '../hooks/useCameraStreamScheduler';
 import { ChartMapDecor } from './ChartMapDecor';
 import { useSatellites } from '../hooks/useSatellites';
 import { DEFAULT_RADAR_OPACITY } from '../lib/radar';
