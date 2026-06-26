@@ -133,7 +133,7 @@ async function fetchOpenSkyViewportFlights(viewport) {
   return normalizeOpenSkyStates(payload.states, viewport);
 }
 
-export async function fetchViewportFlights(viewport, home) {
+export async function fetchViewportFlights(viewport, home, { enrich = true } = {}) {
   const homeLat = Number(home.lat);
   const homeLon = Number(home.lon);
   const homeRadius = Number(home.radiusMiles) || 85;
@@ -169,17 +169,19 @@ export async function fetchViewportFlights(viewport, home) {
   flights = thinFlights(flights, viewport, limit);
   flights = enrichAndSortFlights(flights, homeLat, homeLon);
 
-  const registryTask = enrichFlightsWithRegistry(flights);
-  const routesTask = enrichFlightsWithRoutes(flights, { homeRadiusMiles: homeRadius });
-  const [, routeFlights] = await Promise.all([registryTask, routesTask]);
-  flights = routeFlights.map((flight, index) => ({
-    ...flight,
-    reg: flights[index].reg ?? flight.reg,
-    type: flights[index].type ?? flight.type,
-    carrierName: flights[index].carrierName ?? flight.carrierName,
-    operating_as: flights[index].operating_as ?? flight.operating_as,
-    painted_as: flights[index].painted_as ?? flight.painted_as,
-  }));
+  if (enrich) {
+    const registryTask = enrichFlightsWithRegistry(flights);
+    const routesTask = enrichFlightsWithRoutes(flights, { homeRadiusMiles: homeRadius });
+    const [, routeFlights] = await Promise.all([registryTask, routesTask]);
+    flights = routeFlights.map((flight, index) => ({
+      ...flight,
+      reg: flights[index].reg ?? flight.reg,
+      type: flights[index].type ?? flight.type,
+      carrierName: flights[index].carrierName ?? flight.carrierName,
+      operating_as: flights[index].operating_as ?? flight.operating_as,
+      painted_as: flights[index].painted_as ?? flight.painted_as,
+    }));
+  }
   flights = enrichFlightsCarriers(flights);
 
   const homeFlights = flights.filter((flight) => (flight.distanceMiles ?? Infinity) <= homeRadius);

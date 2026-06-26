@@ -40,8 +40,8 @@ export function TrackSmoothingProvider({
     if (!enabled) return undefined;
 
     let frame = 0;
-    const tick = (now: number) => {
-      engineRef.current.tickMarkers(now);
+    const tick = () => {
+      engineRef.current.tickMarkers(Date.now());
       frame = window.requestAnimationFrame(tick);
     };
 

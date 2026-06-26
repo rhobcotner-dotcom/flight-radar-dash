@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+} from 'react';
 import type { Alert, AirportHub, Flight } from '../types';
 import type { MapViewportBounds } from '../lib/mapViewport';
 import { stableViewportKey, viewportSearchParams } from '../lib/mapViewport';
@@ -67,6 +76,61 @@ interface RefreshOptions {
   snapshot?: boolean;
   silent?: boolean;
   generation?: number;
+  enrich?: boolean;
+}
+
+function applyRefreshPayload(
+  data: MapRefreshPayload,
+  incoming: Flight[],
+  options: RefreshOptions,
+  hasLoadedRef: MutableRefObject<boolean>,
+  setters: {
+    setFlights: Dispatch<SetStateAction<Flight[]>>;
+    setGovFlights: Dispatch<SetStateAction<Flight[]>>;
+    setB52Flights: Dispatch<SetStateAction<Flight[]>>;
+    setAlerts: Dispatch<SetStateAction<Alert[]>>;
+    setFetchedAt: Dispatch<SetStateAction<string | null>>;
+    setInViewCount: Dispatch<SetStateAction<number>>;
+    setHomeCount: Dispatch<SetStateAction<number>>;
+    setError: Dispatch<SetStateAction<string | null>>;
+    setDataWarning: Dispatch<SetStateAction<string | null>>;
+    setHasLoaded: Dispatch<SetStateAction<boolean>>;
+    setLoading: Dispatch<SetStateAction<boolean>>;
+    setTrendsKey: Dispatch<SetStateAction<number>>;
+  }
+) {
+  if (options.silent) {
+    if (incoming.length > 0) {
+      if (hasLoadedRef.current) {
+        setters.setFlights((prev) => {
+          const merged = mergeFlightList(prev, incoming);
+          return flightListsEqual(prev, merged) ? prev : merged;
+        });
+      } else {
+        setters.setFlights(incoming);
+      }
+    }
+    setters.setGovFlights(data.govFlights || []);
+    setters.setAlerts(data.alerts || []);
+    setters.setB52Flights(data.b52Flights || []);
+  } else {
+    setters.setFlights(incoming);
+    setters.setGovFlights(data.govFlights || []);
+    setters.setB52Flights(data.b52Flights || []);
+    setters.setAlerts(data.alerts || []);
+  }
+
+  setters.setFetchedAt(data.fetchedAt || new Date().toISOString());
+  setters.setInViewCount(data.count ?? incoming.length);
+  setters.setHomeCount(data.homeCount ?? 0);
+  setters.setError(null);
+  setters.setDataWarning(data.dataWarning || null);
+  setters.setHasLoaded(true);
+  hasLoadedRef.current = true;
+  setters.setLoading(false);
+  if (options.snapshot !== false && !options.silent) {
+    setters.setTrendsKey((k) => k + 1);
+  }
 }
 
 export function useFlights(queryString: string, viewportBounds: MapViewportBounds) {
@@ -90,8 +154,12 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   const refreshInFlight = useRef(false);
   const pendingRefreshRef = useRef<RefreshOptions | null>(null);
   const loadGenerationRef = useRef(0);
-  const hasFetchedRef = useRef(false);
+  const hasLoadedRef = useRef(false);
   const viewportKey = useMemo(() => stableViewportKey(viewportBounds), [viewportBounds]);
+
+  useEffect(() => {
+    hasLoadedRef.current = hasLoaded;
+  }, [hasLoaded]);
 
   const refreshMap = useCallback(
     async (options: RefreshOptions = {}) => {
@@ -102,7 +170,10 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
 
       refreshInFlight.current = true;
       const generation = options.generation ?? loadGenerationRef.current;
-      const showLoading = !hasLoaded && !options.silent;
+      const enrich = options.enrich !== false;
+      const showLoading = !hasLoadedRef.current;
+      let queueEnrichment = false;
+
       if (showLoading) {
         setLoading(true);
       }
@@ -115,65 +186,76 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
       if (options.snapshot === false) {
         params.set('snapshot', 'false');
       }
+      if (!enrich) {
+        params.set('enrich', '0');
+      }
 
       try {
         const res = await fetch(`/api/live/refresh?${params.toString()}`);
         const data: MapRefreshPayload = await res.json();
 
-        if (generation !== loadGenerationRef.current) return;
+        const incoming = data.flights || [];
+        const isStale = generation !== loadGenerationRef.current;
+        if (isStale && (hasLoadedRef.current || incoming.length === 0)) return;
         if (!res.ok) throw new Error(data.error || 'Failed to load flights');
 
-        const incoming = data.flights || [];
-        if (options.silent) {
-          if (incoming.length > 0) {
-            setFlights((prev) => {
-              const merged = mergeFlightList(prev, incoming);
-              return flightListsEqual(prev, merged) ? prev : merged;
-            });
+        applyRefreshPayload(
+          data,
+          incoming,
+          options,
+          hasLoadedRef,
+          {
+            setFlights,
+            setGovFlights,
+            setB52Flights,
+            setAlerts,
+            setFetchedAt,
+            setInViewCount,
+            setHomeCount,
+            setError,
+            setDataWarning,
+            setHasLoaded,
+            setLoading,
+            setTrendsKey,
           }
-          setGovFlights(data.govFlights || []);
-          setAlerts(data.alerts || []);
-          setB52Flights(data.b52Flights || []);
-        } else {
-          setFlights(incoming);
-          setGovFlights(data.govFlights || []);
-          setB52Flights(data.b52Flights || []);
-          setAlerts(data.alerts || []);
-        }
+        );
 
-        setFetchedAt(data.fetchedAt || new Date().toISOString());
-        setInViewCount(data.count ?? incoming.length);
-        setHomeCount(data.homeCount ?? 0);
-        setError(null);
-        setDataWarning(data.dataWarning || null);
-        setHasLoaded(true);
-        if (options.snapshot !== false && !options.silent) {
-          setTrendsKey((k) => k + 1);
+        if (!enrich && incoming.length > 0) {
+          queueEnrichment = true;
         }
       } catch (err) {
-        if (generation !== loadGenerationRef.current) return;
+        if (generation !== loadGenerationRef.current && hasLoadedRef.current) return;
         const message = friendlyApiError(err instanceof Error ? err.message : 'Unknown error');
         if (!options.silent) {
-          if (hasLoaded) {
+          if (hasLoadedRef.current) {
             setDataWarning(message);
             setError(null);
           } else {
             setError(message);
+            setLoading(false);
           }
         }
       } finally {
-        if (showLoading) {
-          setLoading(false);
-        }
         refreshInFlight.current = false;
         const pending = pendingRefreshRef.current;
         pendingRefreshRef.current = null;
         if (pending) {
           void refreshMap(pending);
+        } else if (showLoading && !hasLoadedRef.current) {
+          setLoading(false);
+        } else if (queueEnrichment) {
+          window.setTimeout(() => {
+            void refreshMap({
+              snapshot: false,
+              silent: true,
+              enrich: true,
+              generation: loadGenerationRef.current,
+            });
+          }, 0);
         }
       }
     },
-    [queryString, viewportBounds, hasLoaded]
+    [queryString, viewportBounds]
   );
 
   const loadAirport = useCallback(async () => {
@@ -194,6 +276,11 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
     }
   }, [queryString]);
 
+  useEffect(() => {
+    setAutoRefreshSecondsState(5);
+    localStorage.setItem(AUTO_REFRESH_KEY, '5');
+  }, []);
+
   const setAutoRefreshSeconds = useCallback((seconds: AutoRefreshSeconds) => {
     setAutoRefreshSecondsState(seconds);
     localStorage.setItem(AUTO_REFRESH_KEY, String(seconds));
@@ -202,10 +289,14 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   useEffect(() => {
     loadGenerationRef.current += 1;
     const generation = loadGenerationRef.current;
-    const delay = hasFetchedRef.current ? 150 : 0;
+    const delay = hasLoadedRef.current ? 150 : 0;
     const timer = window.setTimeout(() => {
-      void refreshMap({ snapshot: false, silent: hasFetchedRef.current, generation });
-      hasFetchedRef.current = true;
+      void refreshMap({
+        snapshot: false,
+        silent: hasLoadedRef.current,
+        generation,
+        enrich: false,
+      });
     }, delay);
     return () => window.clearTimeout(timer);
     // Reload when the watched area or viewport changes.
@@ -216,7 +307,12 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
     if (!autoRefreshSeconds || !hasLoaded) return undefined;
 
     const id = window.setInterval(() => {
-      refreshMap({ snapshot: false, silent: true, generation: loadGenerationRef.current });
+      refreshMap({
+        snapshot: false,
+        silent: true,
+        enrich: false,
+        generation: loadGenerationRef.current,
+      });
     }, autoRefreshSeconds * 1000);
 
     return () => window.clearInterval(id);
@@ -249,6 +345,6 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
     setAutoRefreshSeconds,
     refreshMap,
     loadAirport,
-    refresh: () => refreshMap({ snapshot: true }),
+    refresh: () => refreshMap({ snapshot: true, enrich: true }),
   };
 }

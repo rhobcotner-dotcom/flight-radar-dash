@@ -238,6 +238,7 @@ const FlightMarker = memo(function FlightMarker({
   flightAnchorKey?: string | null;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
+  const smoothedPositionRef = useRef<[number, number]>([flight.lat, flight.lon]);
   const military = isLikelyMilGov(flight);
   const emergency = isSquawk7700(flight);
   const heloKind = helosEnabled ? classifyHelicopter(flight) : null;
@@ -258,10 +259,10 @@ const FlightMarker = memo(function FlightMarker({
     () => speedTrendForFlight(id, flight.gspeed, !ground),
     [id, flight.gspeed, ground]
   );
-  const markerPosition = useMemo<[number, number]>(
-    () => [flight.lat, flight.lon],
-    flightRefreshIntervalMs > 0 ? [id] : [id, flight.lat, flight.lon]
-  );
+  const markerPosition =
+    flightRefreshIntervalMs > 0
+      ? smoothedPositionRef.current
+      : ([flight.lat, flight.lon] as [number, number]);
   const [icon, setIcon] = useState<L.DivIcon>(() =>
     buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend)
   );
@@ -377,6 +378,7 @@ const TrainMarker = memo(function TrainMarker({
   trainAnchorKey?: string | null;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
+  const smoothedPositionRef = useRef<[number, number]>([train.lat, train.lon]);
   const icon = useMemo(
     () => buildTrainMapIcon(train, highlighted),
     [train.trainKind, train.heading, train.velocityMph, train.crossingStatus, train.railroad, highlighted]
@@ -389,10 +391,10 @@ const TrainMarker = memo(function TrainMarker({
     }),
     [train.velocityMph, train.heading]
   );
-  const markerPosition = useMemo<[number, number]>(
-    () => [train.lat, train.lon],
-    trainRefreshIntervalMs > 0 ? [id] : [id, train.lat, train.lon]
-  );
+  const markerPosition =
+    trainRefreshIntervalMs > 0
+      ? smoothedPositionRef.current
+      : ([train.lat, train.lon] as [number, number]);
 
   useAnimatedMarkerPosition({
     trackId: id,
