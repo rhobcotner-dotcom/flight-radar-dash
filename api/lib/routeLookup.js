@@ -1,6 +1,10 @@
+import { fetchWithTimeout, mapWithConcurrency } from './fetchWithTimeout.js';
+
 const ROUTE_API = process.env.ROUTE_API_BASE || 'https://api.adsbdb.com/v0';
 const ROUTE_CACHE_TTL_MS = Number(process.env.ROUTE_CACHE_TTL_MS || 60 * 60 * 1000);
 const ROUTE_LOOKUP_LIMIT = Number(process.env.ROUTE_LOOKUP_LIMIT || 120);
+const ROUTE_LOOKUP_CONCURRENCY = Number(process.env.ROUTE_LOOKUP_CONCURRENCY || 12);
+const ROUTE_FETCH_TIMEOUT_MS = Number(process.env.ROUTE_FETCH_TIMEOUT_MS || 8_000);
 
 const cache = new Map();
 
@@ -32,9 +36,11 @@ async function lookupRouteByCallsign(callsign) {
     return cached.data;
   }
 
-  const res = await fetch(`${ROUTE_API}/callsign/${encodeURIComponent(key)}`, {
-    headers: { Accept: 'application/json' },
-  });
+  const res = await fetchWithTimeout(
+    `${ROUTE_API}/callsign/${encodeURIComponent(key)}`,
+    { headers: { Accept: 'application/json' } },
+    ROUTE_FETCH_TIMEOUT_MS
+  );
 
   if (!res.ok) {
     cache.set(key, { ts: Date.now(), data: null });
@@ -99,15 +105,14 @@ export async function enrichFlightsWithRoutes(flights, { homeRadiusMiles = null 
   ].slice(0, ROUTE_LOOKUP_LIMIT);
 
   const routeByCallsign = new Map();
-  const batchSize = 5;
-
-  for (let i = 0; i < callsigns.length; i += batchSize) {
-    const batch = callsigns.slice(i, i + batchSize);
-    const results = await Promise.all(batch.map((callsign) => lookupRouteByCallsign(callsign)));
-    batch.forEach((callsign, index) => {
-      routeByCallsign.set(callsign, results[index]);
-    });
-  }
+  const results = await mapWithConcurrency(
+    callsigns,
+    ROUTE_LOOKUP_CONCURRENCY,
+    (callsign) => lookupRouteByCallsign(callsign)
+  );
+  callsigns.forEach((callsign, index) => {
+    routeByCallsign.set(callsign, results[index]);
+  });
 
   return flights.map((flight) => {
     const key = normalizeCallsign(flight.callsign || flight.flight);

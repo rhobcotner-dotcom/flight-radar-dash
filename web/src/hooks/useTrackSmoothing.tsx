@@ -36,11 +36,33 @@ export function TrackSmoothingProvider({
     }
   }, [enabled]);
 
+  useEffect(() => {
+    if (!enabled) return undefined;
+
+    let frame = 0;
+    const tick = (now: number) => {
+      engineRef.current.tickMarkers(now);
+      frame = window.requestAnimationFrame(tick);
+    };
+
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [enabled]);
+
   return <TrackSmoothingContext.Provider value={value}>{children}</TrackSmoothingContext.Provider>;
 }
 
 function useTrackSmoothingContext() {
   return useContext(TrackSmoothingContext);
+}
+
+function applyMarkerPosition(
+  markerRef: MutableRefObject<Marker | null>,
+  lat: number,
+  lon: number
+) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+  markerRef.current?.setLatLng([lat, lon]);
 }
 
 export function useAnimatedMarkerPosition({
@@ -64,10 +86,17 @@ export function useAnimatedMarkerPosition({
 }) {
   const context = useTrackSmoothingContext();
   const smoothingEnabled = Boolean(context?.enabled && refreshIntervalMs > 0);
+  const latestFixRef = useRef({ lat, lon });
+
+  useEffect(() => {
+    latestFixRef.current = { lat, lon };
+  }, [lat, lon]);
 
   useEffect(() => {
     if (!smoothingEnabled || !context) return;
     context.engine.register(trackId, lat, lon, motionHint ?? {}, refreshIntervalMs, profile);
+    const pos = context.engine.getPosition(trackId) ?? { lat, lon };
+    applyMarkerPosition(markerRef, pos.lat, pos.lon);
   }, [
     anchorKey,
     context,
@@ -79,30 +108,22 @@ export function useAnimatedMarkerPosition({
     refreshIntervalMs,
     smoothingEnabled,
     trackId,
+    markerRef,
   ]);
 
   useEffect(() => {
-    const marker = markerRef.current;
-    if (!marker) return undefined;
+    if (smoothingEnabled) return;
+    applyMarkerPosition(markerRef, lat, lon);
+  }, [lat, lon, markerRef, smoothingEnabled]);
 
-    if (!smoothingEnabled || !context) {
-      marker.setLatLng([lat, lon]);
-      return undefined;
-    }
+  useEffect(() => {
+    if (!smoothingEnabled || !context) return undefined;
 
-    let frame = 0;
-    const tick = () => {
-      const pos = context.engine.getPosition(trackId);
-      if (pos) {
-        markerRef.current?.setLatLng([pos.lat, pos.lon]);
-      }
-      frame = window.requestAnimationFrame(tick);
-    };
-
-    marker.setLatLng([lat, lon]);
-    frame = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(frame);
-  }, [anchorKey, context, lat, lon, markerRef, profile, refreshIntervalMs, smoothingEnabled, trackId]);
+    return context.engine.registerMarkerSink(trackId, (now) => {
+      const pos = context.engine.getPosition(trackId, now) ?? latestFixRef.current;
+      applyMarkerPosition(markerRef, pos.lat, pos.lon);
+    });
+  }, [context, markerRef, smoothingEnabled, trackId]);
 }
 
 export function useTrackSmoothingCleanup(activeIds: Set<string>) {

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import compression from 'compression';
 import express from 'express';
 import { warmNationwideCameraPool } from './lib/usTrafficCameras.js';
 import {
@@ -64,6 +65,7 @@ const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const isServerless = Boolean(process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
+app.use(compression({ threshold: 1024 }));
 app.use(express.json());
 
 function asyncHandler(fn) {

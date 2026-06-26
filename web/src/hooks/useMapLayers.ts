@@ -48,6 +48,8 @@ const REFRESH_MS = {
   drought: 6 * 60 * 60_000,
 };
 
+const VIEWPORT_QUERY_DEBOUNCE_MS = 300;
+
 async function fetchJson<T>(url: string): Promise<T> {
   let res: Response;
   try {
@@ -82,6 +84,14 @@ export function useMapLayers(
   const [drought, setDrought] = useState<DroughtCollection | null>(null);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const inFlight = useRef(new Set<string>());
+  const [debouncedQueryString, setDebouncedQueryString] = useState(queryString);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedQueryString(queryString);
+    }, VIEWPORT_QUERY_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [queryString]);
 
   const loadLayer = useCallback(
     async (key: keyof LayerToggles, url: string, setter: (value: never) => void) => {
@@ -111,67 +121,67 @@ export function useMapLayers(
     const jobs: Array<{ key: keyof LayerToggles; url: string; setter: (value: never) => void }> = [
       {
         key: 'weatherAlerts',
-        url: `/api/weather/alert-polygons?${queryString}`,
+        url: `/api/weather/alert-polygons?${debouncedQueryString}`,
         setter: setWeatherAlerts as (value: never) => void,
       },
       {
         key: 'lightning',
-        url: `/api/weather/lightning?${queryString}`,
+        url: `/api/weather/lightning?${debouncedQueryString}`,
         setter: setLightning as (value: never) => void,
       },
       {
         key: 'rivers',
-        url: `/api/live/river-gauges?${queryString}`,
+        url: `/api/live/river-gauges?${debouncedQueryString}`,
         setter: setRivers as (value: never) => void,
       },
       {
         key: 'transit',
-        url: `/api/live/transit?${queryString}`,
+        url: `/api/live/transit?${debouncedQueryString}`,
         setter: setTransit as (value: never) => void,
       },
       {
         key: 'roads',
-        url: `/api/live/road-conditions?${queryString}`,
+        url: `/api/live/road-conditions?${debouncedQueryString}`,
         setter: setRoads as (value: never) => void,
       },
       {
         key: 'aisVessels',
-        url: `/api/live/ais-vessels?${queryString}`,
+        url: `/api/live/ais-vessels?${debouncedQueryString}`,
         setter: setAisVessels as (value: never) => void,
       },
       {
         key: 'earthquakes',
-        url: `/api/live/earthquakes?${queryString}`,
+        url: `/api/live/earthquakes?${debouncedQueryString}`,
         setter: setEarthquakes as (value: never) => void,
       },
       {
         key: 'wildfires',
-        url: `/api/weather/wildfires?${queryString}`,
+        url: `/api/weather/wildfires?${debouncedQueryString}`,
         setter: setWildfires as (value: never) => void,
       },
       {
         key: 'riverForecast',
-        url: `/api/live/river-forecast?${queryString}`,
+        url: `/api/live/river-forecast?${debouncedQueryString}`,
         setter: setRiverForecast as (value: never) => void,
       },
       {
         key: 'ebird',
-        url: `/api/live/ebird?${queryString}`,
+        url: `/api/live/ebird?${debouncedQueryString}`,
         setter: setEbird as (value: never) => void,
       },
       {
         key: 'inaturalist',
-        url: `/api/live/inaturalist?${queryString}`,
+        url: `/api/live/inaturalist?${debouncedQueryString}`,
         setter: setINaturalist as (value: never) => void,
       },
       {
         key: 'aprs',
-        url: `/api/live/aprs?${queryString}`,
+        url: `/api/live/aprs?${debouncedQueryString}`,
         setter: setAprs as (value: never) => void,
       },
       {
         key: 'drought',
-        url: `/api/weather/drought?${queryString}`,
+        url: `/api/weather/drought?${debouncedQueryString}`,
         setter: setDrought as (value: never) => void,
       },
     ];
@@ -191,7 +201,7 @@ export function useMapLayers(
     return () => {
       intervals.forEach((id) => window.clearInterval(id));
     };
-  }, [enabled, loadLayer, queryString, toggles]);
+  }, [enabled, loadLayer, debouncedQueryString, toggles]);
 
   useEffect(() => {
     if (!toggles.weatherAlerts) setWeatherAlerts(null);

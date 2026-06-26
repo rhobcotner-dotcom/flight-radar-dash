@@ -1,5 +1,8 @@
+import { fetchWithTimeout } from './lib/fetchWithTimeout.js';
+
 const ADSB_BASE = process.env.ADSB_API_BASE || 'https://api.adsb.lol';
 const STALE_MAX_MS = Number(process.env.ADSB_STALE_MAX_MS || 90_000);
+const ADSB_FETCH_TIMEOUT_MS = Number(process.env.ADSB_FETCH_TIMEOUT_MS || 12_000);
 
 const cache = new Map();
 
@@ -14,10 +17,11 @@ export function milesToNauticalMiles(miles) {
 }
 
 async function fetchJsonWithRetry(url, options = {}, attempts = 3) {
+  const { timeoutMs, ...fetchOptions } = options;
   let lastError;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
-      const res = await fetch(url, options);
+      const res = await fetchWithTimeout(url, fetchOptions, timeoutMs);
       return res;
     } catch (err) {
       lastError = err;
@@ -49,9 +53,10 @@ export async function getFlightsNearPoint(lat, lon, radiusMiles) {
   }
 
   try {
-    const res = await fetchJsonWithRetry(`${ADSB_BASE}${path}`, {
-      headers: { Accept: 'application/json' },
-    });
+      const res = await fetchJsonWithRetry(`${ADSB_BASE}${path}`, {
+        headers: { Accept: 'application/json' },
+        timeoutMs: ADSB_FETCH_TIMEOUT_MS,
+      });
 
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {

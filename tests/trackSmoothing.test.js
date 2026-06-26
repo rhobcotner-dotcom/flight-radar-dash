@@ -65,3 +65,16 @@ test('interpolateSegment reaches endpoint at duration', () => {
   assert.equal(done.progress, 1);
   assert.equal(done.lat, 39);
 });
+
+test('TrackSmoothingEngine continues from current visual position on refresh', () => {
+  const engine = new TrackSmoothingEngine();
+  engine.register('a', 38.79, -90.6, { speedMph: 360, headingDeg: 90 }, 10_000, 'aircraft', 0);
+  const mid = engine.getPosition('a', 5_000);
+  assert.ok(mid);
+
+  engine.register('a', 38.795, -90.58, { speedMph: 360, headingDeg: 90 }, 10_000, 'aircraft', 5_000);
+  const afterRefresh = engine.getPosition('a', 5_000);
+  assert.ok(afterRefresh);
+  const jumpMiles = Math.hypot((afterRefresh.lat - mid.lat) * 69, (afterRefresh.lon - mid.lon) * 69);
+  assert.ok(jumpMiles < 0.5, `expected small visual correction, got ~${jumpMiles.toFixed(2)} mi`);
+});

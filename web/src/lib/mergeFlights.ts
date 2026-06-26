@@ -5,6 +5,8 @@ const LIVE_FIELDS = ['lat', 'lon', 'alt', 'gspeed', 'vspeed', 'track', 'squawk',
 
 /** Keep stable object references when only live position fields change. */
 export function mergeFlightList(prev: Flight[], incoming: Flight[]): Flight[] {
+  if (!incoming.length) return prev;
+
   const prevMap = new Map(prev.map((flight) => [flightKey(flight), flight]));
 
   return incoming.map((next) => {

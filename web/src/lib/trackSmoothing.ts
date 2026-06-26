@@ -57,6 +57,12 @@ interface TrackRecord {
 }
 
 const MAX_SAMPLES = 5;
+const MIN_SEGMENT_MS = 1_000;
+const MAX_VISUAL_CORRECTION_MILES = 18;
+
+function isFiniteCoord(lat: number, lon: number) {
+  return Number.isFinite(lat) && Number.isFinite(lon);
+}
 
 function offsetLatLon(lat: number, lon: number, miles: number, headingDeg: number) {
   const headingRad = (headingDeg * Math.PI) / 180;
@@ -138,16 +144,31 @@ export function predictNextPosition(
 }
 
 export function interpolateSegment(segment: TrackSegment, now: number) {
-  const progress = Math.min(1, Math.max(0, (now - segment.startTime) / segment.durationMs));
+  const rawProgress = Math.min(1, Math.max(0, (now - segment.startTime) / segment.durationMs));
+  const progress = rawProgress < 0.5 ? 2 * rawProgress * rawProgress : 1 - (-2 * rawProgress + 2) ** 2 / 2;
   return {
     lat: segment.fromLat + (segment.toLat - segment.fromLat) * progress,
     lon: segment.fromLon + (segment.toLon - segment.fromLon) * progress,
-    progress,
+    progress: rawProgress,
   };
 }
 
 export class TrackSmoothingEngine {
   private tracks = new Map<string, TrackRecord>();
+  private markerSinks = new Map<string, () => void>();
+
+  registerMarkerSink(id: string, sink: (now: number) => void) {
+    this.markerSinks.set(id, sink);
+    return () => {
+      this.markerSinks.delete(id);
+    };
+  }
+
+  tickMarkers(now = Date.now()) {
+    for (const sink of this.markerSinks.values()) {
+      sink(now);
+    }
+  }
 
   register(
     id: string,
@@ -159,6 +180,7 @@ export class TrackSmoothingEngine {
     now = Date.now()
   ) {
     const record = this.tracks.get(id) ?? { samples: [], segment: null };
+    const currentVisual = this.getPosition(id, now);
     const previous = record.samples[record.samples.length - 1];
     const jumpMiles =
       previous != null ? distanceMiles(previous.lat, previous.lon, lat, lon) : 0;
@@ -186,13 +208,14 @@ export class TrackSmoothingEngine {
     }
 
     const predicted = predictNextPosition(record.samples, hint, intervalMs, profile);
+    const start = this.segmentStart(lat, lon, currentVisual, profile);
     record.segment = {
-      fromLat: lat,
-      fromLon: lon,
+      fromLat: start.lat,
+      fromLon: start.lon,
       toLat: predicted.lat,
       toLon: predicted.lon,
       startTime: now,
-      durationMs: intervalMs,
+      durationMs: Math.max(MIN_SEGMENT_MS, intervalMs),
     };
     this.tracks.set(id, record);
   }
@@ -205,12 +228,35 @@ export class TrackSmoothingEngine {
     for (const id of this.tracks.keys()) {
       if (!activeIds.has(id)) this.tracks.delete(id);
     }
+    for (const id of this.markerSinks.keys()) {
+      if (!activeIds.has(id)) this.markerSinks.delete(id);
+    }
   }
 
   getPosition(id: string, now = Date.now()) {
     const record = this.tracks.get(id);
     if (!record?.segment) return null;
-    return interpolateSegment(record.segment, now);
+    const pos = interpolateSegment(record.segment, now);
+    if (!isFiniteCoord(pos.lat, pos.lon)) return null;
+    return pos;
+  }
+
+  private segmentStart(
+    lat: number,
+    lon: number,
+    currentVisual: { lat: number; lon: number } | null,
+    profile: TrackSmoothingProfile
+  ) {
+    if (!currentVisual || profile === 'beacon' || !isFiniteCoord(currentVisual.lat, currentVisual.lon)) {
+      return { lat, lon };
+    }
+
+    const driftMiles = distanceMiles(currentVisual.lat, currentVisual.lon, lat, lon);
+    if (driftMiles > MAX_VISUAL_CORRECTION_MILES) {
+      return { lat, lon };
+    }
+
+    return { lat: currentVisual.lat, lon: currentVisual.lon };
   }
 }
 

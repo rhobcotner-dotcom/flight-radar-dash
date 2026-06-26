@@ -14,9 +14,14 @@ export function useSatellites(
   const [error, setError] = useState<string | null>(null);
   const [meta, setMeta] = useState<Pick<SatelliteCollection, 'fetchedAt' | 'minElevationDeg' | 'catalogSize' | 'count' | 'source'> | null>(null);
   const loadInFlight = useRef(false);
+  const pendingLoadRef = useRef(false);
 
   const load = useCallback(async () => {
-    if (loadInFlight.current) return;
+    if (loadInFlight.current) {
+      pendingLoadRef.current = true;
+      return;
+    }
+
     loadInFlight.current = true;
     setLoading(true);
 
@@ -36,6 +41,10 @@ export function useSatellites(
     } finally {
       setLoading(false);
       loadInFlight.current = false;
+      if (pendingLoadRef.current) {
+        pendingLoadRef.current = false;
+        void load();
+      }
     }
   }, [queryString]);
 

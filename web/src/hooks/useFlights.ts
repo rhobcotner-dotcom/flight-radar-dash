@@ -63,6 +63,12 @@ function readAutoRefreshSeconds(): AutoRefreshSeconds {
   return 5;
 }
 
+interface RefreshOptions {
+  snapshot?: boolean;
+  silent?: boolean;
+  generation?: number;
+}
+
 export function useFlights(queryString: string, viewportBounds: MapViewportBounds) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [govFlights, setGovFlights] = useState<Flight[]>([]);
@@ -82,13 +88,20 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   const [trendsKey, setTrendsKey] = useState(0);
   const [autoRefreshSeconds, setAutoRefreshSecondsState] = useState<AutoRefreshSeconds>(readAutoRefreshSeconds);
   const refreshInFlight = useRef(false);
+  const pendingRefreshRef = useRef<RefreshOptions | null>(null);
+  const loadGenerationRef = useRef(0);
   const hasFetchedRef = useRef(false);
   const viewportKey = useMemo(() => stableViewportKey(viewportBounds), [viewportBounds]);
 
   const refreshMap = useCallback(
-    async (options: { snapshot?: boolean; silent?: boolean } = {}) => {
-      if (refreshInFlight.current) return;
+    async (options: RefreshOptions = {}) => {
+      if (refreshInFlight.current) {
+        pendingRefreshRef.current = options;
+        return;
+      }
+
       refreshInFlight.current = true;
+      const generation = options.generation ?? loadGenerationRef.current;
       const showLoading = !hasLoaded && !options.silent;
       if (showLoading) {
         setLoading(true);
@@ -107,14 +120,19 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
         const res = await fetch(`/api/live/refresh?${params.toString()}`);
         const data: MapRefreshPayload = await res.json();
 
+        if (generation !== loadGenerationRef.current) return;
         if (!res.ok) throw new Error(data.error || 'Failed to load flights');
 
         const incoming = data.flights || [];
         if (options.silent) {
-          setFlights((prev) => {
-            const merged = mergeFlightList(prev, incoming);
-            return flightListsEqual(prev, merged) ? prev : merged;
-          });
+          if (incoming.length > 0) {
+            setFlights((prev) => {
+              const merged = mergeFlightList(prev, incoming);
+              return flightListsEqual(prev, merged) ? prev : merged;
+            });
+          }
+          setGovFlights(data.govFlights || []);
+          setAlerts(data.alerts || []);
           setB52Flights(data.b52Flights || []);
         } else {
           setFlights(incoming);
@@ -133,6 +151,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
           setTrendsKey((k) => k + 1);
         }
       } catch (err) {
+        if (generation !== loadGenerationRef.current) return;
         const message = friendlyApiError(err instanceof Error ? err.message : 'Unknown error');
         if (!options.silent) {
           if (hasLoaded) {
@@ -147,6 +166,11 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
           setLoading(false);
         }
         refreshInFlight.current = false;
+        const pending = pendingRefreshRef.current;
+        pendingRefreshRef.current = null;
+        if (pending) {
+          void refreshMap(pending);
+        }
       }
     },
     [queryString, viewportBounds, hasLoaded]
@@ -176,9 +200,11 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   }, []);
 
   useEffect(() => {
+    loadGenerationRef.current += 1;
+    const generation = loadGenerationRef.current;
     const delay = hasFetchedRef.current ? 150 : 0;
     const timer = window.setTimeout(() => {
-      void refreshMap({ snapshot: false, silent: hasFetchedRef.current });
+      void refreshMap({ snapshot: false, silent: hasFetchedRef.current, generation });
       hasFetchedRef.current = true;
     }, delay);
     return () => window.clearTimeout(timer);
@@ -190,7 +216,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
     if (!autoRefreshSeconds || !hasLoaded) return undefined;
 
     const id = window.setInterval(() => {
-      refreshMap({ snapshot: false, silent: true });
+      refreshMap({ snapshot: false, silent: true, generation: loadGenerationRef.current });
     }, autoRefreshSeconds * 1000);
 
     return () => window.clearInterval(id);

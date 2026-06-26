@@ -258,6 +258,10 @@ const FlightMarker = memo(function FlightMarker({
     () => speedTrendForFlight(id, flight.gspeed, !ground),
     [id, flight.gspeed, ground]
   );
+  const markerPosition = useMemo<[number, number]>(
+    () => [flight.lat, flight.lon],
+    flightRefreshIntervalMs > 0 ? [id] : [id, flight.lat, flight.lon]
+  );
   const [icon, setIcon] = useState<L.DivIcon>(() =>
     buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend, speedTrend)
   );
@@ -310,7 +314,7 @@ const FlightMarker = memo(function FlightMarker({
   return (
     <Marker
       ref={markerRef}
-      position={[flight.lat, flight.lon]}
+      position={markerPosition}
       icon={icon}
       zIndexOffset={highlighted ? 800 : undefined}
       eventHandlers={mapHandlers?.(id)}
@@ -385,6 +389,10 @@ const TrainMarker = memo(function TrainMarker({
     }),
     [train.velocityMph, train.heading]
   );
+  const markerPosition = useMemo<[number, number]>(
+    () => [train.lat, train.lon],
+    trainRefreshIntervalMs > 0 ? [id] : [id, train.lat, train.lon]
+  );
 
   useAnimatedMarkerPosition({
     trackId: id,
@@ -404,7 +412,7 @@ const TrainMarker = memo(function TrainMarker({
   return (
     <Marker
       ref={markerRef}
-      position={[train.lat, train.lon]}
+      position={markerPosition}
       icon={icon}
       zIndexOffset={highlighted ? 750 : undefined}
       eventHandlers={mapHandlers?.(id)}
@@ -565,16 +573,26 @@ const FlightMapInner = memo(function FlightMapInner({
   const fetchMeters = fetchMiles * 1609.34;
   const homeLabel = area.address || area.name;
   const streamBounds = viewportBounds ?? viewportFromArea(area);
-  const activeTrackIds = useMemo(() => {
-    const ids = new Set<string>();
+  const activeTrackKey = useMemo(() => {
+    const parts: string[] = [];
     if (layerToggles.flights) {
-      for (const flight of flights) ids.add(flightKey(flight));
+      for (const flight of flights) parts.push(flightKey(flight));
     }
     if (layerToggles.rail) {
-      for (const train of trains) ids.add(trainKey(train));
+      for (const train of trains) parts.push(trainKey(train));
+    }
+    parts.sort();
+    return parts.join('\0');
+  }, [flights, layerToggles.flights, layerToggles.rail, trains]);
+
+  const activeTrackIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (!activeTrackKey) return ids;
+    for (const id of activeTrackKey.split('\0')) {
+      if (id) ids.add(id);
     }
     return ids;
-  }, [flights, layerToggles.flights, layerToggles.rail, trains]);
+  }, [activeTrackKey]);
 
   return (
     <TrackSmoothingProvider enabled={smoothMovementEnabled}>
@@ -827,6 +845,15 @@ export function FlightMap({
     });
     return viewportSearchParams(homeParams.toString(), viewportBounds ?? viewportFromArea(area)).toString();
   }, [area.lat, area.lon, area.radiusMiles, viewportKey, viewportBounds]);
+  const homeQueryString = useMemo(
+    () =>
+      new URLSearchParams({
+        lat: String(area.lat),
+        lon: String(area.lon),
+        radiusMiles: String(area.radiusMiles ?? 85),
+      }).toString(),
+    [area.lat, area.lon, area.radiusMiles]
+  );
   const layerToggles = useMemo(
     () => ({
       flights: flightsEnabled,
@@ -909,7 +936,7 @@ export function FlightMap({
     error: satelliteError,
     meta: satelliteMeta,
     loading: satellitesLoading,
-  } = useSatellites(queryString, satellitesEnabled);
+  } = useSatellites(homeQueryString, satellitesEnabled);
   const heloCount = useMemo(
     () => (helosEnabled ? flights.filter((flight) => classifyHelicopter(flight)).length : 0),
     [flights, helosEnabled]

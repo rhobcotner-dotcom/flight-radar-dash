@@ -42,15 +42,22 @@ export function useTrains(
   const [coverage, setCoverage] = useState<string | null>(null);
   const [freightHints, setFreightHints] = useState<FreightHints | null>(null);
   const loadInFlight = useRef(false);
+  const pendingLoadRef = useRef(false);
+  const loadGenerationRef = useRef(0);
 
-  const load = useCallback(async () => {
-    if (loadInFlight.current) return;
+  const load = useCallback(async (generation = loadGenerationRef.current) => {
+    if (loadInFlight.current) {
+      pendingLoadRef.current = true;
+      return;
+    }
+
     loadInFlight.current = true;
     setLoading(true);
 
     try {
       const res = await fetch(`/api/live/trains?${requestQuery}`);
       const data = await res.json();
+      if (generation !== loadGenerationRef.current) return;
       if (!res.ok) throw new Error(data.error || 'Failed to load trains');
 
       setTrains(Array.isArray(data.trains) ? data.trains : []);
@@ -61,23 +68,30 @@ export function useTrains(
       setFreightHints(data.freightHints ?? null);
       setError(null);
     } catch (err) {
+      if (generation !== loadGenerationRef.current) return;
       setError(err instanceof Error ? err.message : 'Failed to load trains');
     } finally {
       setLoading(false);
       loadInFlight.current = false;
+      if (pendingLoadRef.current) {
+        pendingLoadRef.current = false;
+        void load(loadGenerationRef.current);
+      }
     }
   }, [requestQuery]);
 
   useEffect(() => {
     if (!enabled) return undefined;
 
-    void load();
+    loadGenerationRef.current += 1;
+    const generation = loadGenerationRef.current;
+    void load(generation);
     const id = window.setInterval(() => {
-      void load();
+      void load(loadGenerationRef.current);
     }, refreshSeconds * 1000);
 
     return () => window.clearInterval(id);
-  }, [enabled, load, refreshSeconds]);
+  }, [enabled, load, refreshSeconds, requestQuery]);
 
   return { trains, loading, error, fetchedAt, radiusMiles, counts, coverage, freightHints, refreshSeconds };
 }
