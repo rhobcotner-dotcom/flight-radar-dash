@@ -27,34 +27,55 @@ export function googleFlightsUrl(flight) {
   return null;
 }
 
-async function lookupRouteByCallsign(callsign) {
+function callsignVariants(callsign, flight = {}) {
   const key = normalizeCallsign(callsign);
-  if (!key) return null;
+  if (!key) return [];
 
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.ts < ROUTE_CACHE_TTL_MS) {
-    return cached.data;
+  const variants = new Set([key]);
+  const match = key.match(/^([A-Z]{2,3})(\d+)$/);
+  if (match) {
+    const [, prefix, digits] = match;
+    variants.add(`${prefix}${digits.padStart(4, '0')}`);
+    if (prefix.length === 3) {
+      variants.add(`${prefix.slice(0, 2)}${digits.padStart(4, '0')}`);
+    }
   }
 
-  const res = await fetchWithTimeout(
-    `${ROUTE_API}/callsign/${encodeURIComponent(key)}`,
-    { headers: { Accept: 'application/json' } },
-    ROUTE_FETCH_TIMEOUT_MS
-  );
+  const flightField = normalizeCallsign(flight.flight);
+  if (flightField) variants.add(flightField);
 
-  if (!res.ok) {
-    cache.set(key, { ts: Date.now(), data: null });
-    return null;
+  return [...variants];
+}
+
+async function lookupRouteByAircraft(flight) {
+  const callsign = normalizeCallsign(flight.callsign || flight.flight);
+  const candidates = [
+    String(flight.reg || '').trim().toUpperCase(),
+    String(flight.hex || '').trim().toUpperCase(),
+  ].filter(Boolean);
+
+  for (const id of candidates) {
+    const query = callsign ? `?callsign=${encodeURIComponent(callsign)}` : '';
+    const res = await fetchWithTimeout(
+      `${ROUTE_API}/aircraft/${encodeURIComponent(id)}${query}`,
+      { headers: { Accept: 'application/json' } },
+      ROUTE_FETCH_TIMEOUT_MS
+    );
+
+    if (!res.ok) continue;
+
+    const body = await res.json();
+    const route = body?.response?.flightroute;
+    if (!route?.origin || !route?.destination) continue;
+
+    return parseRoutePayload(route);
   }
 
-  const body = await res.json();
-  const route = body?.response?.flightroute;
-  if (!route?.origin || !route?.destination) {
-    cache.set(key, { ts: Date.now(), data: null });
-    return null;
-  }
+  return null;
+}
 
-  const data = {
+function parseRoutePayload(route) {
+  return {
     orig_iata: route.origin.iata_code || undefined,
     orig_icao: route.origin.icao_code || undefined,
     orig_city: route.origin.municipality || route.origin.name || undefined,
@@ -79,9 +100,43 @@ async function lookupRouteByCallsign(callsign) {
       dest_icao: route.destination.icao_code,
     }),
   };
+}
 
-  cache.set(key, { ts: Date.now(), data });
-  return data;
+async function lookupRouteByCallsign(callsign, flight = {}) {
+  const variants = callsignVariants(callsign, flight);
+  if (!variants.length) return null;
+
+  for (const key of variants) {
+    const cached = cache.get(key);
+    if (cached && Date.now() - cached.ts < ROUTE_CACHE_TTL_MS) {
+      if (cached.data) return cached.data;
+      continue;
+    }
+
+    const res = await fetchWithTimeout(
+      `${ROUTE_API}/callsign/${encodeURIComponent(key)}`,
+      { headers: { Accept: 'application/json' } },
+      ROUTE_FETCH_TIMEOUT_MS
+    );
+
+    if (!res.ok) {
+      cache.set(key, { ts: Date.now(), data: null });
+      continue;
+    }
+
+    const body = await res.json();
+    const route = body?.response?.flightroute;
+    if (!route?.origin || !route?.destination) {
+      cache.set(key, { ts: Date.now(), data: null });
+      continue;
+    }
+
+    const data = parseRoutePayload(route);
+    cache.set(key, { ts: Date.now(), data });
+    return data;
+  }
+
+  return lookupRouteByAircraft(flight);
 }
 
 export async function enrichFlightsWithRoutes(flights, { homeRadiusMiles = null } = {}) {
@@ -108,7 +163,10 @@ export async function enrichFlightsWithRoutes(flights, { homeRadiusMiles = null 
   const results = await mapWithConcurrency(
     callsigns,
     ROUTE_LOOKUP_CONCURRENCY,
-    (callsign) => lookupRouteByCallsign(callsign)
+    (callsign) => {
+      const flight = flights.find((item) => normalizeCallsign(item.callsign || item.flight) === callsign);
+      return lookupRouteByCallsign(callsign, flight || {});
+    }
   );
   callsigns.forEach((callsign, index) => {
     routeByCallsign.set(callsign, results[index]);

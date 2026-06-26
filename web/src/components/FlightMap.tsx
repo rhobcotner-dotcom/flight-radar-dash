@@ -334,6 +334,7 @@ const FlightMarker = memo(function FlightMarker({
     flight.flight,
     flight.reg,
     flight.alt,
+    flight.vspeed,
     flight.gspeed,
     flight.lat,
     flight.lon,

@@ -7,6 +7,7 @@ import { enrichAndSortFlights } from './distance.js';
 import { enrichFlightsCarriers } from './airlineNames.js';
 import { enrichFlightsWithRoutes } from './routeLookup.js';
 import { enrichFlightsWithRegistry } from './aircraftRegistry.js';
+import { withLocalAirportInference } from '../../lib/localAirportInference.js';
 
 const MAX_ADSB_RADIUS_NM = 250;
 const MAX_ADSB_RADIUS_MILES = MAX_ADSB_RADIUS_NM * 1.15078;
@@ -160,6 +161,11 @@ export async function fetchViewportFlights(viewport, home, { enrich = true } = {
       flights = await fetchAdsbViewportFlights(viewport);
       dataSource = 'adsb.lol';
     } catch (adsbError) {
+      if (adsbError?.status === 429) {
+        dataWarning =
+          dataWarning ||
+          'ADSB.lol rate limited — retrying with cached positions when available.';
+      }
       throw openSkyError || adsbError;
     }
   }
@@ -183,6 +189,7 @@ export async function fetchViewportFlights(viewport, home, { enrich = true } = {
     }));
   }
   flights = enrichFlightsCarriers(flights);
+  flights = flights.map((flight) => withLocalAirportInference(flight));
 
   const homeFlights = flights.filter((flight) => (flight.distanceMiles ?? Infinity) <= homeRadius);
 

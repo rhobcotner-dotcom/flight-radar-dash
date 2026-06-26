@@ -6,6 +6,8 @@ import militaryAircraftPhotos from '../../../config/military-aircraft-photos.jso
 import { isLikelyMilGov, resolveMilPhotoType } from './military';
 import typeNames from '../../../config/aircraft-type-names.json';
 import typicalSeats from '../../../config/aircraft-typical-seats.json';
+import { mapFlightRouteSubLabel as mapFlightRouteSubLabelCore } from '../../../lib/flightRouteLabels.js';
+import { withLocalAirportInference } from '../../../lib/localAirportInference.js';
 
 export function flightKey(flight: Flight) {
   return flight.fr24_id || flight.hex || `${flight.lat}-${flight.lon}`;
@@ -90,9 +92,22 @@ export function isNearLandingLocation(flight: Flight, radiusMiles = NEAR_AIRPORT
   return distanceMiles(flight.lat, flight.lon, destLat, destLon) <= radiusMiles;
 }
 
+export type FlightRouteSubLabel = {
+  text: string;
+  tone: 'from' | 'to';
+};
+
+export function mapFlightRouteSubLabel(
+  flight: Flight,
+  options: { altitudeTrend?: 'up' | 'down' | null } = {}
+): FlightRouteSubLabel | null {
+  return mapFlightRouteSubLabelCore(flight, options);
+}
+
 export function routeLabel(flight: Flight) {
-  const from = endpointLabel(flight, 'orig');
-  const to = endpointLabel(flight, 'dest');
+  const enriched = withLocalAirportInference(flight) as Flight;
+  const from = endpointLabel(enriched, 'orig');
+  const to = endpointLabel(enriched, 'dest');
   if (from !== '?' || to !== '?') return `${from} → ${to}`;
 
   const codes = routeCodesLabel(flight);

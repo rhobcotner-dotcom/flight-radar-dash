@@ -69,7 +69,7 @@ function readAutoRefreshSeconds(): AutoRefreshSeconds {
   } catch {
     /* ignore */
   }
-  return 5;
+  return 30;
 }
 
 interface RefreshOptions {
@@ -291,11 +291,6 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
       setAirportLoading(false);
     }
   }, [queryString]);
-
-  useEffect(() => {
-    setAutoRefreshSecondsState(5);
-    localStorage.setItem(AUTO_REFRESH_KEY, '5');
-  }, []);
 
   const setAutoRefreshSeconds = useCallback((seconds: AutoRefreshSeconds) => {
     setAutoRefreshSecondsState(seconds);

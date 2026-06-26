@@ -1,12 +1,7 @@
 import type { Flight } from '../types';
 import { carrierName } from './airlineNames';
 import type { FlightAltitudeTrend } from './flightAltitudeTrend';
-import {
-  flightDepartureLabel,
-  flightDestinationLabel,
-  isNearLandingLocation,
-  isNearTakeoffLocation,
-} from './flightUtils';
+import { mapFlightRouteSubLabel } from './flightUtils';
 
 export const FLIGHT_LABEL_ZOOM_CALLSIGN = 10;
 export const FLIGHT_LABEL_ZOOM_CARRIER = 10;
@@ -24,23 +19,7 @@ export function mapFlightMarkerRouteSubLabel(
   flight: Flight,
   trend: FlightAltitudeTrend
 ): MarkerSubLabel | null {
-  const departure = flightDepartureLabel(flight);
-  const destination = flightDestinationLabel(flight);
-  if (!departure && !destination) return null;
-
-  if (isNearTakeoffLocation(flight) && destination) {
-    return { text: `to ${destination}`, tone: 'to' };
-  }
-  if (isNearLandingLocation(flight) && departure) {
-    return { text: `from ${departure}`, tone: 'from' };
-  }
-  if (trend === 'down' && departure) {
-    return { text: `from ${departure}`, tone: 'from' };
-  }
-  if (trend === 'up' && destination) {
-    return { text: `to ${destination}`, tone: 'to' };
-  }
-  return null;
+  return mapFlightRouteSubLabel(flight, { altitudeTrend: trend });
 }
 
 function mapFlightMarkerLabelsFull(flight: Flight, trend: FlightAltitudeTrend) {
