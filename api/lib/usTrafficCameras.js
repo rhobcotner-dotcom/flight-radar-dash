@@ -25,7 +25,7 @@ export const CONUS_BBOX = { west: -125, south: 24, east: -66, north: 50 };
 const VERIFIED_HLS_PER_STATE = 24;
 const VERIFIED_SNAP_PER_STATE = 24;
 /** Wisconsin has ~480 live HLS feeds — keep a larger verified slice for map + storm reliability. */
-const VERIFIED_HLS_OVERRIDES = { WI: 96 };
+const VERIFIED_HLS_OVERRIDES = { WI: 96, OK: 96 };
 /** Illinois is snapshot-only via Travel Midwest — verify more working feeds for dense map coverage. */
 const VERIFIED_SNAP_OVERRIDES = { IL: 96, IN: 96, OH: 96 };
 /** States where snapshots are the primary inventory (no public HLS). */

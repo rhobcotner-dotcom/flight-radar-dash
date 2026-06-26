@@ -84,6 +84,7 @@ const ALLOWED_HLS_HOST_SUFFIXES = [
   'cotrip.org',
   'carsprogram.org',
   'road511.com',
+  'oktraffic.org',
 ];
 
 function hostAllowed(hostname) {

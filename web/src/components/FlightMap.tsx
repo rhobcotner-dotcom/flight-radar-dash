@@ -47,12 +47,14 @@ import type { MapViewportBounds } from '../lib/mapViewport';
 import { stableViewportKey, viewportFromArea, viewportSearchParams } from '../lib/mapViewport';
 import { CameraStreamSchedulerProvider } from '../hooks/useCameraStreamScheduler';
 import { ChartMapDecor } from './ChartMapDecor';
+import { ChartSeaMonsters } from './ChartSeaMonsters';
 import { useSatellites } from '../hooks/useSatellites';
 import { DEFAULT_RADAR_OPACITY } from '../lib/radar';
 import { weatherAlertCollectionKey } from '../lib/mapLayers';
 import { classifyHelicopter } from '../lib/helicopters';
 import { MAP_LAYER_HELP, PANEL_HELP, FUN_TOGGLE_HELP } from '../lib/panelHelp';
-import { LayerToggle, PanelTip } from './PanelTip';
+import { PanelTip } from './PanelTip';
+import { MapLayerFilterBox, type MapLayerFilterSection } from './MapLayerFilterBox';
 import { FunMapLayers } from './FunMapLayers';
 import type { useFunMode } from '../hooks/useFunMode';
 import type { AutoRefreshSeconds } from '../hooks/useFlights';
@@ -63,6 +65,7 @@ import {
   buildSatelliteMapIcon,
   preloadMapMarkerSprites,
 } from '../lib/mapMarkers';
+import { altitudeTrendForFlight, pruneAltitudeTrends } from '../lib/flightAltitudeTrend';
 
 type MapHighlightHandlers = ReturnType<typeof useHighlight>['mapHandlers'];
 
@@ -242,10 +245,14 @@ const FlightMarker = memo(function FlightMarker({
     }),
     [flight.gspeed, flight.track]
   );
-  const [icon, setIcon] = useState<L.DivIcon>(() =>
-    buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind)
-  );
   const id = flightKey(flight);
+  const altitudeTrend = useMemo(
+    () => altitudeTrendForFlight(id, flight.alt),
+    [id, flight.alt]
+  );
+  const [icon, setIcon] = useState<L.DivIcon>(() =>
+    buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend)
+  );
   const [tooltipActive, setTooltipActive] = useState(false);
 
   useAnimatedMarkerPosition({
@@ -260,8 +267,8 @@ const FlightMarker = memo(function FlightMarker({
 
   useEffect(() => {
     let cancelled = false;
-    setIcon(buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind));
-    void buildFlightMapIcon(flight, highlighted, military, emergency, heloKind).then((next) => {
+    setIcon(buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind, altitudeTrend));
+    void buildFlightMapIcon(flight, highlighted, military, emergency, heloKind, altitudeTrend).then((next) => {
       if (!cancelled) setIcon(next);
     });
     return () => {
@@ -279,6 +286,7 @@ const FlightMarker = memo(function FlightMarker({
     flight.reg,
     flight.alt,
     flight.gspeed,
+    altitudeTrend,
     highlighted,
     military,
     emergency,
@@ -326,6 +334,8 @@ const FlightMarker = memo(function FlightMarker({
     prev.flight.painted_as === next.flight.painted_as &&
     prev.flight.hex === next.flight.hex &&
     prev.flight.squawk === next.flight.squawk &&
+    prev.flight.alt === next.flight.alt &&
+    prev.flight.gspeed === next.flight.gspeed &&
     prev.mapHandlers === next.mapHandlers
   );
 });
@@ -573,6 +583,7 @@ const FlightMapInner = memo(function FlightMapInner({
             zIndex={250}
           />
           <ChartMapDecor />
+          <ChartSeaMonsters />
         </>
       ) : (
         <TileLayer
@@ -692,6 +703,9 @@ const FlightMapInner = memo(function FlightMapInner({
 
 function FlightMapTrackCleanup({ activeTrackIds }: { activeTrackIds: Set<string> }) {
   useTrackSmoothingCleanup(activeTrackIds);
+  useEffect(() => {
+    pruneAltitudeTrends(activeTrackIds);
+  }, [activeTrackIds]);
   return null;
 }
 
@@ -896,6 +910,259 @@ export function FlightMap({
     void preloadMapMarkerSprites();
   }, []);
 
+  const layerFilterSections = useMemo<MapLayerFilterSection[]>(
+    () => [
+      {
+        title: 'Tracking',
+        items: [
+          {
+            id: 'flights',
+            label: 'Flights',
+            tip: MAP_LAYER_HELP.flights,
+            checked: flightsEnabled,
+            onChange: setFlightsEnabled,
+            storageKey: LAYER_KEYS.flights,
+          },
+          {
+            id: 'rail',
+            label: 'Rail',
+            tip: MAP_LAYER_HELP.rail,
+            checked: railEnabled,
+            onChange: setRailEnabled,
+            storageKey: LAYER_KEYS.rail,
+          },
+          {
+            id: 'helos',
+            label: 'Helos',
+            tip: MAP_LAYER_HELP.helos,
+            checked: helosEnabled,
+            onChange: setHelosEnabled,
+            storageKey: LAYER_KEYS.helos,
+          },
+          {
+            id: 'satellites',
+            label: 'Satellites',
+            tip: MAP_LAYER_HELP.satellites,
+            checked: satellitesEnabled,
+            onChange: setSatellitesEnabled,
+            storageKey: SATELLITES_ENABLED_KEY,
+          },
+          {
+            id: 'aprs',
+            label: 'APRS',
+            tip: MAP_LAYER_HELP.aprs,
+            checked: aprsEnabled,
+            onChange: setAprsEnabled,
+            storageKey: LAYER_KEYS.aprs,
+          },
+        ],
+      },
+      {
+        title: 'Weather',
+        items: [
+          {
+            id: 'weatherAlerts',
+            label: 'Alerts',
+            tip: MAP_LAYER_HELP.weatherAlerts,
+            checked: weatherAlertsEnabled,
+            onChange: setWeatherAlertsEnabled,
+            storageKey: LAYER_KEYS.weatherAlerts,
+          },
+          {
+            id: 'lightning',
+            label: 'Lightning',
+            tip: MAP_LAYER_HELP.lightning,
+            checked: lightningEnabled,
+            onChange: setLightningEnabled,
+            storageKey: LAYER_KEYS.lightning,
+          },
+          {
+            id: 'radar',
+            label: 'Radar',
+            tip: MAP_LAYER_HELP.radar,
+            checked: radarEnabled,
+            onChange: setRadarEnabled,
+            storageKey: RADAR_ENABLED_KEY,
+          },
+          {
+            id: 'radarNoir',
+            label: 'Treasure chart',
+            tip: FUN_TOGGLE_HELP.radarNoir,
+            checked: fun.settings.radarNoir,
+            onChange: (checked) => fun.setSetting('radarNoir', checked),
+          },
+          {
+            id: 'drought',
+            label: 'Drought',
+            tip: MAP_LAYER_HELP.drought,
+            checked: droughtEnabled,
+            onChange: setDroughtEnabled,
+            storageKey: LAYER_KEYS.drought,
+          },
+        ],
+      },
+      {
+        title: 'Water & roads',
+        items: [
+          {
+            id: 'rivers',
+            label: 'Rivers',
+            tip: MAP_LAYER_HELP.rivers,
+            checked: riversEnabled,
+            onChange: setRiversEnabled,
+            storageKey: LAYER_KEYS.rivers,
+          },
+          {
+            id: 'riverForecast',
+            label: 'NWPS',
+            tip: MAP_LAYER_HELP.riverForecast,
+            checked: riverForecastEnabled,
+            onChange: setRiverForecastEnabled,
+            storageKey: LAYER_KEYS.riverForecast,
+          },
+          {
+            id: 'aisVessels',
+            label: 'Ships',
+            tip: MAP_LAYER_HELP.aisVessels,
+            checked: aisVesselsEnabled,
+            onChange: setAisVesselsEnabled,
+            storageKey: LAYER_KEYS.aisVessels,
+          },
+          {
+            id: 'transit',
+            label: 'Metro',
+            tip: MAP_LAYER_HELP.transit,
+            checked: transitEnabled,
+            onChange: setTransitEnabled,
+            storageKey: LAYER_KEYS.transit,
+          },
+          {
+            id: 'roads',
+            label: 'MoDOT',
+            tip: MAP_LAYER_HELP.roads,
+            checked: roadsEnabled,
+            onChange: setRoadsEnabled,
+            storageKey: LAYER_KEYS.roads,
+          },
+        ],
+      },
+      {
+        title: 'Hazards & nature',
+        items: [
+          {
+            id: 'earthquakes',
+            label: 'Quakes',
+            tip: MAP_LAYER_HELP.earthquakes,
+            checked: earthquakesEnabled,
+            onChange: setEarthquakesEnabled,
+            storageKey: LAYER_KEYS.earthquakes,
+          },
+          {
+            id: 'wildfires',
+            label: 'Fires',
+            tip: MAP_LAYER_HELP.wildfires,
+            checked: wildfiresEnabled,
+            onChange: setWildfiresEnabled,
+            storageKey: LAYER_KEYS.wildfires,
+          },
+          {
+            id: 'ebird',
+            label: 'eBird',
+            tip: MAP_LAYER_HELP.ebird,
+            checked: ebirdEnabled,
+            onChange: setEbirdEnabled,
+            storageKey: LAYER_KEYS.ebird,
+          },
+          {
+            id: 'inaturalist',
+            label: 'iNat',
+            tip: MAP_LAYER_HELP.inaturalist,
+            checked: inaturalistEnabled,
+            onChange: setINaturalistEnabled,
+            storageKey: LAYER_KEYS.inaturalist,
+          },
+        ],
+      },
+      {
+        title: 'Cameras',
+        items: [
+          {
+            id: 'cameras',
+            label: 'Cams',
+            tip: MAP_LAYER_HELP.cameras,
+            checked: camerasEnabled,
+            onChange: setCamerasEnabled,
+            storageKey: LAYER_KEYS.cameras,
+          },
+          {
+            id: 'weatherCameras',
+            label: 'Sky cams',
+            tip: MAP_LAYER_HELP.weatherCameras,
+            checked: weatherCamerasEnabled,
+            onChange: setWeatherCamerasEnabled,
+            storageKey: LAYER_KEYS.weatherCameras,
+            extra:
+              weatherCamerasEnabled && viewportCameras?.count ? (
+                <span className="weather-cam-badge weather-cam-layer-status muted" title="Teal sun icons on map">
+                  {viewportCameras.cameras.filter((cam) => cam.camKind === 'weather').length} sky
+                </span>
+              ) : null,
+          },
+          {
+            id: 'railCameras',
+            label: 'Rail cams',
+            tip: MAP_LAYER_HELP.railCameras,
+            checked: railCamerasEnabled,
+            onChange: setRailCamerasEnabled,
+            storageKey: LAYER_KEYS.railCameras,
+            extra: (
+              <>
+                {railCamerasEnabled && viewportRailCameras?.count ? (
+                  <span className="rail-cam-badge rail-cam-layer-status" title="Amber dots on map">
+                    {viewportRailCameras.count} nearby
+                    {viewportRailCameras.cameras?.[0]?.distanceMiles != null
+                      ? ` · closest ${viewportRailCameras.cameras[0].distanceMiles} mi`
+                      : ''}
+                  </span>
+                ) : null}
+                {railCamerasEnabled && railCameraError ? (
+                  <span className="muted rail-cam-layer-status">{railCameraError}</span>
+                ) : null}
+              </>
+            ),
+          },
+        ],
+      },
+    ],
+    [
+      flightsEnabled,
+      railEnabled,
+      helosEnabled,
+      satellitesEnabled,
+      aprsEnabled,
+      weatherAlertsEnabled,
+      lightningEnabled,
+      radarEnabled,
+      fun,
+      droughtEnabled,
+      riversEnabled,
+      riverForecastEnabled,
+      aisVesselsEnabled,
+      transitEnabled,
+      roadsEnabled,
+      earthquakesEnabled,
+      wildfiresEnabled,
+      ebirdEnabled,
+      inaturalistEnabled,
+      camerasEnabled,
+      weatherCamerasEnabled,
+      railCamerasEnabled,
+      viewportCameras,
+      viewportRailCameras,
+      railCameraError,
+    ]
+  );
+
   return (
     <div className={`panel map-panel${fullPage ? ' map-panel-fullpage' : ''}`}>
       {!fullPage ? (
@@ -917,177 +1184,7 @@ export function FlightMap({
         </PanelTip>
       ) : null}
       <div className={`panel-header map-panel-header map-layer-controls${fullPage ? ' map-layer-controls-float' : ''}`}>
-        <div className="map-radar-controls">
-          <LayerToggle
-            label="Flights"
-            tip={MAP_LAYER_HELP.flights}
-            checked={flightsEnabled}
-            onChange={setFlightsEnabled}
-            storageKey={LAYER_KEYS.flights}
-          />
-          <LayerToggle
-            label="Rail"
-            tip={MAP_LAYER_HELP.rail}
-            checked={railEnabled}
-            onChange={setRailEnabled}
-            storageKey={LAYER_KEYS.rail}
-          />
-          <LayerToggle
-            label="Alerts"
-            tip={MAP_LAYER_HELP.weatherAlerts}
-            checked={weatherAlertsEnabled}
-            onChange={setWeatherAlertsEnabled}
-            storageKey={LAYER_KEYS.weatherAlerts}
-          />
-          <LayerToggle
-            label="Lightning"
-            tip={MAP_LAYER_HELP.lightning}
-            checked={lightningEnabled}
-            onChange={setLightningEnabled}
-            storageKey={LAYER_KEYS.lightning}
-          />
-          <LayerToggle
-            label="Helos"
-            tip={MAP_LAYER_HELP.helos}
-            checked={helosEnabled}
-            onChange={setHelosEnabled}
-            storageKey={LAYER_KEYS.helos}
-          />
-          <LayerToggle
-            label="Rivers"
-            tip={MAP_LAYER_HELP.rivers}
-            checked={riversEnabled}
-            onChange={setRiversEnabled}
-            storageKey={LAYER_KEYS.rivers}
-          />
-          <LayerToggle
-            label="Metro"
-            tip={MAP_LAYER_HELP.transit}
-            checked={transitEnabled}
-            onChange={setTransitEnabled}
-            storageKey={LAYER_KEYS.transit}
-          />
-          <LayerToggle
-            label="MoDOT"
-            tip={MAP_LAYER_HELP.roads}
-            checked={roadsEnabled}
-            onChange={setRoadsEnabled}
-            storageKey={LAYER_KEYS.roads}
-          />
-          <LayerToggle
-            label="Ships"
-            tip={MAP_LAYER_HELP.aisVessels}
-            checked={aisVesselsEnabled}
-            onChange={setAisVesselsEnabled}
-            storageKey={LAYER_KEYS.aisVessels}
-          />
-          <LayerToggle
-            label="Quakes"
-            tip={MAP_LAYER_HELP.earthquakes}
-            checked={earthquakesEnabled}
-            onChange={setEarthquakesEnabled}
-            storageKey={LAYER_KEYS.earthquakes}
-          />
-          <LayerToggle
-            label="Fires"
-            tip={MAP_LAYER_HELP.wildfires}
-            checked={wildfiresEnabled}
-            onChange={setWildfiresEnabled}
-            storageKey={LAYER_KEYS.wildfires}
-          />
-          <LayerToggle
-            label="Cams"
-            tip={MAP_LAYER_HELP.cameras}
-            checked={camerasEnabled}
-            onChange={setCamerasEnabled}
-            storageKey={LAYER_KEYS.cameras}
-          />
-          <LayerToggle
-            label="Sky cams"
-            tip={MAP_LAYER_HELP.weatherCameras}
-            checked={weatherCamerasEnabled}
-            onChange={setWeatherCamerasEnabled}
-            storageKey={LAYER_KEYS.weatherCameras}
-          />
-          {weatherCamerasEnabled && viewportCameras?.count ? (
-            <span className="weather-cam-badge weather-cam-layer-status muted" title="Teal sun icons on map">
-              {viewportCameras.cameras.filter((cam) => cam.camKind === 'weather').length} sky
-            </span>
-          ) : null}
-          <LayerToggle
-            label="Rail cams"
-            tip={MAP_LAYER_HELP.railCameras}
-            checked={railCamerasEnabled}
-            onChange={setRailCamerasEnabled}
-            storageKey={LAYER_KEYS.railCameras}
-          />
-          {railCamerasEnabled && viewportRailCameras?.count ? (
-            <span className="rail-cam-badge rail-cam-layer-status" title="Amber dots on map">
-              {viewportRailCameras.count} nearby
-              {viewportRailCameras.cameras?.[0]?.distanceMiles != null
-                ? ` · closest ${viewportRailCameras.cameras[0].distanceMiles} mi`
-                : ''}
-            </span>
-          ) : null}
-          {railCamerasEnabled && railCameraError ? (
-            <span className="muted rail-cam-layer-status">{railCameraError}</span>
-          ) : null}
-          <LayerToggle
-            label="NWPS"
-            tip={MAP_LAYER_HELP.riverForecast}
-            checked={riverForecastEnabled}
-            onChange={setRiverForecastEnabled}
-            storageKey={LAYER_KEYS.riverForecast}
-          />
-          <LayerToggle
-            label="eBird"
-            tip={MAP_LAYER_HELP.ebird}
-            checked={ebirdEnabled}
-            onChange={setEbirdEnabled}
-            storageKey={LAYER_KEYS.ebird}
-          />
-          <LayerToggle
-            label="iNat"
-            tip={MAP_LAYER_HELP.inaturalist}
-            checked={inaturalistEnabled}
-            onChange={setINaturalistEnabled}
-            storageKey={LAYER_KEYS.inaturalist}
-          />
-          <LayerToggle
-            label="APRS"
-            tip={MAP_LAYER_HELP.aprs}
-            checked={aprsEnabled}
-            onChange={setAprsEnabled}
-            storageKey={LAYER_KEYS.aprs}
-          />
-          <LayerToggle
-            label="Drought"
-            tip={MAP_LAYER_HELP.drought}
-            checked={droughtEnabled}
-            onChange={setDroughtEnabled}
-            storageKey={LAYER_KEYS.drought}
-          />
-          <LayerToggle
-            label="Satellites"
-            tip={MAP_LAYER_HELP.satellites}
-            checked={satellitesEnabled}
-            onChange={setSatellitesEnabled}
-            storageKey={SATELLITES_ENABLED_KEY}
-          />
-          <LayerToggle
-            label="Radar"
-            tip={MAP_LAYER_HELP.radar}
-            checked={radarEnabled}
-            onChange={setRadarEnabled}
-            storageKey={RADAR_ENABLED_KEY}
-          />
-          <LayerToggle
-            label="Treasure chart"
-            tip={FUN_TOGGLE_HELP.radarNoir}
-            checked={fun.settings.radarNoir}
-            onChange={(checked) => fun.setSetting('radarNoir', checked)}
-          />
-        </div>
+        <MapLayerFilterBox sections={layerFilterSections} float={fullPage} />
       </div>
       {!mounted ? (
         <div className="flight-map map-loading">Loading map…</div>

@@ -241,10 +241,133 @@ body {
   pointer-events: auto;
 }
 
-.map-panel-fullpage .map-layer-controls-float .map-radar-controls {
-  overflow-x: auto;
-  flex-wrap: nowrap;
-  padding-bottom: 0.15rem;
+.map-panel-fullpage .map-layer-controls-float {
+  overflow: visible;
+}
+
+.map-layer-filter-box {
+  position: relative;
+  width: 100%;
+}
+
+.map-layer-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.map-layer-filter-quick {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.65rem;
+  min-width: 0;
+}
+
+.map-layer-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-left: auto;
+  padding: 0.42rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.map-layer-filter-trigger:hover,
+.map-layer-filter-box-open .map-layer-filter-trigger {
+  border-color: rgba(125, 211, 252, 0.45);
+  background: rgba(30, 41, 59, 0.92);
+}
+
+.map-layer-filter-count {
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.16);
+  color: #bae6fd;
+  font-size: 0.78rem;
+}
+
+.map-layer-filter-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.55rem);
+  z-index: 500;
+  max-height: min(62vh, 34rem);
+  overflow: auto;
+  padding: 0.85rem 0.95rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(11, 18, 32, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+}
+
+.map-layer-filter-box-float .map-layer-filter-panel {
+  top: auto;
+  bottom: calc(100% + 0.55rem);
+}
+
+.map-layer-filter-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.map-layer-filter-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.map-layer-filter-section-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.map-layer-filter-section-items {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.map-layer-filter-item {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.map-layer-filter-item-extra {
+  padding-left: 1.35rem;
+  font-size: 0.78rem;
+}
+
+.map-layer-filter-panel .layer-toggle-wrap .panel-tip-bubble {
+  z-index: 520;
+}
+
+.map-radar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.65rem;
+  justify-content: flex-end;
+  max-width: 100%;
 }
 
 .app-header {
@@ -1170,23 +1293,28 @@ body {
 /* Fun: treasure chart — aged pirate-map parchment, brown ink, kitschy cartography */
 
 .flight-map-radar-noir.leaflet-container {
-  background-color: #9a7340;
+  background-color: #b08a4a;
   background-image:
-    radial-gradient(ellipse at 50% 42%, rgba(212, 178, 118, 0.95) 0%, rgba(168, 124, 62, 0.88) 42%, rgba(92, 58, 28, 0.92) 100%),
-    radial-gradient(circle at 20% 18%, rgba(255, 236, 196, 0.35) 0%, transparent 34%),
-    radial-gradient(circle at 78% 82%, rgba(54, 32, 14, 0.45) 0%, transparent 42%);
+    radial-gradient(ellipse 130% 95% at 50% 50%, rgba(228, 201, 144, 0.92) 0%, rgba(186, 142, 78, 0.88) 55%, rgba(102, 66, 34, 0.94) 100%),
+    radial-gradient(circle at 18% 16%, rgba(255, 236, 196, 0.28) 0%, transparent 38%),
+    radial-gradient(circle at 82% 84%, rgba(54, 32, 14, 0.32) 0%, transparent 40%);
 }
 
 .flight-map-radar-noir .leaflet-tile-pane > .map-basemap-tiles {
-  filter: url(#chart-paper-grain) sepia(0.92) saturate(1.35) contrast(1.28) brightness(0.72) hue-rotate(-6deg);
-  opacity: 0.9;
+  filter: sepia(0.92) saturate(1.35) contrast(1.22) brightness(0.74) hue-rotate(-6deg);
+  opacity: 0.92;
   mix-blend-mode: multiply;
 }
 
 .flight-map-radar-noir .leaflet-tile-pane > .map-basemap-labels {
-  filter: sepia(1) saturate(1.8) contrast(1.45) brightness(0.52) hue-rotate(-12deg);
-  opacity: 0.78;
-  mix-blend-mode: multiply;
+  filter: sepia(0.85) saturate(1.45) contrast(1.65) brightness(0.88) hue-rotate(-10deg);
+  opacity: 0.96;
+  mix-blend-mode: normal;
+}
+
+.flight-map-radar-noir .map-basemap-labels img.leaflet-tile {
+  transform: scale(1.22);
+  transform-origin: center center;
 }
 
 .flight-map-radar-noir .leaflet-tile-pane > .radar-overlay-tiles {
@@ -1223,32 +1351,30 @@ body {
 .chart-map-grain {
   position: absolute;
   inset: 0;
-  opacity: 0.34;
+  opacity: 0.38;
+  filter: url(#chart-paper-grain);
   background-image:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 248, 230, 0.06) 0 1px,
-      transparent 1px 2px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(44, 24, 16, 0.05) 0 1px,
-      transparent 1px 3px
-    ),
-    repeating-linear-gradient(
-      47deg,
-      rgba(74, 45, 24, 0.025) 0 1px,
-      transparent 1px 5px
-    );
+    radial-gradient(circle at 12% 18%, rgba(44, 24, 16, 0.06) 0%, transparent 48%),
+    radial-gradient(circle at 88% 76%, rgba(44, 24, 16, 0.05) 0%, transparent 44%);
 }
 
 .chart-map-grain-heavy {
-  opacity: 0.28;
+  opacity: 0.24;
   mix-blend-mode: multiply;
   background-image:
-    radial-gradient(circle at 17% 23%, rgba(44, 24, 16, 0.08) 0 1px, transparent 1px 4px),
-    radial-gradient(circle at 73% 61%, rgba(44, 24, 16, 0.07) 0 1px, transparent 1px 5px),
-    radial-gradient(circle at 41% 82%, rgba(44, 24, 16, 0.06) 0 1px, transparent 1px 4px);
+    radial-gradient(circle at 17% 23%, rgba(44, 24, 16, 0.07) 0 1px, transparent 2px 6px),
+    radial-gradient(circle at 73% 61%, rgba(44, 24, 16, 0.06) 0 1px, transparent 2px 7px),
+    radial-gradient(circle at 41% 82%, rgba(44, 24, 16, 0.05) 0 1px, transparent 2px 6px),
+    radial-gradient(circle at 55% 44%, rgba(44, 24, 16, 0.04) 0 1px, transparent 2px 8px);
+}
+
+.chart-map-rhumbs {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: rgba(74, 45, 24, 0.55);
+  pointer-events: none;
 }
 
 .chart-map-vignette {
@@ -1364,10 +1490,12 @@ body {
   bottom: 22px;
   margin: 0;
   font-family: 'Pirata One', 'IM Fell English SC', serif;
-  font-size: 1.05rem;
+  font-size: 1.28rem;
   letter-spacing: 0.04em;
-  color: rgba(74, 45, 24, 0.78);
-  text-shadow: 0 1px 0 rgba(255, 236, 196, 0.4);
+  color: rgba(42, 24, 12, 0.92);
+  text-shadow:
+    0 1px 0 rgba(255, 236, 196, 0.55),
+    0 0 12px rgba(255, 236, 196, 0.35);
   transform: rotate(-2deg);
 }
 
@@ -1382,20 +1510,79 @@ body {
   filter: drop-shadow(0 1px 0 rgba(255, 236, 196, 0.25));
 }
 
-.chart-map-sea-monster {
+.chart-ocean-monster-marker.leaflet-div-icon {
+  background: transparent;
+  border: none;
+}
+
+.chart-ocean-monster {
+  width: 220px;
+  height: 176px;
+  color: rgba(36, 22, 10, 0.96);
+  filter: drop-shadow(0 1px 1px rgba(255, 236, 196, 0.28));
+  transform-origin: center center;
+}
+
+.chart-ocean-monster-svg {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
 }
 
+.chart-ocean-monster-svg path,
+.chart-ocean-monster-svg line,
+.chart-ocean-monster-svg ellipse,
+.chart-ocean-monster-svg circle {
+  vector-effect: non-scaling-stroke;
+}
+
+.chart-ocean-monster-caption {
+  display: block;
+  margin-top: -0.2rem;
+  text-align: center;
+  font-family: 'Pirata One', 'IM Fell English SC', serif;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  color: rgba(42, 24, 12, 0.96);
+  transform: rotate(-2deg);
+  text-shadow:
+    0 1px 0 rgba(255, 236, 196, 0.5),
+    0 0 10px rgba(255, 236, 196, 0.28);
+}
+
+.leaflet-chart-sea-monsters-pane {
+  pointer-events: none !important;
+  filter: none !important;
+}
+
+.flight-map-radar-noir .map-marker-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: #2a180c;
+  text-shadow:
+    0 1px 0 rgba(255, 236, 196, 0.65),
+    0 0 8px rgba(255, 236, 196, 0.45),
+    0 1px 3px rgba(44, 24, 16, 0.35);
+  max-width: 132px;
+}
+
+.flight-map-radar-noir .map-marker-label-civil,
+.flight-map-radar-noir .map-marker-label-military,
+.flight-map-radar-noir .map-marker-label-emergency,
+.flight-map-radar-noir .map-marker-label-helo,
+.flight-map-radar-noir .map-marker-label-train,
+.flight-map-radar-noir .map-marker-label-satellite {
+  color: #2a180c;
+}
 .flight-map-radar-noir .map-popup-location,
 .flight-map-radar-noir .leaflet-popup-content h3,
 .flight-map-radar-noir .leaflet-popup-content strong:first-child {
   font-family: 'IM Fell English SC', 'Times New Roman', serif;
   font-weight: 400;
+  font-size: 1.05em;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #4a2f1a;
+  color: #2a180c;
 }
 
 .flight-map-radar-noir .leaflet-tooltip,
@@ -1406,8 +1593,9 @@ body {
 .flight-map-radar-noir .weather-alert-tooltip-body,
 .flight-map-radar-noir .weather-alert-popup {
   font-family: 'Special Elite', 'Courier New', Courier, monospace;
+  font-size: 0.95rem;
   letter-spacing: 0.03em;
-  color: #3d2817;
+  color: #2a180c;
 }
 
 .flight-map-radar-noir .leaflet-popup-content-wrapper,
@@ -2171,6 +2359,68 @@ body {
   transform-origin: center center;
 }
 
+.map-aircraft-marker-wrap {
+  position: relative;
+  display: block;
+}
+
+.map-aircraft-trend {
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  z-index: 3;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95));
+  pointer-events: none;
+}
+
+.map-aircraft-trend-up {
+  color: #86efac;
+}
+
+.map-aircraft-trend-down {
+  color: #fca5a5;
+}
+
+.map-aircraft-marker-wrap:has(.map-aircraft-active) .map-aircraft-trend {
+  width: 22px;
+  height: 22px;
+  right: -7px;
+}
+
+.map-aircraft-cloud {
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 72%;
+  height: auto;
+  transform: translateX(-50%);
+  z-index: 1;
+  color: rgba(248, 250, 252, 0.82);
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.55));
+  pointer-events: none;
+}
+
+.map-aircraft-marker-wrap .map-rotating-marker {
+  position: relative;
+  z-index: 2;
+}
+
+.flight-map-radar-noir .map-aircraft-cloud {
+  color: rgba(236, 214, 170, 0.88);
+  filter: drop-shadow(0 1px 1px rgba(44, 24, 16, 0.45));
+}
+
+.flight-map-radar-noir .map-aircraft-trend-up {
+  color: #4ade80;
+}
+
+.flight-map-radar-noir .map-aircraft-trend-down {
+  color: #f87171;
+}
+
 .map-aircraft-shell {
   width: 100%;
   height: 100%;
@@ -2191,6 +2441,46 @@ body {
 
 .map-aircraft-civil .map-aircraft-mask {
   background-color: #4ade80;
+}
+
+.map-aircraft-ground,
+.map-aircraft-ground .map-aircraft-mask {
+  background-color: #94a3b8 !important;
+  filter: grayscale(0.9) saturate(0.35);
+  opacity: 0.72;
+}
+
+.map-aircraft-ground.map-aircraft-emergency .map-aircraft-mask,
+.map-aircraft-ground.map-aircraft-military .map-aircraft-mask,
+.map-aircraft-ground.map-aircraft-helo .map-aircraft-mask {
+  background-color: #94a3b8 !important;
+}
+
+.map-aircraft-ground .map-aircraft-fallback {
+  color: #94a3b8;
+  opacity: 0.72;
+  filter: grayscale(0.9);
+}
+
+.map-aircraft-ground.map-aircraft-active .map-aircraft-mask {
+  background-color: #cbd5e1 !important;
+  opacity: 0.82;
+}
+
+.flight-map-radar-noir .map-aircraft-ground,
+.flight-map-radar-noir .map-aircraft-ground .map-aircraft-mask {
+  background-color: #6b7280 !important;
+  filter: grayscale(0.85) saturate(0.2);
+  opacity: 0.68;
+}
+
+.map-marker-label-ground {
+  color: #94a3b8 !important;
+  opacity: 0.78;
+}
+
+.flight-map-radar-noir .map-marker-label-ground {
+  color: #78716c !important;
 }
 
 .map-aircraft-military {

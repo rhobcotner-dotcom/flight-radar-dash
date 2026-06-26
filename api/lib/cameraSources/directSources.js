@@ -883,6 +883,72 @@ async function fetchWisconsin511Cameras(bbox) {
   return cameras;
 }
 
+const OKTRAFFIC_API = 'https://oktraffic.org/api/cameraPoles';
+const OKTRAFFIC_POLES_FILTER = JSON.stringify({
+  include: [
+    {
+      relation: 'mapCameras',
+      scope: {
+        include: 'streamDictionary',
+        where: { status: { neq: 'Out Of Service' }, type: 'Web', blockAtis: { neq: '1' } },
+      },
+    },
+  ],
+});
+
+/** Map one OKTraffic mapCamera row (with streamDictionary) to a normalized camera. */
+export function mapOkTrafficMapCamera(row) {
+  if (!row || row.type !== 'Web' || row.status === 'Out Of Service' || String(row.blockAtis) === '1') {
+    return null;
+  }
+  const lat = Number(row.latitude);
+  const lon = Number(row.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+
+  const hls = normalizeHlsUrl(row.streamDictionary?.streamSrc);
+  if (!hls) return null;
+
+  const description =
+    String(row.location || row.streamDictionary?.streamName || 'Traffic camera').trim() ||
+    `Camera ${row.id}`;
+
+  return normalizeCamera({
+    id: `ok-${row.id}`,
+    description,
+    lat,
+    lon,
+    streamUrl: hls,
+    liveUrl: hls,
+    source: 'OKTraffic',
+    state: 'OK',
+  });
+}
+
+let okTrafficCache = { fetchedAt: 0, cameras: [] };
+
+async function fetchOklahomaTrafficCameras(bbox) {
+  const now = Date.now();
+  if (!okTrafficCache.cameras.length || now - okTrafficCache.fetchedAt >= CACHE_MS) {
+    const poles = await fetchCachedJson(
+      `${OKTRAFFIC_API}?filter=${encodeURIComponent(OKTRAFFIC_POLES_FILTER)}`,
+      'oktraffic-camera-poles'
+    );
+    const rows = Array.isArray(poles) ? poles : [];
+    okTrafficCache = {
+      fetchedAt: now,
+      cameras: dedupeCameras(
+        rows.flatMap((pole) =>
+          (Array.isArray(pole.mapCameras) ? pole.mapCameras : [])
+            .map((cam) => mapOkTrafficMapCamera(cam))
+            .filter(Boolean)
+        )
+      ),
+    };
+  }
+
+  return okTrafficCache.cameras.filter((cam) => pointInBbox(cam.lat, cam.lon, bbox));
+}
+
 async function fetchMapIcons511Cameras(bbox, { baseUrl, stateCode, cacheKey, sourceLabel, assignStateFromCoords = false }) {
   const body = await fetchCachedJson(`${baseUrl}/map/mapIcons/Cameras`, cacheKey);
   const items = Array.isArray(body?.item2) ? body.item2 : [];
@@ -1257,6 +1323,12 @@ export const DIRECT_FETCHERS = [
     states: ['WI'],
     fetch: fetchWisconsin511Cameras,
   },
+  {
+    id: 'oktraffic',
+    region: regionFor('OK'),
+    states: ['OK'],
+    fetch: fetchOklahomaTrafficCameras,
+  },
   { id: 'ak511', region: regionFor('AK'), states: ['AK'], fetch: fetchAlaskaCameras },
   { id: 'midrive', region: regionFor('MI'), states: ['MI'], fetch: fetchMichiganCameras },
   { id: 'nmroads', region: regionFor('NM'), states: ['NM'], fetch: fetchNewMexicoCameras },
@@ -1327,7 +1399,7 @@ export const STATE_FEED_GAPS = {
   NE: '511 Nebraska has no public camera JSON feed',
   NJ: '511NJ mapIcons blocked; Turnpike ArcGIS layers are not publicly queryable',
   NM: 'NMRoads GetCameraInfo serves snapshot images only',
-  OK: 'OKTraffic has no public camera JSON feed',
+  OK: 'OKTraffic cameraPoles API serves ~388 live HLS views via stream.oktraffic.org',
   SD: 'Iteris SD geojson serves snapshot images only',
   VA: 'VDOT ArcGIS skyvdn HLS endpoints time out / unreachable from public networks',
   WI: '511WI list feed provides live HLS (cctv.dot.wi.gov) plus view snapshots; developer API key optional for v2',

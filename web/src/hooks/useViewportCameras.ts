@@ -17,6 +17,7 @@ const CONUS_BOUNDS: MapViewportBounds = {
 const WARM_POLL_MS = 3000;
 
 const WI_VIEWPORT = { west: -92.9, south: 42.5, east: -86.8, north: 47.1 };
+const OK_VIEWPORT = { west: -103.0, south: 33.6, east: -94.4, north: 37.0 };
 const IL_VIEWPORT = { west: -91.5, south: 37.0, east: -87.5, north: 42.5 };
 const IN_VIEWPORT = { west: -88.1, south: 37.8, east: -84.8, north: 41.8 };
 const OH_VIEWPORT = { west: -84.8, south: 38.4, east: -80.5, north: 42.0 };
@@ -29,6 +30,17 @@ function viewportCenterInWisconsin(bounds: MapViewportBounds) {
     lat <= WI_VIEWPORT.north &&
     lon >= WI_VIEWPORT.west &&
     lon <= WI_VIEWPORT.east
+  );
+}
+
+function viewportCenterInOklahoma(bounds: MapViewportBounds) {
+  const lat = (bounds.south + bounds.north) / 2;
+  const lon = (bounds.west + bounds.east) / 2;
+  return (
+    lat >= OK_VIEWPORT.south &&
+    lat <= OK_VIEWPORT.north &&
+    lon >= OK_VIEWPORT.west &&
+    lon <= OK_VIEWPORT.east
   );
 }
 
@@ -89,7 +101,7 @@ function cameraLimitForZoom(zoom: number, bounds: MapViewportBounds) {
   else if (zoom <= 10) limit = 96;
   else limit = 120;
 
-  if (viewportCenterInWisconsin(bounds)) {
+  if (viewportCenterInWisconsin(bounds) || viewportCenterInOklahoma(bounds)) {
     limit = wide ? Math.min(Math.round(limit * 1.5), 400) : Math.min(Math.round(limit * 1.5), 180);
   } else if (viewportCenterInIllinois(bounds)) {
     limit = wide ? Math.min(Math.round(limit * 2), 500) : Math.min(Math.round(limit * 1.5), 180);
