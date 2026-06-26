@@ -2,9 +2,9 @@ import { GeoJSON, CircleMarker, Marker, Popup, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { PathOptions, TooltipOptions } from 'leaflet';
 import { useEffect, useMemo, useState } from 'react';
-import { CameraPreviewMedia } from './CameraPreviewMedia';
-import { useCameraStreamScheduler } from '../hooks/useCameraStreamScheduler';
-import { CAMERA_STREAM_HOVER_DELAY_MS } from '../lib/cameraStreamScheduler';
+import { CameraMapSnapshot } from './CameraMapSnapshot';
+import { CameraMapLivePreview } from './CameraMapLivePreview';
+import { cameraHasMapMarker, cameraSourceSiteHref } from '../lib/cameraSnapshot';
 import { VesselDetails } from './VesselDetails';
 import {
   alertKindLabel,
@@ -342,6 +342,20 @@ export function TfrPolygonLayer({ collection }: { collection: TfrCollection | nu
   );
 }
 
+function lightningIcon(opacity: number, fresh: boolean) {
+  const style = fresh ? '' : ` style="opacity:${opacity.toFixed(2)}"`;
+  return L.divIcon({
+    className: `lightning-marker${fresh ? ' lightning-marker-fresh' : ''}`,
+    html: `<div class="lightning-bolt"${style} aria-hidden="true">
+      <svg viewBox="0 0 12 16" width="10" height="13" role="presentation">
+        <path d="M7.2 0 3.4 8.6H6L4.8 16 10.6 7.4H8l2.2-7.4Z" fill="#fff"/>
+      </svg>
+    </div>`,
+    iconSize: [12, 14],
+    iconAnchor: [6, 7],
+  });
+}
+
 export function LightningLayer({ payload }: { payload: LightningPayload | null }) {
   if (!payload?.strikes?.length) return null;
 
@@ -349,23 +363,19 @@ export function LightningLayer({ payload }: { payload: LightningPayload | null }
     <>
       {payload.strikes.map((strike, index) => {
         const age = strike.ageMinutes ?? 0;
-        const opacity = Math.max(0.25, 1 - age / 30);
+        const opacity = Math.max(0.35, 1 - age / 30);
+        const fresh = age <= 5;
         return (
-          <CircleMarker
+          <Marker
             key={`${strike.lat}-${strike.lon}-${strike.observedAt || index}`}
-            center={[strike.lat, strike.lon]}
-            radius={age <= 5 ? 5 : 4}
-            pathOptions={{
-              color: '#fef08a',
-              fillColor: '#facc15',
-              fillOpacity: opacity,
-              weight: 1,
-            }}
+            position={[strike.lat, strike.lon]}
+            icon={lightningIcon(opacity, fresh)}
+            zIndexOffset={360}
           >
             <Tooltip direction="top" opacity={1}>
               Lightning · {age <= 1 ? 'just now' : `${age}m ago`}
             </Tooltip>
-          </CircleMarker>
+          </Marker>
         );
       })}
     </>
@@ -624,7 +634,15 @@ export function WildfireLayer({ payload }: { payload: WildfirePayload | null }) 
   );
 }
 
-function cameraIcon(kind: 'road' | 'rail' = 'road') {
+function cameraIcon(kind: 'road' | 'rail' | 'weather' = 'road') {
+  if (kind === 'weather') {
+    return L.divIcon({
+      className: 'camera-marker weather-camera-marker',
+      html: `<div class="weather-camera-dot" aria-hidden="true"><span class="weather-camera-sun"></span></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+    });
+  }
   const dotClass = kind === 'rail' ? 'camera-dot rail-camera-dot' : 'camera-dot';
   const size = kind === 'rail' ? 20 : 12;
   const anchor = size / 2;
@@ -696,42 +714,16 @@ const CAMERA_TOOLTIP_OPTIONS: TooltipOptions = {
   className: 'camera-preview-tooltip',
 };
 
+function CameraSnapshotPreview({ cam, className = 'camera-preview-image' }: { cam: TrafficCamera; className?: string }) {
+  return <CameraMapSnapshot cam={cam} className={className} />;
+}
+
 function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexOffset?: number }) {
   const [previewActive, setPreviewActive] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
-  const { requestStream, releaseStream, isStreamAllowed, getStreamTier } = useCameraStreamScheduler();
-  const kind = cam.camKind === 'rail' ? 'rail' : 'road';
+  const kind =
+    cam.camKind === 'weather' ? 'weather' : cam.camKind === 'rail' ? 'rail' : 'road';
   const icon = useMemo(() => cameraIcon(kind), [kind]);
-  const tier = getStreamTier(cam.lat, cam.lon);
-  const needsStreamSlot = cam.mediaType === 'hls';
-  const streamAllowed = !needsStreamSlot || isStreamAllowed(cam.id);
-
-  useEffect(() => {
-    if (!needsStreamSlot || !previewActive) return undefined;
-    const timer = window.setTimeout(() => {
-      requestStream(cam.id, cam.lat, cam.lon, 'tooltip');
-    }, CAMERA_STREAM_HOVER_DELAY_MS);
-    return () => {
-      window.clearTimeout(timer);
-      if (!popupOpen) releaseStream(cam.id);
-    };
-  }, [needsStreamSlot, previewActive, popupOpen, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
-
-  useEffect(() => {
-    if (!needsStreamSlot || !popupOpen) {
-      if (!previewActive) releaseStream(cam.id);
-      return undefined;
-    }
-    requestStream(cam.id, cam.lat, cam.lon, 'popup');
-    return () => {
-      if (!previewActive) releaseStream(cam.id);
-    };
-  }, [needsStreamSlot, popupOpen, previewActive, cam.id, cam.lat, cam.lon, requestStream, releaseStream]);
-
-  useEffect(() => () => releaseStream(cam.id), [cam.id, releaseStream]);
-
-  const showTooltipStream = previewActive && cam.liveUrl && streamAllowed;
-  const showPopupStream = popupOpen && cam.liveUrl && streamAllowed;
 
   return (
     <Marker position={[cam.lat, cam.lon]} icon={icon} zIndexOffset={zIndexOffset}>
@@ -749,22 +741,7 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
               .filter(Boolean)
               .join(' · ')}
           </div>
-          {previewActive && cam.liveUrl && needsStreamSlot && tier === 'distant' ? (
-            <div className="camera-preview-loading muted">Pan the map to center this cam for a live preview.</div>
-          ) : null}
-          {previewActive && cam.liveUrl && needsStreamSlot && tier !== 'distant' && !streamAllowed ? (
-            <div className="camera-preview-loading muted">
-              {tier === 'inView' ? 'Starting live preview…' : 'Queued — nearby cams load first…'}
-            </div>
-          ) : null}
-          {showTooltipStream && cam.liveUrl ? (
-            <CameraPreviewMedia
-              key={`${cam.id}-tooltip-${cam.liveUrl}`}
-              liveUrl={cam.liveUrl}
-              sourceLiveUrl={cam.sourceLiveUrl}
-              mediaType={cam.mediaType}
-            />
-          ) : null}
+          {previewActive ? <CameraSnapshotPreview cam={cam} /> : null}
         </div>
       </Tooltip>
       <Popup
@@ -782,22 +759,17 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
               .filter(Boolean)
               .join(' · ')}
           </div>
-          {popupOpen && cam.liveUrl && needsStreamSlot && !streamAllowed ? (
-            <div className="camera-preview-loading muted">Starting live stream…</div>
-          ) : null}
-          {showPopupStream && cam.liveUrl ? (
-            <CameraPreviewMedia
-              key={`${cam.id}-popup-${cam.liveUrl}`}
-              liveUrl={cam.liveUrl}
-              sourceLiveUrl={cam.sourceLiveUrl}
-              mediaType={cam.mediaType}
-            />
-          ) : null}
-          {cam.liveUrl ? (
-            <a href={cam.sourceLiveUrl || cam.liveUrl} target="_blank" rel="noreferrer">
-              Open live stream
-            </a>
-          ) : null}
+          {popupOpen ? <CameraMapLivePreview cam={cam} /> : null}
+          {(() => {
+            const href = cameraSourceSiteHref(cam);
+            if (!href) return null;
+            const modot = /modot/i.test(cam.source || '') || /modot\.(mo\.gov|org)/i.test(href);
+            return (
+              <a href={href} target="_blank" rel="noreferrer">
+                {modot ? 'Open on MoDOT Traveler map ↗' : 'Open on source site'}
+              </a>
+            );
+          })()}
         </div>
       </Popup>
     </Marker>
@@ -807,7 +779,7 @@ function CameraMarker({ cam, zIndexOffset = 320 }: { cam: TrafficCamera; zIndexO
 export function RailCameraLayer({ payload }: { payload: TrafficCameraPayload | null }) {
   const cameras =
     payload?.cameras
-      ?.filter((cam) => cam.liveUrl)
+      ?.filter((cam) => cameraHasMapMarker(cam))
       .map((cam) => ({ ...cam, camKind: 'rail' as const })) ?? [];
   if (!cameras.length) return null;
   return (
@@ -820,12 +792,26 @@ export function RailCameraLayer({ payload }: { payload: TrafficCameraPayload | n
 }
 
 export function TrafficCameraLayer({ payload }: { payload: TrafficCameraPayload | null }) {
-  const cameras = payload?.cameras?.filter((cam) => cam.liveUrl) ?? [];
+  const cameras =
+    payload?.cameras?.filter((cam) => cameraHasMapMarker(cam) && cam.camKind !== 'weather') ?? [];
   if (!cameras.length) return null;
   return (
     <>
       {cameras.map((cam) => (
         <CameraMarker key={cam.id} cam={cam} zIndexOffset={320} />
+      ))}
+    </>
+  );
+}
+
+export function WeatherCameraLayer({ payload }: { payload: TrafficCameraPayload | null }) {
+  const cameras =
+    payload?.cameras?.filter((cam) => cameraHasMapMarker(cam) && cam.camKind === 'weather') ?? [];
+  if (!cameras.length) return null;
+  return (
+    <>
+      {cameras.map((cam) => (
+        <CameraMarker key={cam.id} cam={cam} zIndexOffset={340} />
       ))}
     </>
   );

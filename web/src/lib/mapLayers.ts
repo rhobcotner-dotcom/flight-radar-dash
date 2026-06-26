@@ -353,8 +353,10 @@ export interface TrafficCamera {
   streamUrl: string;
   liveUrl: string;
   sourceLiveUrl?: string;
+  /** Still image for map hover/click — no live video on map markers. */
+  previewUrl?: string | null;
   mediaType: 'hls' | 'snapshot' | 'youtube';
-  camKind?: 'road' | 'rail';
+  camKind?: 'road' | 'rail' | 'weather';
   source?: string;
   state?: string | null;
   railroad?: string | null;

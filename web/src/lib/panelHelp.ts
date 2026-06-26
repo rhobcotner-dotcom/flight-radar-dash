@@ -1,8 +1,12 @@
 export const MAP_LAYER_HELP = {
+  flights:
+    'All aircraft in the current map view from OpenSky + ADSB.lol — planes, jets, helicopters, and GA. Turn off to hide every flight marker while keeping other layers.',
+  rail:
+    'Live rail traffic: Amtrak and MetroLink passenger trains, freight and crossing activity, APRS rail (with aprs.fi key), and corridor hints. Turn off to hide train markers on the map.',
   weatherAlerts:
     'NWS warning polygons on the map: tornado, severe thunderstorm, flood, flash flood, winter, and heat alerts for MO/IL/IA/AR/KS. Refreshes every minute.',
   lightning:
-    'Recent cloud-to-ground lightning strikes near your area (last ~30 min). Yellow dots fade as strikes age. Source: Blitzortung.',
+    'Recent cloud-to-ground lightning strikes near your area (last ~30 min). White bolt icons flash when fresh and fade as strikes age. Source: Blitzortung.',
   helos:
     'Highlights helicopters on your existing ADSB feed: purple = general, pink = medevac, cyan = news, blue = law enforcement (best-effort callsign/type matching).',
   rivers:
@@ -18,9 +22,11 @@ export const MAP_LAYER_HELP = {
   wildfires:
     'NASA FIRMS VIIRS wildfire hotspots within 200 mi. Requires free NASA_FIRMS_MAP_KEY from firms.modaps.eosdis.nasa.gov.',
   cameras:
-    'US highway traffic cameras from free state DOT feeds. Pan/zoom the map to load cameras for the current view — coverage grows as you move across states.',
+    'US highway traffic cameras from state DOT feeds (Travel Midwest GTIS in MO/IL/IA/IN/WI/KY/MN, Iowa DOT, MoDOT west of the Mississippi near St. Louis, etc.). Hover for a snapshot; click for live video.',
+  weatherCameras:
+    'Sky- and landscape-facing weather cameras (ALERTWest, Wyoming scenic, optional Windy). Teal sun icons — hover for a snapshot, click for details and live view when available.',
   railCameras:
-    '240+ verified live rail cameras from 15 YouTube networks (Virtual Railfan, Live Trains, Steel Highway, SouthWest RailCams, Tehachapi, PU Tower, and more). Rebuild with npm run build:rail-cams. Amber dots within 125 mi of home.',
+    '240+ rail cameras from YouTube networks. Hover shows a thumbnail still; click a dot for the live YouTube feed in the popup.',
   riverForecast:
     'NOAA NWPS river forecast gauges with flood categories and crest forecasts on the Missouri/Mississippi/Meramec. Complements USGS stage dots.',
   ebird:
@@ -34,7 +40,7 @@ export const MAP_LAYER_HELP = {
   satellites:
     'Satellites above 5° elevation at your location (ISS, GPS, weather sats, etc.). Positions computed from CelesTrak TLEs — not ground tracks.',
   radar:
-    'NEXRAD base reflectivity overlay (IEM, ~3–5 min scan lag). Composite tiles scale above zoom 9; with Radar on, click a storm cell for a meteorologist-style briefing (clear sky clicks do nothing).',
+    'NEXRAD base reflectivity overlay (IEM, ~3–5 min scan lag). Composite tiles scale above zoom 9; with Radar on, click a storm cell for a meteorologist-style briefing (clear sky clicks do nothing). Between refreshes, recent frames are blended so echoes drift smoothly instead of jumping.',
 } as const;
 
 export const PANEL_HELP = {
@@ -59,7 +65,7 @@ export const PANEL_HELP = {
   trends:
     'SQLite snapshot history from manual "Refresh map" clicks. Shows traffic volume, category mix, and alert counts over the last 24 hours or 7 days.',
   funZone:
-    'Loony mode: ISS wave toasts, chemtrail satire, black helicopter bingo, callsign roulette, disaster movie UI, Arch shadow nonsense, T-ravioli index, and other STL-area absurdity.',
+    'Loony mode: ISS wave toasts, chemtrail satire, callsign roulette, disaster movie UI, Arch shadow nonsense, T-ravioli index, and other STL-area absurdity.',
   liveFacts:
     'Live dashboard panel: MISO electricity mix & hub price, Cardinals/Blues home games, FAA NAS delays for STL airports, aurora/Kp outlook, golden hour, and notes on data we cannot yet map (Ameren outages, PulsePoint, US pollen).',
 } as const;
@@ -89,11 +95,19 @@ export const FUN_TOGGLE_HELP = {
     'Toasts when known celebrity/billionaire tail numbers (N628TS, etc.) appear in your ADSB feed.',
   roulette:
     'Each day picks a random “holy grail” callsign; toasts if that callsign flies overhead.',
+  radarNoir:
+    'Black-and-white radar view: dense dark checkerboard basemap and storm echoes as a white-to-black intensity gradient (weak = dark, hail core = white).',
 } as const;
 
 export function friendlyApiError(message: string) {
   if (message.includes('Unknown API route')) {
     return 'Map layer API not loaded — stop and restart: npm run dev (the Node API must reload after code changes).';
+  }
+  if (/^fetch failed$/i.test(message) || message === 'Failed to fetch') {
+    return 'Network blip — flight data feed unreachable. Will retry automatically.';
+  }
+  if (/ADSB\.lol request failed|adsb\.lol|ADSB flight feed unreachable/i.test(message)) {
+    return 'Flight feed hiccup — showing last known positions.';
   }
   return message;
 }

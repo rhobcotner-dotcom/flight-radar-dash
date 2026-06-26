@@ -44,8 +44,6 @@ export function FunZonePanel({ fun }: Props) {
     disasterActive,
     werewolfActive,
     kpClass,
-    heloBingo,
-    squawkBingo,
     rouletteTarget,
     planeOrUfo,
     planeOrUfoScore,
@@ -196,40 +194,20 @@ export function FunZonePanel({ fun }: Props) {
           checked={settings.roulette}
           onChange={(v) => setSetting('roulette', v)}
         />
+        <FunToggle
+          label="Radar noir"
+          tip={FUN_TOGGLE_HELP.radarNoir}
+          checked={settings.radarNoir}
+          onChange={(v) => setSetting('radarNoir', v)}
+        />
       </div>
 
       <div className="fun-games">
-        <section className="fun-game-block">
-          <h3>Black helicopter bingo</h3>
-          <p className="muted">Today&apos;s card — spot helos to mark squares.</p>
-          <div className="bingo-grid">
-            {funConfig.blackHeloBingo.map((label, index) => (
-              <div
-                key={label}
-                className={`bingo-cell${heloBingo.marked[index] ? ' bingo-cell-hit' : ''}`}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section className="fun-game-block">
           <h3>Callsign roulette</h3>
           <p className="muted">
             Today&apos;s holy grail: <strong>{rouletteTarget}</strong>
           </p>
-        </section>
-
-        <section className="fun-game-block">
-          <h3>Squawk bingo</h3>
-          <ul className="squawk-list">
-            {funConfig.squawkBingo.map((row) => (
-              <li key={row.code} className={squawkBingo.hit[row.code] ? 'squawk-hit' : ''}>
-                {row.code} — {row.label}
-              </li>
-            ))}
-          </ul>
         </section>
 
         <section className="fun-game-block">

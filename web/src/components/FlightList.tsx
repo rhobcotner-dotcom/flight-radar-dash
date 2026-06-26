@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { AreaSettings, Flight } from '../types';
 import type { useHighlight } from '../hooks/useHighlight';
 import { PANEL_HELP } from '../lib/panelHelp';
@@ -6,6 +6,16 @@ import { PanelTip } from './PanelTip';
 import { carrierLabel } from '../lib/airlineNames';
 import { flightKey, flightLabel, formatFlightSpeedMph, routeLabel, sortFlightsByDistance } from '../lib/flightUtils';
 import { FlightVisual } from './FlightVisual';
+
+const MINIMIZED_KEY = 'flight-radar-dash-nearby-flights-minimized';
+
+function readMinimizedFlag() {
+  try {
+    return localStorage.getItem(MINIMIZED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
 
 interface Props {
   area: AreaSettings;
@@ -17,6 +27,7 @@ interface Props {
 }
 
 export function FlightList({ area, flights, inViewCount, highlightedId, listHandlers }: Props) {
+  const [minimized, setMinimized] = useState(readMinimizedFlag);
   const nearby = useMemo(
     () =>
       sortFlightsByDistance(flights, area.lat, area.lon).filter(
@@ -25,16 +36,42 @@ export function FlightList({ area, flights, inViewCount, highlightedId, listHand
     [area.lat, area.lon, area.radiusMiles, flights]
   );
 
+  const countLabel = `${nearby.length} near home${
+    typeof inViewCount === 'number' ? ` · ${inViewCount.toLocaleString()} in map view` : ''
+  }`;
+
+  const toggleMinimized = () => {
+    setMinimized((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(MINIMIZED_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
   return (
-    <PanelTip tip={PANEL_HELP.nearbyFlights} className="panel flight-list-panel">
-      <div className="panel-header">
-        <h2>Nearby flights</h2>
-        <span className="muted">
-          {nearby.length} near home
-          {typeof inViewCount === 'number' ? ` · ${inViewCount.toLocaleString()} in map view` : ''}
-        </span>
+    <PanelTip
+      tip={PANEL_HELP.nearbyFlights}
+      className={`panel flight-list-panel${minimized ? ' is-minimized' : ''}`}
+    >
+      <div className="panel-header flight-list-panel-header">
+        <div className="panel-header-title">
+          <h2>Nearby flights</h2>
+          <span className="muted">{countLabel}</span>
+        </div>
+        <button
+          type="button"
+          className="btn-secondary panel-minimize-btn"
+          onClick={toggleMinimized}
+          aria-expanded={!minimized}
+        >
+          {minimized ? 'Show' : 'Minimize'}
+        </button>
       </div>
-      {nearby.length === 0 ? (
+      {minimized ? null : nearby.length === 0 ? (
         <p className="empty">
           No flights near home right now. Pan the map — flights load for whatever is in view worldwide.
         </p>

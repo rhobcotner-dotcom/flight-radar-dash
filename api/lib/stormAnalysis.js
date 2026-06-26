@@ -4,6 +4,7 @@ import { fetchLightningStrikes } from './lightning.js';
 import { fetchNwsAlerts } from './nwsAlerts.js';
 import { fetchWeatherConditions } from './weather.js';
 import { sampleRadarField } from './radarReflectivity.js';
+import { fetchCamerasNearPoint } from './usTrafficCameras.js';
 
 function intensityFromDbz(dbz) {
   if (dbz >= 65) return { label: 'extreme hail-core signature', class: 'extreme', cloudType: 'supercell core / possible hail' };
@@ -12,22 +13,6 @@ function intensityFromDbz(dbz) {
   if (dbz >= 35) return { label: 'moderate storm', class: 'moderate', cloudType: 'robust shower or thunderstorm' };
   if (dbz >= 25) return { label: 'developing storm', class: 'developing', cloudType: 'convective shower building' };
   return { label: 'weak echo', class: 'weak', cloudType: 'stratiform or light convective rain' };
-}
-
-function structureFromProfile(peakDbz, clickDbz, diameterMiles) {
-  if (peakDbz >= 55 && diameterMiles <= 12) {
-    return 'Compact, high-reflectivity core — classic pulse or supercell structure with a focused updraft.';
-  }
-  if (peakDbz - clickDbz >= 8 && diameterMiles >= 10) {
-    return 'Broader echo with a localized core — likely a multicell cluster or mesoscale convective element.';
-  }
-  if (diameterMiles >= 18) {
-    return 'Wide stratiform/convective shield — organized rain area rather than an isolated cell.';
-  }
-  if (peakDbz >= 40) {
-    return 'Organized convection with a well-defined precipitation core on radar.';
-  }
-  return 'Scattered convective echoes — individual shower or small cell on radar.';
 }
 
 function estimateMotion(weather, peakDbz) {
@@ -70,56 +55,30 @@ function forecastTrack(lat, lon, directionDeg, speedMph) {
   };
 }
 
-function hazardNotes(alerts, lightningCount, peakDbz) {
-  const notes = [];
-  if (alerts.length) {
-    notes.push(
-      `Active NWS headline: ${alerts[0].headline}. Treat warnings as ground truth over radar interpretation alone.`
-    );
-  }
-  if (lightningCount >= 8) {
-    notes.push(`Frequent cloud-to-ground lightning nearby (${lightningCount} strikes in the last ~30 minutes) — a sign of active electrification.`);
-  } else if (lightningCount > 0) {
-    notes.push(`Isolated lightning detected within range (${lightningCount} recent strikes).`);
-  }
-  if (peakDbz >= 55) {
-    notes.push('Reflectivity this high supports hail or destructive wind gusts in the strongest core — stay weather-aware.');
-  } else if (peakDbz >= 45) {
-    notes.push('Heavy rain rates and localized gusty winds are likely under this echo top.');
-  }
-  if (!notes.length) {
-    notes.push('No immediate warning products or dense lightning plumes detected at this location, but convection can strengthen quickly.');
-  }
-  return notes;
+function buildBrief({ radar, intensity, motion, track }) {
+  const motionBit =
+    motion.directionLabel && motion.speedMph
+      ? ` Moving ${motion.directionLabel} ~${motion.speedMph} mph`
+      : '';
+  const trackBit = track?.summary ? ` ${track.summary.replace(/^If motion holds, /i, '')}` : '';
+  return `${intensity.label} roughly ${radar.approxDiameterMiles} mi across with peak ${radar.peakDbz} dBZ (${radar.clickDbz} dBZ at your click).${motionBit}.${trackBit}`.replace(/\.\./g, '.');
 }
 
-function buildSections({ radar, intensity, motion, track, weather, alerts, lightningCount }) {
-  return [
-    {
-      title: 'Radar snapshot',
-      body: `Peak reflectivity near your click is about ${radar.peakDbz} dBZ (${intensity.label}). At the exact point: ~${radar.clickDbz} dBZ on ${radar.source.toUpperCase()} composite.`,
-    },
-    {
-      title: 'Size & structure',
-      body: `${structureFromProfile(radar.peakDbz, radar.clickDbz, radar.approxDiameterMiles)} Estimated radar footprint: ~${radar.approxDiameterMiles} mi across the core echo.`,
-    },
-    {
-      title: 'Cloud & precipitation type',
-      body: `Meteorologically this reads as ${intensity.cloudType}. ${weather?.conditionLabel ? `Surface observation nearby: ${weather.conditionLabel}.` : ''} Temperature ${weather?.temperatureF != null ? `${Math.round(weather.temperatureF)}°F` : 'unknown'}${weather?.dewpointF != null ? ` with dew point ${Math.round(weather.dewpointF)}°F` : ''}.`,
-    },
-    {
-      title: 'Motion & heading',
-      body: motion.narrative,
-    },
-    {
-      title: 'Where it is headed',
-      body: track?.summary || 'Insufficient wind data to project a confident track.',
-    },
-    {
-      title: 'Hazards & situational awareness',
-      body: hazardNotes(alerts, lightningCount, radar.peakDbz).join(' '),
-    },
-  ];
+function buildHazardLine(alerts, lightningCount, peakDbz) {
+  const bits = [];
+  if (alerts.length > 1) bits.push(`${alerts.length} active NWS alerts nearby`);
+  if (lightningCount >= 4) bits.push(`${lightningCount} recent lightning strikes`);
+  else if (lightningCount > 0) bits.push('Isolated lightning nearby');
+  if (peakDbz >= 55) bits.push('Hail or destructive wind possible in core');
+  else if (peakDbz >= 45) bits.push('Heavy rain and gusty winds likely');
+  if (!bits.length) return 'No warnings or dense lightning at this pin — convection can strengthen quickly.';
+  return bits.join(' · ');
+}
+
+const STORM_CAMERA_RADIUS_MILES = 15;
+
+async function camerasInStormCell(lat, lon) {
+  return fetchCamerasNearPoint(lat, lon, STORM_CAMERA_RADIUS_MILES, 3);
 }
 
 export async function analyzeStormCell(lat, lon) {
@@ -128,10 +87,11 @@ export async function analyzeStormCell(lat, lon) {
     return { hasStorm: false, lat, lon };
   }
 
-  const [weatherRaw, alertsPayload, lightningPayload] = await Promise.all([
+  const [weatherRaw, alertsPayload, lightningPayload, cameras] = await Promise.all([
     fetchWeatherConditions(lat, lon).catch(() => null),
     fetchNwsAlerts(lat, lon).catch(() => ({ alerts: [] })),
     fetchLightningStrikes(lat, lon, 35).catch(() => ({ count: 0, strikes: [] })),
+    camerasInStormCell(lat, lon).catch(() => []),
   ]);
   const weather = weatherRaw ? enrichWeatherConditions(weatherRaw) : null;
 
@@ -140,14 +100,19 @@ export async function analyzeStormCell(lat, lon) {
   const track = forecastTrack(lat, lon, motion.directionDeg, motion.speedMph);
   const alerts = alertsPayload?.alerts || [];
   const lightningCount = lightningPayload?.count || 0;
+  const cellRadiusMiles = Math.max(3, (radar.approxDiameterMiles / 2) * 1.15);
 
-  const summary = `${intensity.label.charAt(0).toUpperCase()}${intensity.label.slice(1)} ~${radar.approxDiameterMiles} mi wide${motion.directionLabel ? `, drifting ${motion.directionLabel}` : ''}. Peak ${radar.peakDbz} dBZ.`;
+  const summary = `${intensity.label.charAt(0).toUpperCase()}${intensity.label.slice(1)} ~${radar.approxDiameterMiles} mi wide${motion.directionLabel ? `, ${motion.directionLabel}` : ''}. Peak ${radar.peakDbz} dBZ.`;
 
   return {
     hasStorm: true,
     lat,
     lon,
     summary,
+    brief: buildBrief({ radar, intensity, motion, track }),
+    hazardLine: buildHazardLine(alerts, lightningCount, radar.peakDbz),
+    cellRadiusMiles,
+    cameras,
     radar: {
       clickDbz: radar.clickDbz,
       peakDbz: radar.peakDbz,
@@ -180,16 +145,6 @@ export async function analyzeStormCell(lat, lon) {
         expires: alert.expires,
       })),
     },
-    sections: buildSections({
-      radar,
-      intensity,
-      motion,
-      track,
-      weather,
-      alerts,
-      lightningCount,
-    }),
-    disclaimer:
-      'Interpretation uses base reflectivity, surface winds, and nearby observations — not dual-pol velocity or a human forecaster on duty. Use NWS warnings for life-safety decisions.',
+    disclaimer: 'Radar reflectivity + nearby obs — not a NWS forecast. Heed official warnings.',
   };
 }

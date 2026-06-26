@@ -75,7 +75,7 @@ function useSchedulerState(bounds: MapViewportBounds | null, boundsKey: string) 
   const evictLowestPriority = useCallback(() => {
     let candidate: ActiveStream | null = null;
     for (const stream of activeRef.current.values()) {
-      if (stream.reason === 'popup') continue;
+      if (stream.reason === 'storm') continue;
       if (!candidate) {
         candidate = stream;
         continue;
@@ -152,7 +152,9 @@ function useSchedulerState(bounds: MapViewportBounds | null, boundsKey: string) 
 
       if (activeRef.current.has(id)) {
         const existing = activeRef.current.get(id)!;
-        if (reason === 'popup' && existing.reason !== 'popup') {
+        if (reason === 'storm') {
+          existing.reason = 'storm';
+        } else if (reason === 'popup' && existing.reason === 'tooltip') {
           existing.reason = 'popup';
         }
         pendingRef.current = pendingRef.current.filter((item) => item.id !== id);
@@ -161,6 +163,15 @@ function useSchedulerState(bounds: MapViewportBounds | null, boundsKey: string) 
       }
 
       const request: PendingRequest = { id, lat, lon, reason, tier, distance };
+
+      if (reason === 'storm') {
+        while (activeRef.current.size >= CAMERA_STREAM_MAX_CONCURRENT && evictLowestPriority()) {
+          /* make room for storm briefing tiles */
+        }
+        grant(request);
+        processQueue();
+        return;
+      }
 
       if (reason === 'popup' || tier === 'inView') {
         if (activeRef.current.size < CAMERA_STREAM_MAX_CONCURRENT) {

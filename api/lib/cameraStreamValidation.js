@@ -1,5 +1,5 @@
 import { fetchProxiedHlsManifest } from './cameraStreamProxy.js';
-import { USER_AGENT } from './cameraSources/helpers.js';
+import { isModotRtplexStreamUrl, USER_AGENT } from './cameraSources/helpers.js';
 import { fetchProxiedCameraImage, cameraNeedsProxy } from './cameraProxy.js';
 
 const PROBE_CONCURRENCY = 36;
@@ -9,6 +9,7 @@ const CACHE_MS = 15 * 60 * 1000;
 const manifestCache = new Map();
 
 export function isKnownDeadStream(url) {
+  if (isModotRtplexStreamUrl(url)) return false;
   const cached = manifestCache.get(url);
   return Boolean(cached && !cached.ok && Date.now() - cached.at < CACHE_MS);
 }
@@ -54,6 +55,12 @@ async function probeOne(camera) {
   }
 
   const sourceLiveUrl = camera.liveUrl;
+  if (isModotRtplexStreamUrl(sourceLiveUrl)) {
+    // Wowza rtplive CDN is often unreachable outside traveler.modot.org — do not mark verified.
+    manifestCache.set(sourceLiveUrl, { ok: false, at: Date.now() });
+    return false;
+  }
+
   const cached = manifestCache.get(sourceLiveUrl);
   if (cached && Date.now() - cached.at < CACHE_MS) return cached.ok;
 
@@ -66,8 +73,11 @@ async function probeOne(camera) {
     ]);
     manifestCache.set(sourceLiveUrl, { ok: true, at: Date.now() });
     return true;
-  } catch {
-    manifestCache.set(sourceLiveUrl, { ok: false, at: Date.now() });
+  } catch (err) {
+    const timedOut = /timeout|timed out/i.test(err?.message || '');
+    if (!timedOut) {
+      manifestCache.set(sourceLiveUrl, { ok: false, at: Date.now() });
+    }
     return false;
   }
 }

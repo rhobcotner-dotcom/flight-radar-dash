@@ -1,4 +1,4 @@
-import { bboxFromPoint, fetchUsTrafficCameras } from '../lib/usTrafficCameras.js';
+import { bboxFromPoint, fetchCamerasNearPoint, fetchUsTrafficCameras, primeCameraPoolAtPoint } from '../lib/usTrafficCameras.js';
 import { fetchRailCameras } from '../lib/railCameras.js';
 import { fetchNwpsRiverForecast } from '../lib/nwpsRiver.js';
 import { fetchEbirdRecent } from '../lib/ebird.js';
@@ -48,6 +48,19 @@ function parseLimit(req, fallback = 120) {
   return Math.min(360, Math.max(20, Math.round(limit)));
 }
 
+export async function handleCamerasNear(req, res) {
+  const point = parseLatLon(req);
+  if (!point) {
+    return res.status(400).json({ error: 'lat and lon query params required' });
+  }
+
+  const limit = Math.min(30, Math.max(1, Number(req.query.limit) || 3));
+  const radiusMiles = Math.min(60, Math.max(5, Number(req.query.radiusMiles) || 20));
+  const cameras = await fetchCamerasNearPoint(point.lat, point.lon, radiusMiles, limit);
+  primeCameraPoolAtPoint(point.lat, point.lon);
+  res.json({ lat: point.lat, lon: point.lon, radiusMiles, limit, count: cameras.length, cameras });
+}
+
 export async function handleTrafficCameras(req, res) {
   const point = parseLatLon(req);
   const limit = parseLimit(req, 120);
@@ -59,12 +72,15 @@ export async function handleTrafficCameras(req, res) {
     return res.status(400).json({ error: 'lat/lon or west/south/east/north query params required' });
   }
 
+  const centerLat = point?.lat ?? (bbox.south + bbox.north) / 2;
+  const centerLon = point?.lon ?? (bbox.west + bbox.east) / 2;
+
   res.json(
     await fetchUsTrafficCameras({
       ...bbox,
       limit,
-      centerLat: point?.lat,
-      centerLon: point?.lon,
+      centerLat,
+      centerLon,
     })
   );
 }

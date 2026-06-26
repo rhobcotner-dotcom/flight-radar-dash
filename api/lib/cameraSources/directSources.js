@@ -1,8 +1,10 @@
 import {
   arcGisEnvelopeParams,
+  dedupeCameras,
   fetchCachedJson,
   fetchCachedText,
   filterByBbox,
+  isModotRtplexStreamUrl,
   normalizeCamera,
   normalizeHlsUrl,
   pickMediaUrl,
@@ -14,6 +16,9 @@ import {
   stateFromCoords,
   STATE_BOUNDS,
 } from './helpers.js';
+import { fetchWeatherCameras } from './weatherCamSources.js';
+
+const CONUS_BBOX = { west: -125, south: 24, east: -66, north: 50 };
 
 function httpsUrl(url) {
   return typeof url === 'string' ? url.replace(/^http:\/\//i, 'https://') : url;
@@ -47,7 +52,7 @@ function regionFor(...stateCodes) {
   };
 }
 
-async function fetchModotCameras(bbox) {
+async function fetchModotArcGisCameras(bbox) {
   const params = arcGisEnvelopeParams(bbox, {
     where: "URL2 IS NOT NULL AND (STREAM_ERROR IS NULL OR STREAM_ERROR <> 'Y')",
     outFields: 'CAM_ID,DESCRIPTION,URL2,STREAM_ERROR',
@@ -75,13 +80,78 @@ async function fetchModotCameras(bbox) {
     .filter(Boolean);
 }
 
+async function fetchModotSnapshotCameras(bbox) {
+  const data = await fetchCachedJson(
+    'https://traveler.modot.org/map/js/snapshot.json',
+    'modot-snapshot-cameras'
+  );
+  const cameras = Array.isArray(data?.cameras) ? data.cameras : [];
+  return cameras
+    .filter((cam) => pointInBbox(cam.location?.y, cam.location?.x, bbox))
+    .map((cam) => {
+      const imagePath = String(cam.url || '').startsWith('http')
+        ? cam.url
+        : `https://traveler.modot.org${cam.url}`;
+      return normalizeCamera({
+        id: `modot-snap-${cam.id}`,
+        description: cam.caption,
+        lat: cam.location?.y,
+        lon: cam.location?.x,
+        streamUrl: imagePath,
+        liveUrl: imagePath,
+        source: 'MoDOT snapshots',
+        state: 'MO',
+      });
+    })
+    .filter(Boolean);
+}
+
+async function fetchModotStreamingCameras(bbox) {
+  const data = await fetchCachedJson(
+    'https://traveler.modot.org/timconfig/feed/desktop/StreamingCams2.json',
+    'modot-streaming-cams2'
+  );
+  const cameras = Array.isArray(data) ? data : [];
+  return cameras
+    .filter((cam) => pointInBbox(cam.y, cam.x, bbox) && cam.html)
+    .map((cam) =>
+      normalizeCamera({
+        id: `modot-stream-${String(cam.location || 'cam')
+          .slice(0, 36)
+          .replace(/\W+/g, '-')}-${roundCoord(cam.y, 2)}`,
+        description: cam.location,
+        lat: cam.y,
+        lon: cam.x,
+        streamUrl: cam.html,
+        liveUrl: cam.html,
+        source: 'MoDOT streams',
+        state: 'MO',
+      })
+    )
+    .filter(Boolean);
+}
+
+async function fetchModotCameras(bbox) {
+  const [arcgis, snapshots, streaming] = await Promise.all([
+    fetchModotArcGisCameras(bbox),
+    fetchModotSnapshotCameras(bbox),
+    fetchModotStreamingCameras(bbox),
+  ]);
+  const merged = dedupeCameras([...arcgis, ...streaming, ...snapshots]);
+  const seen = new Set();
+  return merged.filter((cam) => {
+    const key = `${roundCoord(cam.lat, 3)}:${roundCoord(cam.lon, 3)}:${cam.description}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 async function fetchTravelMidwestCameras(bbox) {
-  const params = new URLSearchParams({
-    where: `x BETWEEN ${bbox.west} AND ${bbox.east} AND y BETWEEN ${bbox.south} AND ${bbox.north} AND SnapShot IS NOT NULL`,
+  const params = arcGisEnvelopeParams(bbox, {
+    where: 'SnapShot IS NOT NULL',
     outFields: 'CameraLocation,SnapShot,x,y',
     returnGeometry: 'false',
-    resultRecordCount: '2000',
-    f: 'json',
   });
   const features = await queryArcGis(
     'https://services2.arcgis.com/aIrBD8yn1TDTEXoz/arcgis/rest/services/TrafficCamerasTM_Public/FeatureServer/0/query',
@@ -98,14 +168,16 @@ async function fetchTravelMidwestCameras(bbox) {
     const dedupeKey = locationKey || `${roundCoord(props.y)}:${roundCoord(props.x)}`;
     if (seen.has(dedupeKey)) continue;
     seen.add(dedupeKey);
+    const lat = props.y;
+    const lon = props.x;
     const cam = normalizeCamera({
-      id: `tm-${dedupeKey.slice(0, 40).replace(/\W+/g, '-')}-${roundCoord(props.y, 2)}`,
+      id: `tm-${dedupeKey.slice(0, 40).replace(/\W+/g, '-')}-${roundCoord(lat, 2)}`,
       description: props.CameraLocation,
-      lat: props.y,
-      lon: props.x,
+      lat,
+      lon,
       streamUrl: props.SnapShot,
       source: 'Travel Midwest',
-      state: 'IL',
+      state: stateFromCoords(lat, lon) || 'IL',
     });
     if (cam) cameras.push(cam);
   }
@@ -134,6 +206,7 @@ async function fetchCaltransCameras(bbox) {
         lon: props.longitude,
         streamUrl: props.streamingVideoURL,
         liveUrl: props.streamingVideoURL,
+        previewUrl: props.currentImageURL,
         source: 'Caltrans',
         state: 'CA',
       });
@@ -211,8 +284,8 @@ async function fetchWsdotCameras(bbox) {
 
 async function fetchIowaCameras(bbox) {
   const params = arcGisEnvelopeParams(bbox, {
-    where: 'VideoURL IS NOT NULL',
-    outFields: 'ImageName,VideoURL',
+    where: 'ImageURL IS NOT NULL OR VideoURL IS NOT NULL',
+    outFields: 'Desc_,ImageName,ImageURL,VideoURL,latitude,longitude,device_id',
     resultRecordCount: '2000',
   });
   const features = await queryArcGis(
@@ -223,13 +296,31 @@ async function fetchIowaCameras(bbox) {
     .map((feature) => {
       const props = feature.attributes || {};
       const coords = feature.geometry;
+      const lat = props.latitude ?? coords?.y;
+      const lon = props.longitude ?? coords?.x;
+      const imageUrl = props.ImageURL ? httpsUrl(props.ImageURL) : null;
+      const videoUrl = props.VideoURL ? httpsUrl(props.VideoURL) : null;
+      const liveUrl = pickLiveFirst(videoUrl, imageUrl);
+      if (liveUrl) {
+        return normalizeCamera({
+          id: `ia-${props.device_id || props.ImageName || feature.attributes?.FID || lat}`,
+          description: props.Desc_ || props.ImageName,
+          lat,
+          lon,
+          streamUrl: liveUrl,
+          liveUrl,
+          source: 'Iowa DOT',
+          state: 'IA',
+        });
+      }
+      if (!imageUrl) return null;
       return normalizeCamera({
-        id: `ia-${props.ImageName || props.OBJECTID}`,
-        description: props.ImageName,
-        lat: coords?.y,
-        lon: coords?.x,
-        streamUrl: props.VideoURL,
-        liveUrl: props.VideoURL,
+        id: `ia-${props.device_id || props.ImageName || feature.attributes?.FID || lat}`,
+        description: props.Desc_ || props.ImageName,
+        lat,
+        lon,
+        streamUrl: imageUrl,
+        liveUrl: imageUrl,
         source: 'Iowa DOT',
         state: 'IA',
       });
@@ -715,6 +806,7 @@ async function fetchWyomingCameras(bbox) {
         streamUrl,
         source: 'WYDOT',
         state: 'WY',
+        camKind: 'weather',
       });
     },
   }).catch(() => []);
@@ -929,7 +1021,19 @@ export const DIRECT_FETCHERS = [
   { id: 'ak511', region: regionFor('AK'), states: ['AK'], fetch: fetchAlaskaCameras },
   { id: 'midrive', region: regionFor('MI'), states: ['MI'], fetch: fetchMichiganCameras },
   { id: 'nmroads', region: regionFor('NM'), states: ['NM'], fetch: fetchNewMexicoCameras },
-  { id: 'travelmidwest', region: regionFor('IL', 'MN'), states: ['IL', 'MN'], fetch: fetchTravelMidwestCameras },
+  {
+    id: 'travelmidwest',
+    region: regionFor('IL', 'MO', 'IA', 'IN', 'WI', 'KY', 'MN'),
+    states: ['IL', 'MO', 'IA', 'IN', 'WI', 'KY', 'MN'],
+    fetch: fetchTravelMidwestCameras,
+  },
+  { id: 'wyoming', region: regionFor('WY'), states: ['WY'], fetch: fetchWyomingCameras },
+  {
+    id: 'alertwest',
+    region: CONUS_BBOX,
+    states: ['CA', 'NV', 'OR', 'WA', 'AZ', 'UT', 'CO', 'NM', 'WY', 'MT', 'ID'],
+    fetch: fetchWeatherCameras,
+  },
 ].filter((entry) => entry.region);
 
 export function fetchDirectCameras(bbox) {
@@ -957,7 +1061,8 @@ export const STATE_FEED_GAPS = {
   AL: 'ALDOT Wowza HLS feeds fail manifest validation from public networks',
   DC: 'DDOT publishes CCTV locations in ArcGIS but no free snapshot/stream URLs',
   HI: 'Hawaii DOT ArcGIS URLs are snapshot JPGs only',
-  IL: 'Travel Midwest snapshots may be sparse outside Chicagoland corridor',
+  IL: 'Travel Midwest GTIS snapshots cover interstates; local IDOT feeds may overlap',
+  MO: 'West St. Louis County uses MoDOT rtplive; app rotates sfs01–sfs03 CDN hosts. Open Traveler map if the CDN is offline.',
   KS: 'KanDrive has no public camera JSON feed',
   MD: 'CHART ArcGIS camera video.php feeds return 404 (legacy DIVAS snapshot URLs)',
   MI: 'MiDrive camera list exposes HTML snapshot URLs only',

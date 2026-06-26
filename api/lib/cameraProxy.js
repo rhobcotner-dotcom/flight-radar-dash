@@ -3,8 +3,14 @@ import { USER_AGENT } from './cameraSources/helpers.js';
 /** Hosts that block browser hotlinks without a DOT-site Referer. */
 const PROXY_RULES = new Map([
   ['cctv.travelmidwest.com', 'https://www.travelmidwest.com/'],
+  ['atmsqf.iowadot.gov', 'https://511ia.org/'],
   ['cmhimg01.dot.state.oh.us', 'https://www.artimis.org/'],
   ['itscameras.dot.state.oh.us', 'https://www.ohgo.com/'],
+  ['sfs01-traveler.modot.mo.gov', 'https://traveler.modot.org/'],
+  ['sfs02-traveler.modot.mo.gov', 'https://traveler.modot.org/'],
+  ['sfs03-traveler.modot.mo.gov', 'https://traveler.modot.org/'],
+  ['sfs04-traveler.modot.mo.gov', 'https://traveler.modot.org/'],
+  ['sfs05-traveler.modot.mo.gov', 'https://traveler.modot.org/'],
 ]);
 
 const DIRECT_IMAGE_HOST_SUFFIXES = [
@@ -20,6 +26,7 @@ const DIRECT_IMAGE_HOST_SUFFIXES = [
   'wsdot.wa.gov',
   'trimarc.org',
   'micamerasimages.net',
+  'img.cdn.prod.alertwest.com',
   'nmroads.com',
   '511ga.org',
   '511wi.gov',

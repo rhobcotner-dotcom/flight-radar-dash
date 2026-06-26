@@ -49,7 +49,12 @@ const REFRESH_MS = {
 };
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  let res: Response;
+  try {
+    res = await fetch(url);
+  } catch (err) {
+    throw new Error(err instanceof Error ? err.message : 'Failed to fetch');
+  }
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error || `Request failed (${res.status})`);

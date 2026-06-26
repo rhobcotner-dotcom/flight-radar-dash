@@ -580,6 +580,36 @@ body {
   font-size: 1.08rem;
 }
 
+.flight-list-panel-header {
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.flight-list-panel-header .panel-header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.flight-list-panel-header .panel-minimize-btn {
+  flex-shrink: 0;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.78rem;
+}
+
+.flight-list-panel.is-minimized {
+  min-height: 0;
+}
+
+.flight-list-panel.is-minimized .flight-list-panel-header {
+  margin-bottom: 0;
+}
+
+.map-overlay-flights:has(.flight-list-panel.is-minimized) {
+  max-height: none;
+}
+
 .flight-list-panel .panel-header .muted {
   font-size: 0.92rem;
 }
@@ -1082,12 +1112,170 @@ body {
   cursor: crosshair;
 }
 
+.storm-cell-glow-core {
+  animation: storm-cell-glow-core 2.4s ease-in-out infinite;
+}
+
+.storm-cell-glow-pulse {
+  animation: storm-cell-glow-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes storm-cell-glow-core {
+  0%,
+  100% {
+    fill-opacity: 0.12;
+    stroke-opacity: 0.75;
+  }
+  50% {
+    fill-opacity: 0.28;
+    stroke-opacity: 1;
+  }
+}
+
+@keyframes storm-cell-glow-pulse {
+  0%,
+  100% {
+    fill-opacity: 0.04;
+    stroke-opacity: 0.35;
+  }
+  50% {
+    fill-opacity: 0.14;
+    stroke-opacity: 0.7;
+  }
+}
+
+.leaflet-overlay-pane path.storm-cell-glow-core {
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.85)) drop-shadow(0 0 22px rgba(14, 165, 233, 0.45));
+}
+
+.leaflet-overlay-pane path.storm-cell-glow-pulse {
+  filter: drop-shadow(0 0 16px rgba(125, 211, 252, 0.35));
+}
+
+/* Fun: radar noir — dense B&W checker + luminance storm echoes */
+.flight-map-radar-noir.leaflet-container {
+  background-color: #030303;
+  background-image:
+    linear-gradient(45deg, #101010 25%, transparent 25%),
+    linear-gradient(-45deg, #101010 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #101010 75%),
+    linear-gradient(-45deg, transparent 75%, #101010 75%);
+  background-size: 6px 6px;
+  background-position: 0 0, 0 3px, 3px -3px, -3px 0;
+}
+
+.flight-map-radar-noir .leaflet-tile-pane {
+  filter: grayscale(100%) brightness(0.2) contrast(1.1);
+  opacity: 0.4;
+}
+
+.flight-map-radar-noir .leaflet-pane .radar-overlay-tiles img.leaflet-tile {
+  filter: url(#radar-noir-storm) blur(0.35px);
+  mix-blend-mode: screen;
+  opacity: 0.98;
+  image-rendering: auto;
+}
+
+.flight-map-radar-noir .leaflet-overlay-pane,
+.flight-map-radar-noir .leaflet-marker-pane,
+.flight-map-radar-noir .leaflet-shadow-pane,
+.flight-map-radar-noir .leaflet-popup-pane,
+.flight-map-radar-noir .leaflet-tooltip-pane {
+  filter: grayscale(100%);
+}
+
+.flight-map-radar-noir path.storm-cell-glow-core,
+.flight-map-radar-noir path.storm-cell-glow-pulse {
+  stroke: #f5f5f5 !important;
+  fill: #ffffff !important;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 22px rgba(255, 255, 255, 0.35));
+}
+
+.flight-map-radar-noir .storm-cell-glow-core {
+  animation-name: storm-cell-glow-core-noir;
+}
+
+.flight-map-radar-noir .storm-cell-glow-pulse {
+  animation-name: storm-cell-glow-pulse-noir;
+}
+
+@keyframes storm-cell-glow-core-noir {
+  0%,
+  100% {
+    fill-opacity: 0.14;
+    stroke-opacity: 0.7;
+  }
+  50% {
+    fill-opacity: 0.32;
+    stroke-opacity: 1;
+  }
+}
+
+@keyframes storm-cell-glow-pulse-noir {
+  0%,
+  100% {
+    fill-opacity: 0.05;
+    stroke-opacity: 0.35;
+  }
+  50% {
+    fill-opacity: 0.16;
+    stroke-opacity: 0.65;
+  }
+}
+
+.flight-map-radar-noir .storm-click-hint-tooltip {
+  filter: none;
+}
+
+.lightning-marker.leaflet-div-icon {
+  background: transparent;
+  border: none;
+}
+
+.lightning-bolt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 6px rgba(186, 230, 253, 0.55));
+  pointer-events: none;
+}
+
+.lightning-marker-fresh .lightning-bolt {
+  animation: lightning-flash 1.4s ease-in-out infinite;
+}
+
+@keyframes lightning-flash {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  12%,
+  18% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  28% {
+    opacity: 0.7;
+    transform: scale(0.96);
+  }
+  38% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
 .storm-analysis-leaflet-popup .leaflet-popup-content-wrapper {
   background: rgba(15, 23, 42, 0.97);
   color: #e2e8f0;
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 12px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  overflow: visible;
+}
+
+.storm-analysis-leaflet-popup .leaflet-popup-content {
+  overflow: visible;
 }
 
 .storm-analysis-leaflet-popup .leaflet-popup-tip {
@@ -1099,8 +1287,222 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  max-height: 420px;
+  max-height: min(72vh, 560px);
   overflow: auto;
+}
+
+.storm-analysis-brief {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.storm-analysis-hazards {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.storm-analysis-cameras {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  overflow: visible;
+}
+
+.storm-analysis-cameras-title {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.storm-analysis-camera-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.55rem;
+  overflow: visible;
+}
+
+.storm-analysis-cam {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+}
+
+.storm-analysis-cam-media {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.storm-analysis-cam:hover {
+  z-index: 10000;
+}
+
+.storm-analysis-cam:hover .storm-analysis-cam-media {
+  overflow: visible;
+}
+
+.storm-analysis-cam:hover .storm-analysis-cam-media .camera-preview-media,
+.storm-analysis-cam:hover .storm-analysis-cam-media > .camera-preview-unavailable {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: min(1120px, 95vw);
+  height: min(704px, 90vh);
+  max-width: 95vw;
+  max-height: 90vh;
+  aspect-ratio: 16 / 10;
+  transform: translate(-50%, -50%);
+  z-index: 10001;
+  box-shadow:
+    0 0 0 2px rgba(56, 189, 248, 0.55),
+    0 24px 80px rgba(0, 0, 0, 0.88);
+  border-radius: 10px;
+  pointer-events: none;
+  background: #020617;
+  overflow: hidden;
+}
+
+.storm-analysis-cam:hover .storm-analysis-cam-media .camera-preview-video-host,
+.storm-analysis-cam:hover .storm-analysis-cam-media .video-js {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  aspect-ratio: auto;
+}
+
+.storm-analysis-cam-media .camera-preview-media {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.storm-analysis-cam:hover .storm-analysis-cam-media .camera-preview-image,
+.storm-analysis-cam:hover .storm-analysis-cam-media .camera-preview-video-host video,
+.storm-analysis-cam:hover .storm-analysis-cam-media .video-js .vjs-tech {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  border-radius: 0;
+  background: #020617;
+}
+
+.storm-analysis-cam:hover .storm-analysis-cam-media .camera-preview-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  font-size: 1rem;
+  background: #020617;
+}
+
+.storm-analysis-cam-label {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.storm-analysis-cam-video,
+.storm-analysis-cam-video.camera-preview-video,
+.storm-analysis-cam-video.camera-preview-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 88px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #0f172a;
+}
+
+.storm-analysis-cam .video-js {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 88px;
+  border-radius: 8px;
+  background: #0f172a;
+}
+
+.storm-analysis-cam .video-js .vjs-tech {
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.storm-analysis-cam .camera-preview-media {
+  position: relative;
+  width: 100%;
+  min-height: 88px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.storm-analysis-cam .camera-preview-unavailable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  aspect-ratio: 16 / 10;
+  border-radius: 8px;
+  background: #0f172a;
+}
+
+.storm-analysis-cam .camera-preview-loading {
+  font-size: 0.72rem;
+  padding: 0.35rem 0;
+}
+
+.storm-analysis-cam .video-js .vjs-loading-spinner,
+.storm-analysis-cam .video-js.vjs-waiting .vjs-loading-spinner {
+  display: none;
+}
+
+.storm-analysis-cam .camera-preview-video-host,
+.storm-analysis-cam .camera-preview-video-host video,
+.camera-preview-video-host {
+  width: 100%;
+  height: 100%;
+  min-height: 88px;
+  border-radius: 8px;
+  background: #0f172a;
+  display: block;
+}
+
+.storm-analysis-cam .camera-preview-video-host {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  border-radius: 8px;
+}
+
+.storm-analysis-cam .camera-preview-video-host video,
+.camera-preview-video-host video {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #0f172a;
+  display: block;
 }
 
 .storm-analysis-kicker {
@@ -1165,6 +1567,21 @@ body {
 
 .leaflet-tooltip.map-weather-click-tooltip::before {
   border-top-color: #38bdf8;
+}
+
+.leaflet-tooltip.storm-click-hint-tooltip {
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid #64748b;
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.storm-click-hint {
+  white-space: nowrap;
 }
 
 .map-weather-hover-body {
@@ -2714,6 +3131,47 @@ th button {
   background: #fde68a;
 }
 
+.weather-camera-marker {
+  z-index: 340 !important;
+}
+
+.weather-camera-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #5eead4 0%, #14b8a6 100%);
+  border: 2px solid #0f766e;
+  box-shadow:
+    0 0 0 1px rgba(45, 212, 191, 0.45),
+    0 1px 4px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.weather-camera-sun {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #fef9c3;
+  box-shadow: 0 0 4px rgba(254, 249, 195, 0.9);
+}
+
+.camera-marker:hover .weather-camera-dot {
+  transform: scale(1.15);
+  background: linear-gradient(180deg, #99f6e4 0%, #2dd4bf 100%);
+}
+
+.weather-cam-badge {
+  font-size: 0.75rem;
+  margin-left: 0.35rem;
+}
+
+.weather-cam-layer-status {
+  margin-left: 0.25rem;
+}
+
 .camera-preview-youtube {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -2797,15 +3255,35 @@ th button {
   font-size: 0.75rem;
 }
 
-.camera-preview-video,
-.camera-preview-image {
-  display: block;
+.camera-preview .camera-preview-media {
   width: 100%;
-  max-width: 640px;
-  max-height: 360px;
+  aspect-ratio: 16 / 9;
+  min-height: 180px;
+}
+
+.camera-preview .camera-preview-media > .camera-preview-image,
+.camera-preview .camera-preview-media > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
   object-fit: cover;
-  border-radius: 6px;
-  background: #0f172a;
+}
+
+.storm-analysis-cam .camera-preview-media > .camera-preview-image,
+.storm-analysis-cam .camera-preview-media > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .camera-preview-image.is-loading,
@@ -2813,13 +3291,115 @@ th button {
   opacity: 0.55;
 }
 
-.camera-preview-loading {
+.camera-frame-capture-host {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.camera-preview-media > .camera-preview-loading,
+.camera-preview-media > .camera-modot-offline {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #020617;
+}
+
+.camera-preview-hover-hint {
   font-size: 0.75rem;
-  padding: 0.35rem 0;
+  padding: 0.5rem 0.25rem 0.15rem;
+  text-align: center;
+}
+
+.camera-preview-loading-title {
+  font-size: 0.75rem;
+}
+
+.camera-preview-debug {
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.camera-preview-debug-line {
+  color: #cbd5e1;
+}
+
+.camera-preview-debug-detail {
+  margin-top: 0.2rem;
+  color: #fbbf24;
+}
+
+.camera-preview-debug-failures {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  color: #fca5a5;
+}
+
+.storm-analysis-cam .camera-preview-debug {
+  font-size: 0.62rem;
+}
+
+.camera-preview-modot-fallback {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+.camera-modot-offline {
+  min-height: 200px;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid color-mix(in srgb, #64748b 35%, var(--border));
+  border-radius: 8px;
+  background: color-mix(in srgb, #0f172a 88%, transparent);
+}
+
+.camera-modot-offline-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fca5a5;
+}
+
+.camera-modot-offline-detail {
+  margin: 0 0 0.65rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.camera-modot-offline-detail code {
+  font-size: 0.68rem;
+}
+
+.camera-modot-offline-skip {
+  margin-top: 0.55rem;
+}
+
+.camera-preview-media:has(.camera-preview-video-host.is-playing) .camera-preview-loading,
+.camera-preview-media:has(.camera-preview-video.is-playing) .camera-preview-loading,
+.camera-preview-media:has(.video-js.is-playing) .camera-preview-loading {
+  display: none;
 }
 
 .camera-preview-media {
+  position: relative;
   min-height: 240px;
+  overflow: hidden;
+  background: #020617;
+  border-radius: 6px;
 }
 
 .camera-preview-unavailable {
@@ -2839,6 +3419,24 @@ th button {
   object-fit: cover;
 }
 
+.camera-preview-video-host {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  aspect-ratio: auto;
+  min-height: 0;
+}
+
+.camera-preview-video-host video {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
 .camera-popup {
   display: flex;
   flex-direction: column;
@@ -2847,8 +3445,16 @@ th button {
   max-width: 40rem;
 }
 
-.camera-popup .camera-preview-video {
+.camera-popup .camera-preview-media {
+  width: 100%;
+  min-height: 270px;
+  aspect-ratio: 16 / 9;
+}
+
+.camera-popup .camera-preview-video,
+.camera-popup .camera-preview-image {
   max-width: 100%;
+  max-height: none;
 }
 
 .nwps-flood-normal {

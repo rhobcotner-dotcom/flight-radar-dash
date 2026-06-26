@@ -67,7 +67,12 @@ function mergeCameraPayload(
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  let res: Response;
+  try {
+    res = await fetch(url);
+  } catch (err) {
+    throw new Error(err instanceof Error ? err.message : 'Failed to fetch');
+  }
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error || `Request failed (${res.status})`);
@@ -75,14 +80,36 @@ async function fetchJson<T>(url: string): Promise<T> {
   return data as T;
 }
 
+export interface StormCameraPriority {
+  lat: number;
+  lon: number;
+  /** Changes when a new storm cell is clicked. */
+  key: string;
+}
+
+/** ~35 mi box around a storm click for immediate regional camera load. */
+function stormPriorityBounds(lat: number, lon: number): MapViewportBounds {
+  const latDelta = 35 / 69;
+  const lonDelta = 35 / (69 * Math.max(Math.cos((lat * Math.PI) / 180), 0.25));
+  return {
+    west: lon - lonDelta,
+    south: lat - latDelta,
+    east: lon + lonDelta,
+    north: lat + latDelta,
+    zoom: 10,
+  };
+}
+
 export function useViewportCameras(
   homeQueryString: string,
   bounds: MapViewportBounds | null,
-  enabled = true
+  enabled = true,
+  stormPriority: StormCameraPriority | null = null
 ) {
   const [cameras, setCameras] = useState<TrafficCameraPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const requestRef = useRef(0);
+  const stormRequestRef = useRef(0);
   const pollRef = useRef<number | null>(null);
   const effectiveBounds = bounds ?? CONUS_BOUNDS;
   const boundsKey = useMemo(() => stableBoundsKey(effectiveBounds), [effectiveBounds]);
@@ -103,21 +130,16 @@ export function useViewportCameras(
     }
 
     const reqId = ++requestRef.current;
-    const homeParams = new URLSearchParams(homeQueryString);
-    const homeLat = Number(homeParams.get('lat'));
-    const homeLon = Number(homeParams.get('lon'));
     const params = new URLSearchParams(homeQueryString);
     params.set('west', effectiveBounds.west.toFixed(4));
     params.set('south', effectiveBounds.south.toFixed(4));
     params.set('east', effectiveBounds.east.toFixed(4));
     params.set('north', effectiveBounds.north.toFixed(4));
-    if (Number.isFinite(homeLat) && Number.isFinite(homeLon)) {
-      params.set('lat', homeLat.toFixed(4));
-      params.set('lon', homeLon.toFixed(4));
-    } else {
-      params.set('lat', ((effectiveBounds.south + effectiveBounds.north) / 2).toFixed(4));
-      params.set('lon', ((effectiveBounds.west + effectiveBounds.east) / 2).toFixed(4));
-    }
+    // Sort/thin by viewport center so panned views get local pins, not cameras closest to home.
+    const sortLat = (effectiveBounds.south + effectiveBounds.north) / 2;
+    const sortLon = (effectiveBounds.west + effectiveBounds.east) / 2;
+    params.set('lat', sortLat.toFixed(4));
+    params.set('lon', sortLon.toFixed(4));
     params.set('limit', String(cameraLimitForZoom(effectiveBounds.zoom, effectiveBounds)));
 
     const url = `/api/live/traffic-cameras?${params.toString()}`;
@@ -149,6 +171,35 @@ export function useViewportCameras(
       clearPoll();
     };
   }, [enabled, boundsKey, homeQueryString, bounds, clearPoll]);
+
+  useEffect(() => {
+    if (!enabled || !stormPriority) return undefined;
+
+    const reqId = ++stormRequestRef.current;
+    const priorityBounds = stormPriorityBounds(stormPriority.lat, stormPriority.lon);
+    const params = new URLSearchParams(homeQueryString);
+    params.set('west', priorityBounds.west.toFixed(4));
+    params.set('south', priorityBounds.south.toFixed(4));
+    params.set('east', priorityBounds.east.toFixed(4));
+    params.set('north', priorityBounds.north.toFixed(4));
+    params.set('lat', stormPriority.lat.toFixed(4));
+    params.set('lon', stormPriority.lon.toFixed(4));
+    params.set('limit', '96');
+
+    const url = `/api/live/traffic-cameras?${params.toString()}`;
+
+    void fetchJson<TrafficCameraPayload>(url)
+      .then((data) => {
+        if (reqId !== stormRequestRef.current) return;
+        setCameras((prev) => mergeCameraPayload(prev, data));
+        setError(null);
+      })
+      .catch(() => {
+        /* storm priority is best-effort; viewport fetch remains primary */
+      });
+
+    return undefined;
+  }, [enabled, homeQueryString, stormPriority?.key, stormPriority, clearPoll]);
 
   return { cameras, error };
 }

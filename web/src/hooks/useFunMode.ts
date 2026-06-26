@@ -19,19 +19,12 @@ import {
 } from '../lib/fun/funCalculations';
 import {
   dailyRouletteCallsign,
-  heloBingoWon,
-  loadHeloBingo,
-  loadSquawkBingo,
   matchCelebrity,
   matchRoulette,
   newPlaneOrUfoRound,
-  updateHeloBingoFromFlights,
-  updateSquawkBingo,
   loadQuakePoll,
   saveQuakePoll,
-  type HeloBingoState,
   type PlaneOrUfoRound,
-  type SquawkBingoState,
 } from '../lib/fun/funGames';
 import { startWindChimes, stopWindChimes, unlockWindChimes } from '../lib/fun/windChimes';
 
@@ -48,6 +41,7 @@ export interface FunSettings {
   catMode: boolean;
   celebrityStalker: boolean;
   roulette: boolean;
+  radarNoir: boolean;
 }
 
 export interface FunStatusPayload {
@@ -70,6 +64,7 @@ const FUN_STORAGE: Record<keyof FunSettings, string> = {
   catMode: 'cat-mode',
   celebrityStalker: 'celebrity',
   roulette: 'roulette',
+  radarNoir: 'radar-noir',
 };
 
 function readFunFlag(key: keyof FunSettings, fallback: boolean) {
@@ -104,6 +99,7 @@ const DEFAULT_SETTINGS: FunSettings = {
   catMode: false,
   celebrityStalker: true,
   roulette: true,
+  radarNoir: false,
 };
 
 interface Options {
@@ -146,11 +142,10 @@ export function useFunMode({
     catMode: readFunFlag('catMode', DEFAULT_SETTINGS.catMode),
     celebrityStalker: readFunFlag('celebrityStalker', DEFAULT_SETTINGS.celebrityStalker),
     roulette: readFunFlag('roulette', DEFAULT_SETTINGS.roulette),
+    radarNoir: readFunFlag('radarNoir', DEFAULT_SETTINGS.radarNoir),
   }));
   const [funStatus, setFunStatus] = useState<FunStatusPayload | null>(null);
   const [funToasts, setFunToasts] = useState<HearingToast[]>([]);
-  const [heloBingo, setHeloBingo] = useState<HeloBingoState>(() => loadHeloBingo());
-  const [squawkBingo, setSquawkBingo] = useState<SquawkBingoState>(() => loadSquawkBingo());
   const [planeOrUfo, setPlaneOrUfo] = useState<PlaneOrUfoRound | null>(null);
   const [planeOrUfoScore, setPlaneOrUfoScore] = useState({ correct: 0, total: 0 });
   const [quakePoll, setQuakePoll] = useState(() => loadQuakePoll());
@@ -271,20 +266,6 @@ export function useFunMode({
   }, [area.lat, area.lon, enabled, pushFunToast, settings.issWave]);
 
   useEffect(() => {
-    if (!enabled) return;
-    setHeloBingo((prev) => updateHeloBingoFromFlights(flights, prev));
-    setSquawkBingo((prev) => updateSquawkBingo(flights, prev));
-  }, [enabled, flights]);
-
-  useEffect(() => {
-    if (!enabled || !heloBingoWon(heloBingo)) return;
-    const key = `bingo-${heloBingo.date}`;
-    if (notifiedRef.current.has(key)) return;
-    notifiedRef.current.add(key);
-    pushFunToast('BLACK HELICOPTER BINGO!', 'You win nothing except bragging rights.');
-  }, [enabled, heloBingo, pushFunToast]);
-
-  useEffect(() => {
     if (!enabled || !settings.celebrityStalker) return;
     for (const flight of flights) {
       const celeb = matchCelebrity(flight);
@@ -370,8 +351,6 @@ export function useFunMode({
     disasterActive,
     werewolfActive,
     kpClass,
-    heloBingo,
-    squawkBingo,
     rouletteTarget,
     planeOrUfo,
     planeOrUfoScore,

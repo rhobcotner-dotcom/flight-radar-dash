@@ -41,6 +41,7 @@ function normalizeRailCamera(row) {
     liveUrl: embedUrl,
     youtubeId: row.youtubeId,
     sourceLiveUrl: `https://www.youtube.com/watch?v=${row.youtubeId}`,
+    previewUrl: `https://img.youtube.com/vi/${row.youtubeId}/hqdefault.jpg`,
     mediaType: 'youtube',
     camKind: 'rail',
     source: row.source || 'Rail cam',

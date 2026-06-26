@@ -12,6 +12,24 @@
     />
   </head>
   <body>
+    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true" focusable="false" style="position: absolute">
+      <defs>
+        <filter id="radar-noir-storm" color-interpolation-filters="sRGB">
+          <feColorMatrix
+            type="matrix"
+            values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"
+          />
+          <feComponentTransfer>
+            <feFuncR type="table" tableValues="0 0.06 0.18 0.34 0.52 0.72 0.9 1" />
+            <feFuncG type="table" tableValues="0 0.06 0.18 0.34 0.52 0.72 0.9 1" />
+            <feFuncB type="table" tableValues="0 0.06 0.18 0.34 0.52 0.72 0.9 1" />
+          </feComponentTransfer>
+          <feComponentTransfer>
+            <feFuncA type="linear" slope="1.2" intercept="-0.08" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+    </svg>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

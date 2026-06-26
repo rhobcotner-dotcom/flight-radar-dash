@@ -3,6 +3,7 @@ import type { Alert, AirportHub, Flight } from '../types';
 import type { MapViewportBounds } from '../lib/mapViewport';
 import { stableViewportKey, viewportSearchParams } from '../lib/mapViewport';
 import { flightListsEqual, mergeFlightList } from '../lib/mergeFlights';
+import { friendlyApiError } from '../lib/panelHelp';
 
 interface MapRefreshPayload {
   flights: Flight[];
@@ -125,14 +126,21 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
         setFetchedAt(data.fetchedAt || new Date().toISOString());
         setInViewCount(data.count ?? incoming.length);
         setHomeCount(data.homeCount ?? 0);
+        setError(null);
         setDataWarning(data.dataWarning || null);
         setHasLoaded(true);
         if (options.snapshot !== false && !options.silent) {
           setTrendsKey((k) => k + 1);
         }
       } catch (err) {
+        const message = friendlyApiError(err instanceof Error ? err.message : 'Unknown error');
         if (!options.silent) {
-          setError(err instanceof Error ? err.message : 'Unknown error');
+          if (hasLoaded) {
+            setDataWarning(message);
+            setError(null);
+          } else {
+            setError(message);
+          }
         }
       } finally {
         if (showLoading) {
@@ -187,6 +195,12 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
 
     return () => window.clearInterval(id);
   }, [autoRefreshSeconds, hasLoaded, refreshMap]);
+
+  useEffect(() => {
+    if (!dataWarning) return undefined;
+    const id = window.setTimeout(() => setDataWarning(null), 12_000);
+    return () => window.clearTimeout(id);
+  }, [dataWarning]);
 
   return {
     flights,

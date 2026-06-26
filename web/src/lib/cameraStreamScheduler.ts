@@ -1,9 +1,9 @@
 import type { MapViewportBounds } from './mapViewport';
 
 export type CameraStreamTier = 'inView' | 'nearby' | 'distant';
-export type CameraStreamReason = 'tooltip' | 'popup';
+export type CameraStreamReason = 'storm' | 'popup' | 'tooltip';
 
-export const CAMERA_STREAM_MAX_CONCURRENT = 4;
+export const CAMERA_STREAM_MAX_CONCURRENT = 6;
 export const CAMERA_STREAM_STAGGER_MS = 400;
 export const CAMERA_STREAM_NEARBY_BUFFER = 0.35;
 export const CAMERA_STREAM_HOVER_DELAY_MS = 200;
@@ -56,11 +56,12 @@ export function compareStreamRequests(
   a: { tier: CameraStreamTier; distance: number; reason: CameraStreamReason },
   b: { tier: CameraStreamTier; distance: number; reason: CameraStreamReason }
 ) {
-  const tierRank: Record<CameraStreamTier, number> = { inView: 0, nearby: 1, distant: 2 };
-  const reasonRank: Record<CameraStreamReason, number> = { popup: 0, tooltip: 1 };
-  const tierDiff = tierRank[a.tier] - tierRank[b.tier];
-  if (tierDiff !== 0) return tierDiff;
+  const reasonRank: Record<CameraStreamReason, number> = { storm: 0, popup: 1, tooltip: 2 };
   const reasonDiff = reasonRank[a.reason] - reasonRank[b.reason];
   if (reasonDiff !== 0) return reasonDiff;
+
+  const tierRank: Record<CameraStreamTier, number> = { inView: 0, nearby: 1, distant: 2 };
+  const tierDiff = tierRank[a.tier] - tierRank[b.tier];
+  if (tierDiff !== 0) return tierDiff;
   return a.distance - b.distance;
 }

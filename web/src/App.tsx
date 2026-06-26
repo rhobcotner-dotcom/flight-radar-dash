@@ -39,7 +39,8 @@ export default function App() {
     () => flights.filter((flight) => (flight.distanceMiles ?? Infinity) <= area.radiusMiles),
     [flights, area.radiusMiles]
   );
-  const { trains, counts, freightHints } = useTrains(queryString, true);
+  const { trains, counts, freightHints, fetchedAt: trainsFetchedAt, refreshSeconds: trainRefreshSeconds } =
+    useTrains(queryString, true);
   const { weather } = useWeather(area.lat, area.lon);
   const {
     toasts,
@@ -59,7 +60,7 @@ export default function App() {
   } = useB52Alerts({
     b52Flights,
     flights,
-    enabled: true,
+    enabled: false,
     alertsEnabled,
     soundEnabled,
   });
@@ -125,6 +126,9 @@ export default function App() {
           mapFetchedAt={fetchedAt}
           inViewCount={inViewCount}
           onViewportChange={setViewportBounds}
+          autoRefreshSeconds={autoRefreshSeconds}
+          trainsFetchedAt={trainsFetchedAt}
+          trainRefreshSeconds={trainRefreshSeconds}
         />
       </div>
 

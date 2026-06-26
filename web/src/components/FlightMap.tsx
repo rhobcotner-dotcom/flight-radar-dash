@@ -5,9 +5,15 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { useHighlight } from '../hooks/useHighlight';
 import type { AreaSettings, Flight, Satellite, Train, WeatherConditions } from '../types';
 import type { TrafficCameraPayload } from '../lib/mapLayers';
-import { flightKey, isSquawk7700 } from '../lib/flightUtils';
+import { flightKey, isSquawk7700, knotsToMph } from '../lib/flightUtils';
 import { trainKey } from '../lib/trainUtils';
 import { satelliteKey } from '../lib/satelliteUtils';
+import { parseTrainHeadingDeg } from '../lib/trackSmoothing';
+import {
+  TrackSmoothingProvider,
+  useAnimatedMarkerPosition,
+  useTrackSmoothingCleanup,
+} from '../hooks/useTrackSmoothing';
 import { isLikelyMilGov } from '../lib/military';
 import { FlightDetails } from './FlightDetails';
 import { TrainDetails } from './TrainDetails';
@@ -27,13 +33,14 @@ import {
   INaturalistLayer,
   RiverForecastLayer,
   TrafficCameraLayer,
+  WeatherCameraLayer,
   RailCameraLayer,
   TransitLayer,
   WeatherAlertPolygonLayer,
   WildfireLayer,
 } from './MapOverlayLayers';
 import { useMapLayers } from '../hooks/useMapLayers';
-import { useViewportCameras } from '../hooks/useViewportCameras';
+import { useViewportCameras, type StormCameraPriority } from '../hooks/useViewportCameras';
 import { useViewportRailCameras } from '../hooks/useViewportRailCameras';
 import type { MapViewportBounds } from '../lib/mapViewport';
 import { stableViewportKey, viewportFromArea } from '../lib/mapViewport';
@@ -46,6 +53,7 @@ import { MAP_LAYER_HELP, PANEL_HELP } from '../lib/panelHelp';
 import { LayerToggle, PanelTip } from './PanelTip';
 import { FunMapLayers } from './FunMapLayers';
 import type { useFunMode } from '../hooks/useFunMode';
+import type { AutoRefreshSeconds } from '../hooks/useFlights';
 import {
   buildFlightMapIcon,
   buildFlightMapIconPlaceholder,
@@ -67,6 +75,8 @@ const FLIGHT_TOOLTIP_OPTIONS: TooltipOptions = {
 const RADAR_ENABLED_KEY = 'flight-radar-dash-radar-enabled';
 const SATELLITES_ENABLED_KEY = 'flight-radar-dash-satellites-enabled';
 const LAYER_KEYS = {
+  flights: 'flight-radar-dash-layer-flights',
+  rail: 'flight-radar-dash-layer-rail',
   weatherAlerts: 'flight-radar-dash-layer-weather-alerts',
   lightning: 'flight-radar-dash-layer-lightning',
   helos: 'flight-radar-dash-layer-helos',
@@ -77,6 +87,7 @@ const LAYER_KEYS = {
   earthquakes: 'flight-radar-dash-layer-earthquakes',
   wildfires: 'flight-radar-dash-layer-wildfires',
   cameras: 'flight-radar-dash-layer-cameras',
+  weatherCameras: 'flight-radar-dash-layer-weather-cameras',
   railCameras: 'flight-radar-dash-layer-rail-cameras',
   riverForecast: 'flight-radar-dash-layer-river-forecast',
   ebird: 'flight-radar-dash-layer-ebird',
@@ -208,21 +219,42 @@ const FlightMarker = memo(function FlightMarker({
   highlighted,
   helosEnabled,
   mapHandlers,
+  flightRefreshIntervalMs,
+  flightAnchorKey,
 }: {
   flight: Flight;
   highlighted: boolean;
   helosEnabled: boolean;
   mapHandlers?: MapHighlightHandlers;
+  flightRefreshIntervalMs: number;
+  flightAnchorKey?: string | null;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
   const military = isLikelyMilGov(flight);
   const emergency = isSquawk7700(flight);
   const heloKind = helosEnabled ? classifyHelicopter(flight) : null;
+  const motionHint = useMemo(
+    () => ({
+      speedMph: knotsToMph(flight.gspeed),
+      headingDeg: flight.track ?? null,
+    }),
+    [flight.gspeed, flight.track]
+  );
   const [icon, setIcon] = useState<L.DivIcon>(() =>
     buildFlightMapIconPlaceholder(flight, highlighted, military, emergency, heloKind)
   );
   const id = flightKey(flight);
   const [tooltipActive, setTooltipActive] = useState(false);
+
+  useAnimatedMarkerPosition({
+    trackId: id,
+    lat: flight.lat,
+    lon: flight.lon,
+    motionHint,
+    refreshIntervalMs: flightRefreshIntervalMs,
+    anchorKey: flightAnchorKey,
+    markerRef,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -251,10 +283,6 @@ const FlightMarker = memo(function FlightMarker({
     heloKind,
     helosEnabled,
   ]);
-
-  useEffect(() => {
-    markerRef.current?.setLatLng([flight.lat, flight.lon]);
-  }, [flight.lat, flight.lon]);
 
   useEffect(() => {
     markerRef.current?.setIcon(icon);
@@ -303,10 +331,14 @@ const TrainMarker = memo(function TrainMarker({
   train,
   highlighted,
   mapHandlers,
+  trainRefreshIntervalMs,
+  trainAnchorKey,
 }: {
   train: Train;
   highlighted: boolean;
   mapHandlers?: MapHighlightHandlers;
+  trainRefreshIntervalMs: number;
+  trainAnchorKey?: string | null;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
   const icon = useMemo(
@@ -314,10 +346,23 @@ const TrainMarker = memo(function TrainMarker({
     [train.trainKind, train.heading, train.velocityMph, train.crossingStatus, train.railroad, highlighted]
   );
   const id = trainKey(train);
+  const motionHint = useMemo(
+    () => ({
+      speedMph: train.velocityMph ?? null,
+      headingDeg: parseTrainHeadingDeg(train.heading),
+    }),
+    [train.velocityMph, train.heading]
+  );
 
-  useEffect(() => {
-    markerRef.current?.setLatLng([train.lat, train.lon]);
-  }, [train.lat, train.lon]);
+  useAnimatedMarkerPosition({
+    trackId: id,
+    lat: train.lat,
+    lon: train.lon,
+    motionHint,
+    refreshIntervalMs: trainRefreshIntervalMs,
+    anchorKey: trainAnchorKey,
+    markerRef,
+  }  );
 
   useEffect(() => {
     markerRef.current?.setIcon(icon);
@@ -418,9 +463,15 @@ const FlightMapInner = memo(function FlightMapInner({
   viewportBounds,
   cameraStreamBoundsKey,
   onViewportChange,
+  onStormCameraPriority,
   weather,
   fun,
   fullPage = false,
+  smoothMovementEnabled = false,
+  flightRefreshIntervalMs = 0,
+  trainRefreshIntervalMs = 0,
+  mapFetchedAt,
+  trainsFetchedAt,
 }: {
   area: AreaSettings;
   flights: Flight[];
@@ -435,6 +486,8 @@ const FlightMapInner = memo(function FlightMapInner({
   onRadarAttribution: (attribution: { name: string; url: string } | null) => void;
   onRadarError: (message: string | null) => void;
   layerToggles: {
+    flights: boolean;
+    rail: boolean;
     weatherAlerts: boolean;
     lightning: boolean;
     helos: boolean;
@@ -445,6 +498,7 @@ const FlightMapInner = memo(function FlightMapInner({
     earthquakes: boolean;
     wildfires: boolean;
     cameras: boolean;
+    weatherCameras: boolean;
     railCameras: boolean;
     riverForecast: boolean;
     ebird: boolean;
@@ -458,9 +512,15 @@ const FlightMapInner = memo(function FlightMapInner({
   viewportBounds: MapViewportBounds | null;
   cameraStreamBoundsKey: string;
   onViewportChange: (bounds: MapViewportBounds) => void;
+  onStormCameraPriority: (lat: number, lon: number) => void;
   weather: WeatherConditions | null;
   fun: ReturnType<typeof useFunMode>;
   fullPage?: boolean;
+  smoothMovementEnabled?: boolean;
+  flightRefreshIntervalMs?: number;
+  trainRefreshIntervalMs?: number;
+  mapFetchedAt?: string | null;
+  trainsFetchedAt?: string | null;
 }) {
   const focusMiles = area.mapFocusMiles ?? 12;
   const fetchMiles = area.radiusMiles;
@@ -468,13 +528,26 @@ const FlightMapInner = memo(function FlightMapInner({
   const fetchMeters = fetchMiles * 1609.34;
   const homeLabel = area.address || area.name;
   const streamBounds = viewportBounds ?? viewportFromArea(area);
+  const activeTrackIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (layerToggles.flights) {
+      for (const flight of flights) ids.add(flightKey(flight));
+    }
+    if (layerToggles.rail) {
+      for (const train of trains) ids.add(trainKey(train));
+    }
+    return ids;
+  }, [flights, layerToggles.flights, layerToggles.rail, trains]);
 
   return (
+    <TrackSmoothingProvider enabled={smoothMovementEnabled}>
+      <FlightMapTrackCleanup activeTrackIds={activeTrackIds} />
     <MapContainer
       center={[area.lat, area.lon]}
       zoom={12}
-      className={`flight-map${fullPage ? ' flight-map-fullpage' : ''}${fun.werewolfActive ? ' flight-map-werewolf' : ''}${fun.disasterActive ? ' flight-map-disaster' : ''}${fun.settings.solarMoodRing ? ` flight-map-${fun.kpClass}` : ''}`}
+      className={`flight-map${fullPage ? ' flight-map-fullpage' : ''}${fun.werewolfActive ? ' flight-map-werewolf' : ''}${fun.disasterActive ? ' flight-map-disaster' : ''}${fun.settings.solarMoodRing ? ` flight-map-${fun.kpClass}` : ''}${fun.settings.radarNoir ? ' flight-map-radar-noir' : ''}`}
       scrollWheelZoom
+      closePopupOnClick
     >
       <FitToHome area={area} />
       <MapViewportReporter onViewportChange={onViewportChange} />
@@ -491,7 +564,12 @@ const FlightMapInner = memo(function FlightMapInner({
         onAttribution={onRadarAttribution}
         onError={onRadarError}
       />
-      <StormCellClick radarEnabled={radarEnabled} />
+      <StormCellClick
+        radarEnabled={radarEnabled}
+        radarNoir={fun.settings.radarNoir}
+        viewportCameras={cameras}
+        onStormCameraPriority={onStormCameraPriority}
+      />
       {layerToggles.weatherAlerts ? (
         <WeatherAlertPolygonLayer
           key={weatherAlertCollectionKey(mapLayers.weatherAlerts)}
@@ -512,6 +590,7 @@ const FlightMapInner = memo(function FlightMapInner({
       {layerToggles.earthquakes ? <EarthquakeLayer payload={mapLayers.earthquakes} /> : null}
       {layerToggles.wildfires ? <WildfireLayer payload={mapLayers.wildfires} /> : null}
       {layerToggles.cameras ? <TrafficCameraLayer payload={cameras} /> : null}
+      {layerToggles.weatherCameras ? <WeatherCameraLayer payload={cameras} /> : null}
       {layerToggles.railCameras ? <RailCameraLayer payload={railCameras} /> : null}
       {layerToggles.riverForecast ? <RiverForecastLayer payload={mapLayers.riverForecast} /> : null}
       {layerToggles.ebird ? <EbirdLayer payload={mapLayers.ebird} /> : null}
@@ -520,8 +599,8 @@ const FlightMapInner = memo(function FlightMapInner({
       {layerToggles.drought ? <DroughtLayer collection={mapLayers.drought} /> : null}
       <FunMapLayers
         area={area}
-        flights={flights}
-        trains={trains}
+        flights={layerToggles.flights ? flights : []}
+        trains={layerToggles.rail ? trains : []}
         weather={weather}
         settings={fun.settings}
       />
@@ -548,23 +627,31 @@ const FlightMapInner = memo(function FlightMapInner({
           {homeLabel}
         </Tooltip>
       </Marker>
-      {flights.map((flight) => (
-        <FlightMarker
-          key={flightKey(flight)}
-          flight={flight}
-          highlighted={highlightedId === flightKey(flight)}
-          helosEnabled={layerToggles.helos}
-          mapHandlers={mapHandlers}
-        />
-      ))}
-      {trains.map((train) => (
-        <TrainMarker
-          key={trainKey(train)}
-          train={train}
-          highlighted={highlightedId === trainKey(train)}
-          mapHandlers={mapHandlers}
-        />
-      ))}
+      {layerToggles.flights
+        ? flights.map((flight) => (
+            <FlightMarker
+              key={flightKey(flight)}
+              flight={flight}
+              highlighted={highlightedId === flightKey(flight)}
+              helosEnabled={layerToggles.helos}
+              mapHandlers={mapHandlers}
+              flightRefreshIntervalMs={flightRefreshIntervalMs}
+              flightAnchorKey={mapFetchedAt}
+            />
+          ))
+        : null}
+      {layerToggles.rail
+        ? trains.map((train) => (
+            <TrainMarker
+              key={trainKey(train)}
+              train={train}
+              highlighted={highlightedId === trainKey(train)}
+              mapHandlers={mapHandlers}
+              trainRefreshIntervalMs={trainRefreshIntervalMs}
+              trainAnchorKey={trainsFetchedAt}
+            />
+          ))
+        : null}
       {satellites.map((satellite) => (
         <SatelliteMarker
           key={satelliteKey(satellite)}
@@ -575,8 +662,14 @@ const FlightMapInner = memo(function FlightMapInner({
       ))}
       </CameraStreamSchedulerProvider>
     </MapContainer>
+    </TrackSmoothingProvider>
   );
 });
+
+function FlightMapTrackCleanup({ activeTrackIds }: { activeTrackIds: Set<string> }) {
+  useTrackSmoothingCleanup(activeTrackIds);
+  return null;
+}
 
 interface Props {
   area: AreaSettings;
@@ -591,6 +684,9 @@ interface Props {
   inViewCount?: number;
   onViewportChange?: (bounds: MapViewportBounds) => void;
   fullPage?: boolean;
+  autoRefreshSeconds?: AutoRefreshSeconds;
+  trainsFetchedAt?: string | null;
+  trainRefreshSeconds?: number;
 }
 
 export function FlightMap({
@@ -606,10 +702,15 @@ export function FlightMap({
   inViewCount,
   onViewportChange,
   fullPage = false,
+  autoRefreshSeconds = 0,
+  trainsFetchedAt = null,
+  trainRefreshSeconds = 10,
 }: Props) {
   const [mounted, setMounted] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState(() => readRadarFlag(RADAR_ENABLED_KEY, true));
   const [satellitesEnabled, setSatellitesEnabled] = useState(() => readRadarFlag(SATELLITES_ENABLED_KEY, false));
+  const [flightsEnabled, setFlightsEnabled] = useState(() => readLayerFlag(LAYER_KEYS.flights, true));
+  const [railEnabled, setRailEnabled] = useState(() => readLayerFlag(LAYER_KEYS.rail, true));
   const [weatherAlertsEnabled, setWeatherAlertsEnabled] = useState(() =>
     readLayerFlag(LAYER_KEYS.weatherAlerts, true)
   );
@@ -628,6 +729,9 @@ export function FlightMap({
     readLayerFlag(LAYER_KEYS.wildfires, false)
   );
   const [camerasEnabled, setCamerasEnabled] = useState(() => readLayerFlag(LAYER_KEYS.cameras, true));
+  const [weatherCamerasEnabled, setWeatherCamerasEnabled] = useState(() =>
+    readLayerFlag(LAYER_KEYS.weatherCameras, true)
+  );
   const [railCamerasEnabled, setRailCamerasEnabled] = useState(() =>
     readLayerFlag(LAYER_KEYS.railCameras, true)
   );
@@ -654,6 +758,8 @@ export function FlightMap({
   );
   const layerToggles = useMemo(
     () => ({
+      flights: flightsEnabled,
+      rail: railEnabled,
       weatherAlerts: weatherAlertsEnabled,
       lightning: lightningEnabled,
       helos: helosEnabled,
@@ -670,6 +776,8 @@ export function FlightMap({
       drought: droughtEnabled,
     }),
     [
+      flightsEnabled,
+      railEnabled,
       weatherAlertsEnabled,
       lightningEnabled,
       helosEnabled,
@@ -687,10 +795,16 @@ export function FlightMap({
     ]
   );
   const mapDisplayToggles = useMemo(
-    () => ({ ...layerToggles, cameras: camerasEnabled, railCameras: railCamerasEnabled }),
-    [layerToggles, camerasEnabled, railCamerasEnabled]
+    () => ({
+      ...layerToggles,
+      cameras: camerasEnabled,
+      weatherCameras: weatherCamerasEnabled,
+      railCameras: railCamerasEnabled,
+    }),
+    [layerToggles, camerasEnabled, weatherCamerasEnabled, railCamerasEnabled]
   );
   const [viewportBounds, setViewportBounds] = useState<MapViewportBounds | null>(null);
+  const [stormCameraPriority, setStormCameraPriority] = useState<StormCameraPriority | null>(null);
   const cameraStreamBoundsKey = useMemo(
     () => (viewportBounds ? stableViewportKey(viewportBounds) : 'initial'),
     [viewportBounds]
@@ -702,11 +816,22 @@ export function FlightMap({
     },
     [onViewportChange]
   );
+  const handleStormCameraPriority = useCallback((lat: number, lon: number) => {
+    setStormCameraPriority({
+      lat,
+      lon,
+      key: `${lat.toFixed(2)}:${lon.toFixed(2)}:${Date.now()}`,
+    });
+  }, []);
+  const smoothMovementEnabled = autoRefreshSeconds > 0;
+  const flightRefreshIntervalMs = autoRefreshSeconds * 1000;
+  const trainRefreshIntervalMs = trainRefreshSeconds * 1000;
   const mapLayers = useMapLayers(queryString, layerToggles, mounted);
   const { cameras: viewportCameras, error: cameraError } = useViewportCameras(
     queryString,
     viewportBounds,
-    camerasEnabled && mounted
+    (camerasEnabled || weatherCamerasEnabled) && mounted,
+    stormCameraPriority
   );
   const { cameras: viewportRailCameras, error: railCameraError } = useViewportRailCameras(
     queryString,
@@ -751,7 +876,10 @@ export function FlightMap({
             <div>
               <h2>Live map</h2>
               <span className="muted">
-                {(inViewCount ?? flights.length).toLocaleString()} in view · {trains.length} trains
+                {flightsEnabled
+                  ? `${(inViewCount ?? flights.length).toLocaleString()} in view`
+                  : 'Flights hidden'}
+                {railEnabled ? ` · ${trains.length} trains` : ' · Rail hidden'}
                 {helosEnabled && heloCount ? ` · ${heloCount} helos` : ''}
                 {satellitesEnabled && satelliteMeta ? ` · ${satelliteMeta.count} satellites overhead` : ''}
                 {' · '}pan/zoom worldwide · home ring {area.mapFocusMiles ?? 12} mi
@@ -762,6 +890,20 @@ export function FlightMap({
       ) : null}
       <div className={`panel-header map-panel-header map-layer-controls${fullPage ? ' map-layer-controls-float' : ''}`}>
         <div className="map-radar-controls">
+          <LayerToggle
+            label="Flights"
+            tip={MAP_LAYER_HELP.flights}
+            checked={flightsEnabled}
+            onChange={setFlightsEnabled}
+            storageKey={LAYER_KEYS.flights}
+          />
+          <LayerToggle
+            label="Rail"
+            tip={MAP_LAYER_HELP.rail}
+            checked={railEnabled}
+            onChange={setRailEnabled}
+            storageKey={LAYER_KEYS.rail}
+          />
           <LayerToggle
             label="Alerts"
             tip={MAP_LAYER_HELP.weatherAlerts}
@@ -832,6 +974,18 @@ export function FlightMap({
             onChange={setCamerasEnabled}
             storageKey={LAYER_KEYS.cameras}
           />
+          <LayerToggle
+            label="Sky cams"
+            tip={MAP_LAYER_HELP.weatherCameras}
+            checked={weatherCamerasEnabled}
+            onChange={setWeatherCamerasEnabled}
+            storageKey={LAYER_KEYS.weatherCameras}
+          />
+          {weatherCamerasEnabled && viewportCameras?.count ? (
+            <span className="weather-cam-badge weather-cam-layer-status muted" title="Teal sun icons on map">
+              {viewportCameras.cameras.filter((cam) => cam.camKind === 'weather').length} sky
+            </span>
+          ) : null}
           <LayerToggle
             label="Rail cams"
             tip={MAP_LAYER_HELP.railCameras}
@@ -925,12 +1079,26 @@ export function FlightMap({
             viewportBounds={viewportBounds}
             cameraStreamBoundsKey={cameraStreamBoundsKey}
             onViewportChange={handleViewportChange}
+            onStormCameraPriority={handleStormCameraPriority}
             weather={weather}
             fun={fun}
             fullPage={fullPage}
+            smoothMovementEnabled={smoothMovementEnabled}
+            flightRefreshIntervalMs={flightRefreshIntervalMs}
+            trainRefreshIntervalMs={trainRefreshIntervalMs}
+            mapFetchedAt={mapFetchedAt}
+            trainsFetchedAt={trainsFetchedAt}
           />
           {!fullPage ? (
           <div className="map-footer">
+            {flightsEnabled ? (
+              <span className="muted">
+                Aircraft in view: {(inViewCount ?? flights.length).toLocaleString()}
+              </span>
+            ) : null}
+            {railEnabled && trains.length ? (
+              <span className="muted">Trains on map: {trains.length}</span>
+            ) : null}
             {weatherAlertsEnabled && mapLayers.weatherAlerts?.count ? (
               <span className="muted map-tornado-legend">
                 Weather alerts: {mapLayers.weatherAlerts.count}

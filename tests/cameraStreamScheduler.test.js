@@ -38,3 +38,11 @@ test('compareStreamRequests prefers in-view popup over nearby tooltip', () => {
   );
   assert.ok(popup < 0);
 });
+
+test('compareStreamRequests prefers storm briefing over distant popup', () => {
+  const storm = compareStreamRequests(
+    { tier: 'distant', distance: 50, reason: 'storm' },
+    { tier: 'inView', distance: 0, reason: 'popup' }
+  );
+  assert.ok(storm < 0);
+});

@@ -152,7 +152,7 @@ export async function sampleRadarField(lat, lon, radiusMiles = 12) {
     sampleCount: samples.length,
     coreSampleCount: coreSamples.length,
     approxDiameterMiles,
-    hasStorm: clickDbz != null && clickDbz >= STORM_MIN_DBZ,
+    hasStorm: clickDbz != null && peakDbz >= STORM_MIN_DBZ,
     source: clickSample.source,
   };
 }

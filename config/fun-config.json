@@ -17,24 +17,6 @@
     "BOND007",
     "NUCLEAR"
   ],
-  "squawkBingo": [
-    { "code": "1200", "label": "VFR parade mode" },
-    { "code": "7777", "label": "Military formation" },
-    { "code": "4400", "label": "Glider convention" },
-    { "code": "0000", "label": "Suspiciously round" },
-    { "code": "7500", "label": "Hijack (real — don't cheer)" }
-  ],
-  "blackHeloBingo": [
-    "Medevac helo",
-    "News helo",
-    "Law enforcement",
-    "Military/gov",
-    "Unknown helo",
-    "Low hover",
-    "Night ops",
-    "Hospital hop",
-    "Black helicopter"
-  ],
   "meteorShowers": [
     { "name": "Quadrantids", "startMonth": 1, "startDay": 1, "endMonth": 1, "endDay": 5, "radiantRa": 230, "radiantDec": 49 },
     { "name": "Lyrids", "startMonth": 4, "startDay": 16, "endMonth": 4, "endDay": 25, "radiantRa": 271, "radiantDec": 34 },

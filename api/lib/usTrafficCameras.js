@@ -1,14 +1,19 @@
 import { boundingBox, distanceMiles } from '../../lib/geo.js';
 import { cameraHlsPlaybackUrl } from './cameraStreamProxy.js';
-import { selectWorkingLiveCameras, isKnownDeadStream, isKnownGoodStream } from './cameraStreamValidation.js';
+import { selectWorkingLiveCameras, isKnownDeadStream } from './cameraStreamValidation.js';
 import {
   CACHE_MS,
   camerasInBbox,
   dedupeCameras,
-  isUsableCamera,
+  isModotRtplexStreamUrl,
+  isMapVisibleCamera,
+  isStormEligibleCamera,
+  isWestOfStLouisMississippi,
   isWideViewport,
+  modotRtplexSnapshotUrl,
   STATE_BOUNDS,
   statesInBbox,
+  STL_MISSISSIPPI_LON,
   thinCameras,
   thinCamerasByState,
 } from './cameraSources/helpers.js';
@@ -44,6 +49,7 @@ function cacheKeyForRequest(bbox, limit, centerLat, centerLon) {
   const poolBucket = nationwidePool.partial ? 'p0' : nationwidePool.cameras.length ? 'p1' : 'p-';
   const verifiedBucket = verifiedPool.cameras.length ? 'v1' : 'v0';
   return [
+    'snap5',
     quantize(bbox.west, 2),
     quantize(bbox.south, 2),
     quantize(bbox.east, 2),
@@ -57,16 +63,63 @@ function cacheKeyForRequest(bbox, limit, centerLat, centerLon) {
   ].join(':');
 }
 
+function hlsSourceUrl(cam) {
+  if (cam.sourceLiveUrl?.startsWith('http')) return cam.sourceLiveUrl;
+  if (cam.liveUrl?.startsWith('http')) return cam.liveUrl;
+  if (cam.liveUrl?.startsWith('/api/live/camera-hls?')) {
+    try {
+      const raw = new URL(cam.liveUrl, 'http://localhost').searchParams.get('url');
+      return raw ? decodeURIComponent(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function ensureMapPreviewUrls(cam) {
+  if (cam.previewUrl) return cam;
+  if (cam.mediaType === 'snapshot') {
+    const raw = cam.sourceLiveUrl || cam.liveUrl;
+    return raw ? { ...cam, previewUrl: cameraPreviewUrl(raw, 'snapshot') } : cam;
+  }
+  if (cam.mediaType === 'hls') {
+    const rawPreview = modotRtplexSnapshotUrl(hlsSourceUrl(cam));
+    if (rawPreview) {
+      return { ...cam, previewUrl: cameraPreviewUrl(rawPreview, 'snapshot') };
+    }
+  }
+  if (cam.mediaType === 'youtube') {
+    const thumb = cam.previewUrl || (cam.youtubeId ? `https://img.youtube.com/vi/${cam.youtubeId}/hqdefault.jpg` : null);
+    if (thumb) return { ...cam, previewUrl: cameraPreviewUrl(thumb, 'snapshot') };
+  }
+  return cam;
+}
+
 function mapPlaybackCameras(cameras) {
   return cameras.map((cam) => {
     const sourceLiveUrl = cam.liveUrl;
     if (cam.mediaType === 'hls') {
-      const playbackUrl = cameraHlsPlaybackUrl(cam.liveUrl);
+      const modotDirect =
+        isModotRtplexStreamUrl(sourceLiveUrl) && isWestOfStLouisMississippi(cam.lon);
+      const playbackUrl = modotDirect ? sourceLiveUrl : cameraHlsPlaybackUrl(cam.liveUrl);
+      const rawPreview =
+        cam.previewUrl || modotRtplexSnapshotUrl(hlsSourceUrl({ ...cam, sourceLiveUrl: cam.liveUrl }));
+      const previewUrl = rawPreview ? cameraPreviewUrl(rawPreview, 'snapshot') : null;
       return {
         ...cam,
         sourceLiveUrl,
         liveUrl: playbackUrl,
         streamUrl: playbackUrl,
+        previewUrl,
+      };
+    }
+    if (cam.mediaType === 'youtube') {
+      const thumb = cam.previewUrl || (cam.youtubeId ? `https://img.youtube.com/vi/${cam.youtubeId}/hqdefault.jpg` : null);
+      return {
+        ...cam,
+        sourceLiveUrl,
+        previewUrl: thumb ? cameraPreviewUrl(thumb, 'snapshot') : null,
       };
     }
     const previewUrl = cameraPreviewUrl(cam.liveUrl, 'snapshot');
@@ -75,6 +128,7 @@ function mapPlaybackCameras(cameras) {
       sourceLiveUrl,
       liveUrl: previewUrl,
       streamUrl: previewUrl,
+      previewUrl,
     };
   });
 }
@@ -104,8 +158,16 @@ function sortCamerasStable(cameras, centerLat, centerLon) {
     });
 }
 
+function preferWestOfMississippi(cameras, centerLon) {
+  if (!Number.isFinite(centerLon) || centerLon >= STL_MISSISSIPPI_LON) return cameras;
+  const west = cameras.filter((cam) => isWestOfStLouisMississippi(cam.lon));
+  if (!west.length) return cameras;
+  const east = cameras.filter((cam) => !isWestOfStLouisMississippi(cam.lon));
+  return [...west, ...east];
+}
+
 function selectForViewport(cameras, bbox, limit, centerLat, centerLon) {
-  const sorted = sortCamerasStable(cameras, centerLat, centerLon);
+  const sorted = sortCamerasStable(preferWestOfMississippi(cameras, centerLon), centerLat, centerLon);
   if (isWideViewport(bbox)) {
     return thinCamerasByState(sorted, bbox, limit, centerLat, centerLon);
   }
@@ -114,36 +176,47 @@ function selectForViewport(cameras, bbox, limit, centerLat, centerLon) {
 
 function regionalPoolFromRaw(pool, bbox, centerLat, centerLon) {
   const inBbox = sortCamerasStable(camerasInBbox(pool.cameras, bbox), centerLat, centerLon);
-  const playable = inBbox.filter((cam) => {
-    if (cam.mediaType === 'snapshot') return true;
-    if (isKnownDeadStream(cam.liveUrl)) return false;
-    return isKnownGoodStream(cam.liveUrl);
-  });
+  const playable = inBbox.filter(
+    (cam) => cam.mediaType === 'snapshot' || !isKnownDeadStream(cam.sourceLiveUrl || cam.liveUrl)
+  );
+  const live = playable.filter((cam) => cam.mediaType === 'hls' || cam.mediaType === 'youtube');
   const snapshots = playable.filter((cam) => cam.mediaType === 'snapshot');
-  const live = playable.filter((cam) => cam.mediaType === 'hls');
-  return [...snapshots, ...live];
+  return [...live, ...snapshots];
 }
 
 function selectCamerasForRequest({ verified, pool, bbox, limit, centerLat, centerLon }) {
-  if (verified.length) {
-    const verifiedInView = selectForViewport(camerasInBbox(verified, bbox), bbox, limit, centerLat, centerLon);
-    if (verifiedInView.length >= Math.min(limit, 8)) {
-      return verifiedInView;
-    }
+  const regionalPool = regionalPoolFromRaw(pool, bbox, centerLat, centerLon);
+  const mappedRegional = mapPlaybackCameras(regionalPool);
 
-    const regionalPool = regionalPoolFromRaw(pool, bbox, centerLat, centerLon);
-    const snapshotBackfill = selectForViewport(
-      mapPlaybackCameras(regionalPool.filter((cam) => cam.mediaType === 'snapshot')),
-      bbox,
-      limit,
-      centerLat,
-      centerLon
+  const snapshots = mappedRegional.filter((cam) => cam.mediaType === 'snapshot');
+  const liveCount = mappedRegional.filter((cam) => cam.mediaType === 'hls').length;
+  const snapQuota =
+    liveCount >= limit
+      ? 0
+      : Math.min(snapshots.length, Math.max(3, Math.ceil(limit * 0.15)));
+  const verifiedInView = verified.length
+    ? selectForViewport(camerasInBbox(verified, bbox), bbox, limit, centerLat, centerLon)
+    : [];
+
+  let hlsPick = [];
+  const hlsRemaining = Math.max(0, limit - verifiedInView.length);
+  if (hlsRemaining > 0) {
+    const hlsPool = mappedRegional.filter(
+      (cam) =>
+        cam.mediaType === 'hls' &&
+        (!isModotRtplexStreamUrl(cam.sourceLiveUrl || cam.liveUrl) ||
+          isWestOfStLouisMississippi(cam.lon))
     );
-    return dedupeCameras([...verifiedInView, ...snapshotBackfill]).slice(0, limit);
+    hlsPick = selectForViewport(hlsPool, bbox, hlsRemaining, centerLat, centerLon);
   }
 
-  const regionalPool = regionalPoolFromRaw(pool, bbox, centerLat, centerLon);
-  return selectForViewport(mapPlaybackCameras(regionalPool), bbox, limit, centerLat, centerLon);
+  const remaining = Math.max(0, limit - verifiedInView.length - hlsPick.length);
+  const snapPick =
+    remaining > 0 && snapQuota > 0
+      ? selectForViewport(snapshots, bbox, Math.min(remaining, snapQuota), centerLat, centerLon)
+      : [];
+
+  return dedupeCameras([...verifiedInView, ...hlsPick, ...snapPick]).slice(0, limit);
 }
 
 function clearResponseCache() {
@@ -158,7 +231,7 @@ function startFullPoolWarm() {
     nationwidePool = {
       fetchedAt: Date.now(),
       partial: false,
-      cameras: dedupeCameras(direct.cameras).filter(isUsableCamera),
+      cameras: dedupeCameras(direct.cameras).filter(isMapVisibleCamera),
       sourceCounts: direct.sourceCounts,
       sources: direct.sources,
     };
@@ -208,7 +281,9 @@ async function buildVerifiedPool() {
 
     const center = stateCenter(state);
     const stateBbox = STATE_BOUNDS[state] || CONUS_BBOX;
-    const hlsCams = stateCams.filter((cam) => cam.mediaType === 'hls');
+    const hlsCams = stateCams.filter(
+      (cam) => cam.mediaType === 'hls' && !isModotRtplexStreamUrl(cam.liveUrl)
+    );
     const snapCams = stateCams.filter((cam) => cam.mediaType === 'snapshot');
 
     if (hlsCams.length) {
@@ -248,28 +323,46 @@ async function ensureLocalPool(centerLat, centerLon) {
     Date.now() - nationwidePool.fetchedAt < CACHE_MS;
   if (freshFull) return nationwidePool;
 
+  const lat = Number.isFinite(centerLat) ? centerLat : DEFAULT_WARM.lat;
+  const lon = Number.isFinite(centerLon) ? centerLon : DEFAULT_WARM.lon;
+
   const freshPartial =
     nationwidePool.partial &&
     nationwidePool.cameras.length &&
     Date.now() - nationwidePool.fetchedAt < CACHE_MS;
   if (freshPartial) {
-    if (!fullPoolWarmPromise) startFullPoolWarm();
-    if (!verifiedPoolWarmPromise) startVerifiedPoolWarm();
-    return nationwidePool;
+    const bootstrapLat = nationwidePool.centerLat;
+    const bootstrapLon = nationwidePool.centerLon;
+    const centerMoved =
+      Number.isFinite(bootstrapLat) &&
+      Number.isFinite(bootstrapLon) &&
+      distanceMiles(lat, lon, bootstrapLat, bootstrapLon) > LOCAL_POOL_RADIUS_MILES * 0.45;
+
+    if (!centerMoved) {
+      if (!fullPoolWarmPromise) startFullPoolWarm();
+      if (!verifiedPoolWarmPromise) startVerifiedPoolWarm();
+      return nationwidePool;
+    }
   }
 
-  const lat = Number.isFinite(centerLat) ? centerLat : DEFAULT_WARM.lat;
-  const lon = Number.isFinite(centerLon) ? centerLon : DEFAULT_WARM.lon;
   const localBbox = boundingBox(lat, lon, LOCAL_POOL_RADIUS_MILES);
   const direct = await fetchDirectCameras(localBbox);
-  const localCameras = dedupeCameras(direct.cameras).filter(isUsableCamera);
+  const localCameras = dedupeCameras(direct.cameras).filter(isMapVisibleCamera);
 
   nationwidePool = {
     fetchedAt: Date.now(),
     partial: true,
-    cameras: localCameras,
-    sourceCounts: direct.sourceCounts,
-    sources: direct.sources,
+    centerLat: lat,
+    centerLon: lon,
+    cameras: freshPartial
+      ? dedupeCameras([...nationwidePool.cameras, ...localCameras])
+      : localCameras,
+    sourceCounts: freshPartial
+      ? { ...nationwidePool.sourceCounts, ...direct.sourceCounts }
+      : direct.sourceCounts,
+    sources: freshPartial
+      ? [...new Set([...nationwidePool.sources, ...direct.sources])]
+      : direct.sources,
   };
   clearResponseCache();
 
@@ -286,6 +379,12 @@ export async function warmNationwideCameraPool({ lat, lon } = DEFAULT_WARM) {
   return nationwidePool;
 }
 
+/** Non-blocking regional pool merge when a storm cell is clicked far from home. */
+export function primeCameraPoolAtPoint(lat, lon) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+  void ensureLocalPool(lat, lon);
+}
+
 export function getCameraPoolStatus() {
   return {
     partial: nationwidePool.partial,
@@ -294,6 +393,109 @@ export function getCameraPoolStatus() {
     warming: nationwidePool.partial || !verifiedPool.cameras.length,
     fetchedAt: nationwidePool.fetchedAt ? new Date(nationwidePool.fetchedAt).toISOString() : null,
   };
+}
+
+const STORM_CAMERA_MIN_RADIUS_MILES = 15;
+
+function stormReliabilityScore(cam) {
+  let score = 0;
+  if (cam.mediaType === 'snapshot') score -= 100;
+  if (cam.camKind === 'weather') score -= 1;
+  else if (cam.mediaType === 'hls') score += 10;
+  else if (cam.mediaType === 'youtube') score += 8;
+  return score;
+}
+
+function isLivePlaybackCamera(cam) {
+  return cam.mediaType === 'hls' || cam.mediaType === 'youtube';
+}
+
+function camerasNearPointFromPool(lat, lon, radiusMiles, limit, mapped) {
+  const inRange = mapped
+    .filter((cam) => cam.liveUrl && distanceMiles(lat, lon, cam.lat, cam.lon) <= radiusMiles)
+    .map((cam) => ({
+      ...cam,
+      distanceMiles: Math.round(distanceMiles(lat, lon, cam.lat, cam.lon) * 10) / 10,
+    }));
+
+  const sortByDistance = (a, b) => {
+    if (Math.abs(a.distanceMiles - b.distanceMiles) > 0.2) {
+      return a.distanceMiles - b.distanceMiles;
+    }
+    const scoreA = stormReliabilityScore(a);
+    const scoreB = stormReliabilityScore(b);
+    if (Math.abs(scoreA - scoreB) > 0.05) return scoreA - scoreB;
+    return a.id.localeCompare(b.id);
+  };
+
+  const live = inRange.filter((cam) => cam.mediaType === 'hls').sort(sortByDistance);
+  const youtube = inRange.filter((cam) => cam.mediaType === 'youtube').sort(sortByDistance);
+  const snapshots = inRange.filter((cam) => cam.mediaType === 'snapshot').sort(sortByDistance);
+  const picked = [];
+
+  for (const group of [live, youtube, snapshots]) {
+    for (const cam of group) {
+      if (picked.length >= limit) break;
+      if (picked.some((existing) => existing.id === cam.id)) continue;
+      picked.push(cam);
+    }
+    if (picked.length >= limit) break;
+  }
+
+  return picked.slice(0, limit).map((cam) => ({
+      id: cam.id,
+      description: cam.description,
+      lat: cam.lat,
+      lon: cam.lon,
+      liveUrl: cam.liveUrl,
+      sourceLiveUrl: cam.sourceLiveUrl,
+      mediaType: cam.mediaType,
+      camKind: cam.camKind,
+      source: cam.source,
+      distanceMiles: cam.distanceMiles,
+    }));
+}
+
+/** Fast regional camera lookup for storm cell previews — live HLS first, snapshots last. */
+function mergeStormCameraSources(directMapped) {
+  const verifiedReady =
+    verifiedPool.cameras.length > 0 && Date.now() - verifiedPool.fetchedAt < CACHE_MS;
+  if (!verifiedReady) return directMapped;
+
+  const verifiedLive = mapPlaybackCameras(
+    verifiedPool.cameras.filter(
+      (cam) =>
+        isStormEligibleCamera(cam) && (cam.mediaType === 'hls' || cam.mediaType === 'youtube')
+    )
+  );
+  return dedupeCameras([...verifiedLive, ...directMapped]);
+}
+
+function countLiveCameras(cameras) {
+  return cameras.filter(isLivePlaybackCamera).length;
+}
+
+export async function fetchCamerasNearPoint(lat, lon, radiusMiles, limit = 8) {
+  const searchRadius = Math.max(radiusMiles, STORM_CAMERA_MIN_RADIUS_MILES);
+  const bbox = boundingBox(lat, lon, Math.max(searchRadius * 1.35, STORM_CAMERA_MIN_RADIUS_MILES));
+  const direct = await fetchDirectCameras(bbox);
+  const mapped = mergeStormCameraSources(
+    mapPlaybackCameras(dedupeCameras(direct.cameras.filter(isStormEligibleCamera)))
+  );
+
+  let cameras = camerasNearPointFromPool(lat, lon, searchRadius, limit, mapped);
+
+  if (searchRadius < 45) {
+    const widerRadius = Math.min(45, searchRadius * 2);
+    const wider = camerasNearPointFromPool(lat, lon, widerRadius, limit, mapped);
+    const widerLive = countLiveCameras(wider);
+    const currentLive = countLiveCameras(cameras);
+    if (widerLive > currentLive || (cameras.length < limit && wider.length > cameras.length)) {
+      cameras = wider;
+    }
+  }
+
+  return cameras;
 }
 
 export async function fetchUsTrafficCameras({
@@ -331,7 +533,7 @@ export async function fetchUsTrafficCameras({
       cameras = dedupeCameras([
         ...cameras,
         ...selectForViewport(
-          mapPlaybackCameras(road511Cameras.filter(isUsableCamera)),
+          mapPlaybackCameras(road511Cameras.filter(isMapVisibleCamera)),
           bbox,
           limit,
           centerLat,
@@ -342,6 +544,8 @@ export async function fetchUsTrafficCameras({
       sourceCounts.road511_error = err.message;
     }
   }
+
+  cameras = cameras.map(ensureMapPreviewUrls);
 
   const statesWithCameras = [...new Set(cameras.map((cam) => cam.state).filter(Boolean))].sort();
   const missingStates = viewportStates.filter((code) => !statesWithCameras.includes(code));

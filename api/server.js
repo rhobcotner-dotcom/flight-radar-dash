@@ -49,6 +49,7 @@ import {
   handleRiverForecast,
   handleSportsSchedule,
   handleTrafficCameras,
+  handleCamerasNear,
   handleRailCameras,
   handleCameraImage,
   handleCameraHls,
@@ -151,6 +152,7 @@ app.get('/api/hearing/config', handleHearingConfig);
 app.get('/api/fun/status', asyncHandler(handleFunStatus));
 app.get('/api/live/dashboard', asyncHandler(handleLiveDashboard));
 app.get('/api/live/traffic-cameras', asyncHandler(handleTrafficCameras));
+app.get('/api/live/cameras-near', asyncHandler(handleCamerasNear));
 app.get('/api/live/rail-cameras', asyncHandler(handleRailCameras));
 app.get('/api/live/camera-image', asyncHandler(handleCameraImage));
 app.get('/api/live/camera-hls', asyncHandler(handleCameraHls));

@@ -84,8 +84,38 @@ export function roundCoord(value, digits = 3) {
   return Math.round(value * factor) / factor;
 }
 
+export function isModotTisvcStreamUrl(url) {
+  return /traveler\.modot\.org\/tisvc\/api\/Tms\/CameraStream\//i.test(url);
+}
+
+/** MoDOT Wowza rtplive feeds are reachable from the browser but often time out via our server proxy. */
+export function isModotRtplexStreamUrl(url) {
+  return /[-.]traveler\.modot\.mo\.gov\/rtplive\//i.test(url || '');
+}
+
+/** Mississippi River ~lon at St. Louis metro — west side is MO suburbs (St. Peters, St. Charles). */
+export const STL_MISSISSIPPI_LON = -90.18;
+
+export function isWestOfStLouisMississippi(lon) {
+  return Number.isFinite(lon) && lon < STL_MISSISSIPPI_LON;
+}
+
+/** Rotate sfs01–sfs03 CDN hosts for the same MODOT_CAM stream (original host first). */
+export function modotRtplexHostVariants(url) {
+  if (!url || typeof url !== 'string') return [];
+  const match = url.match(
+    /^https:\/\/(sfs0[1-3]-traveler\.modot\.mo\.gov)(\/rtplive\/MODOT_CAM_\d+\/playlist\.m3u8)$/i
+  );
+  if (!match) return [url];
+  const [, originalHost, path] = match;
+  const variants = [1, 2, 3].map((n) => `https://sfs0${n}-traveler.modot.mo.gov${path}`);
+  const preferred = `https://${originalHost}${path}`;
+  return [preferred, ...variants.filter((v) => v !== preferred)];
+}
+
 export function isHlsUrl(url) {
-  return /\.m3u8(?:$|\?)/i.test(url) || /\.stream\/(?:playlist\.m3u8|index\.m3u8)?/i.test(url);
+  if (isModotTisvcStreamUrl(url)) return true;
+  return /\.m3u8(?:$|\?)/i.test(url);
 }
 
 function httpsUrl(url) {
@@ -140,10 +170,30 @@ export function isSnapshotUrl(url) {
     if (/webapps\.arlingtontx\.gov\/webcams\//i.test(parsed.href)) return true;
     if (/micamerasimages\.net\//i.test(parsed.href)) return true;
     if (/nmroads\.com\//i.test(parsed.href)) return true;
+    if (/traveler\.modot\.org\/traffic_camera_snapshots\//i.test(parsed.href)) return true;
+    if (/img\.cdn\.prod\.alertwest\.com\//i.test(parsed.href)) return true;
+    if (/[-.]traveler\.modot\.mo\.gov\/rtplive\//i.test(parsed.href)) return true;
     return /camera|cctv|snapshot|webcam|roadcam|milestone/i.test(parsed.pathname);
   } catch {
     return false;
   }
+}
+
+/** Best-effort still frame URL for MoDOT rtplive HLS feeds (may 404 when CDN has no JPEG). */
+export function modotRtplexSnapshotUrl(hlsUrl) {
+  if (!isModotRtplexStreamUrl(hlsUrl)) return null;
+  const match = hlsUrl.match(/MODOT_CAM_(\d+)/i);
+  if (!match) return null;
+  const id = match[1];
+  const hostMatch = hlsUrl.match(/^https:\/\/(sfs0[1-3]-traveler\.modot\.mo\.gov)/i);
+  const host = hostMatch?.[1] || 'sfs02-traveler.modot.mo.gov';
+  return `https://${host}/rtplive/MODOT_CAM_${id}/thumbnail.jpg`;
+}
+
+function inferHlsPreviewUrl(hlsUrl, explicitPreview) {
+  const picked = pickMediaUrl(explicitPreview);
+  if (picked && isSnapshotUrl(picked)) return httpsUrl(picked);
+  return modotRtplexSnapshotUrl(hlsUrl);
 }
 
 export function normalizeCamera({
@@ -153,13 +203,18 @@ export function normalizeCamera({
   lon,
   streamUrl,
   liveUrl,
+  previewUrl,
   source,
   state,
+  camKind = 'road',
 }) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
 
+  const kind = camKind === 'weather' || camKind === 'rail' ? camKind : 'road';
+
   const live = normalizeHlsUrl(liveUrl || streamUrl);
   if (live) {
+    const snapshotPreview = inferHlsPreviewUrl(live, previewUrl);
     return {
       id: String(id),
       description: description || `Camera ${id}`,
@@ -167,13 +222,15 @@ export function normalizeCamera({
       lon,
       streamUrl: live,
       liveUrl: live,
+      previewUrl: snapshotPreview,
       mediaType: 'hls',
+      camKind: kind,
       source,
       state: state || null,
     };
   }
 
-  const snapshot = pickMediaUrl(streamUrl, liveUrl);
+  const snapshot = pickMediaUrl(streamUrl, liveUrl, previewUrl);
   if (snapshot && isSnapshotUrl(snapshot)) {
     const imageUrl = httpsUrl(snapshot);
     return {
@@ -183,7 +240,9 @@ export function normalizeCamera({
       lon,
       streamUrl: imageUrl,
       liveUrl: imageUrl,
+      previewUrl: imageUrl,
       mediaType: 'snapshot',
+      camKind: kind,
       source,
       state: state || null,
     };
@@ -194,6 +253,60 @@ export function normalizeCamera({
 
 export function isUsableCamera(cam) {
   return Boolean(cam?.liveUrl && (cam.mediaType === 'hls' || cam.mediaType === 'snapshot'));
+}
+
+/** MoDOT Wowza rtplive feeds fail outside traveler.modot.org — hide from map markers, except west STL suburbs where they are the only local inventory. */
+export function isBrokenModotRtplexCamera(cam) {
+  if (isWestOfStLouisMississippi(cam?.lon)) return false;
+  if (cam?.mediaType !== 'hls') return false;
+  const raw = cam.sourceLiveUrl || cam.liveUrl;
+  if (typeof raw !== 'string') return false;
+  if (raw.startsWith('/api/live/camera-hls?')) {
+    try {
+      const decoded = new URL(raw, 'http://localhost').searchParams.get('url');
+      return isModotRtplexStreamUrl(decoded ? decodeURIComponent(decoded) : '');
+    } catch {
+      return false;
+    }
+  }
+  return isModotRtplexStreamUrl(raw);
+}
+
+export function isMapVisibleCamera(cam) {
+  return isUsableCamera(cam) && !isBrokenModotRtplexCamera(cam);
+}
+
+function cameraUrlStrings(cam) {
+  const urls = [];
+  for (const value of [cam?.sourceLiveUrl, cam?.liveUrl, cam?.streamUrl, cam?.previewUrl]) {
+    if (typeof value !== 'string' || !value) continue;
+    if (value.startsWith('/api/live/camera-hls?')) {
+      try {
+        const decoded = new URL(value, 'http://localhost').searchParams.get('url');
+        if (decoded) urls.push(decodeURIComponent(decoded));
+      } catch {
+        /* ignore malformed proxy URLs */
+      }
+    }
+    urls.push(value);
+  }
+  return urls;
+}
+
+/** Any MoDOT-sourced feed — excluded from storm briefing east of the river; west STL relies on MoDOT. */
+export function isModotTrafficCamera(cam) {
+  if (isWestOfStLouisMississippi(cam?.lon)) return false;
+  if (/modot/i.test(String(cam?.source || ''))) return true;
+  if (/^modot[-_]/i.test(String(cam?.id || ''))) return true;
+  for (const url of cameraUrlStrings(cam)) {
+    if (/modot\.(mo\.gov|org)/i.test(url)) return true;
+    if (isModotRtplexStreamUrl(url) || isModotTisvcStreamUrl(url)) return true;
+  }
+  return false;
+}
+
+export function isStormEligibleCamera(cam) {
+  return isMapVisibleCamera(cam) && !isModotTrafficCamera(cam);
 }
 
 export function isLiveCamera(cam) {
@@ -227,6 +340,27 @@ export function arcGisEnvelopeParams(bbox, extra = {}) {
   });
 }
 
+function cameraPickScore(cam) {
+  if (!cam?.liveUrl) return -1;
+  if (cam.camKind === 'weather') return 4;
+  if (cam.mediaType === 'snapshot') return 3;
+  if (cam.mediaType === 'youtube') return 2;
+  if (cam.mediaType === 'hls') return 1;
+  return 0;
+}
+
+function shouldPreferCamera(existing, candidate) {
+  if (existing.liveUrl && !candidate.liveUrl) return false;
+  if (!existing.liveUrl && candidate.liveUrl) return true;
+  const existingScore = cameraPickScore(existing);
+  const candidateScore = cameraPickScore(candidate);
+  if (candidateScore !== existingScore) return candidateScore > existingScore;
+  if (existing.mediaType === 'hls' && candidate.mediaType === 'hls') {
+    return modotStreamPreference(candidate.liveUrl) > modotStreamPreference(existing.liveUrl);
+  }
+  return false;
+}
+
 export function dedupeCameras(cameras) {
   const byCell = new Map();
   for (const cam of cameras) {
@@ -236,16 +370,17 @@ export function dedupeCameras(cameras) {
       byCell.set(key, cam);
       continue;
     }
-    if (existing.liveUrl && !cam.liveUrl) continue;
-    if (!existing.liveUrl && cam.liveUrl) {
-      byCell.set(key, cam);
-      continue;
-    }
-    if (existing.mediaType !== 'hls' && cam.mediaType === 'hls') {
+    if (shouldPreferCamera(existing, cam)) {
       byCell.set(key, cam);
     }
   }
   return [...byCell.values()];
+}
+
+function modotStreamPreference(url) {
+  if (isModotTisvcStreamUrl(url)) return 2;
+  if (isModotRtplexStreamUrl(url)) return 0;
+  return 1;
 }
 
 export function isWideViewport(bbox) {
