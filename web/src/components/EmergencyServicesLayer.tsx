@@ -59,7 +59,11 @@ function ipawsStyle(): PathOptions {
 }
 
 function bindEmergencyPopup(layer: L.Layer, props: EmergencyEntityProperties) {
-  layer.bindPopup(formatEmergencyPopup(props), { maxWidth: 320 });
+  layer.bindPopup(formatEmergencyPopup(props), {
+    maxWidth: 320,
+    closeOnClick: false,
+    autoClose: false,
+  });
   if (props.emergencyLabel) {
     layer.bindTooltip(String(props.emergencyLabel), { direction: 'top', opacity: 0.95, className: 'map-layer-tooltip' });
   }
@@ -99,7 +103,7 @@ function PointMarkers({
             <Tooltip direction="top" opacity={0.95} className="map-layer-tooltip">
               {incident.emergencyLabel || incident.title || kind}
             </Tooltip>
-            <Popup maxWidth={340}>
+            <Popup maxWidth={340} closeOnClick={false} autoClose={false}>
               <div dangerouslySetInnerHTML={{ __html: formatEmsIncidentPopupHtml(incident) }} />
             </Popup>
           </CircleMarker>

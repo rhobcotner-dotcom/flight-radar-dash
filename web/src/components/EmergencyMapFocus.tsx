@@ -86,7 +86,7 @@ export function EmergencyMapFocus({ request }: { request: EmergencyFocusRequest 
     }
 
     if (layer) {
-      layer.bindPopup(popupHtml, { maxWidth: 320 });
+      layer.bindPopup(popupHtml, { maxWidth: 320, closeOnClick: false, autoClose: false });
       layer.addTo(map);
       layerRef.current = layer;
       map.once('moveend', openFocusedPopup);
