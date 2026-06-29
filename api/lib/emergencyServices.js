@@ -3,7 +3,7 @@ import { fetchFemaDisasters } from './femaDisasters.js';
 import { fetchNwsEmergencyAlerts } from './nwsEmergencyAlerts.js';
 import { fetchIpawsAlerts } from './ipawsAlerts.js';
 import { fetchEmsIncidents, allConfiguredEmsFeeds } from './emsIncidentFeeds.js';
-import { attachViewportToArea, searchBbox } from './viewportQuery.js';
+import { attachViewportToArea, emsFetchBbox, searchBbox } from './viewportQuery.js';
 import { resolveArea } from './area.js';
 import { stableViewportCacheKey } from '../../lib/viewportCacheKey.js';
 import { applyEmergencyMapFreshness } from './emergencyFreshness.js';
@@ -19,6 +19,7 @@ const responseCache = new Map();
 export async function fetchEmergencyServices(query = {}) {
   const area = attachViewportToArea(resolveArea(query), query);
   const bbox = searchBbox(area, area.queryRadiusMiles || area.radiusMiles || 500);
+  const emsBbox = emsFetchBbox(area);
   const zoom = Number(query.zoom);
   const cacheKey = stableViewportCacheKey({
     west: bbox.west,
@@ -40,7 +41,7 @@ export async function fetchEmergencyServices(query = {}) {
     fetchFemaDisasters(bbox).catch((err) => ({ error: err.message })),
     fetchNwsEmergencyAlerts(bbox).catch((err) => ({ error: err.message })),
     fetchIpawsAlerts().catch((err) => ({ error: err.message })),
-    fetchEmsIncidents(bbox).catch((err) => ({ error: err.message })),
+    fetchEmsIncidents(emsBbox).catch((err) => ({ error: err.message })),
   ]);
 
   if (nifc.error) gaps.push({ source: 'nifc-wfigs', error: nifc.error });

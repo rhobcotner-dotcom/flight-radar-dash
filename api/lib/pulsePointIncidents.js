@@ -292,6 +292,14 @@ function buildPayloadFromResults(results, bbox, agencyCount) {
   };
 }
 
+function bboxAgenciesPolledInGlobalCache(bbox, agencies) {
+  if (!globalCache?.feeds?.length) return false;
+  const scoped = filterAgenciesByBbox(agencies, bbox);
+  if (!scoped.length) return true;
+  const polled = new Set(globalCache.feeds.map((feed) => feed.feed));
+  return scoped.every((agency) => polled.has(agency.id));
+}
+
 function buildPayloadFromGlobalCache(bbox) {
   const incidents = filterIncidentsToBbox(globalCache.incidents, bbox).map((incident) => ({
     ...incident,
@@ -414,15 +422,25 @@ export async function fetchPulsePointIncidents(bbox) {
   const globalFresh = globalCache && Date.now() - globalCache.fetchedAt < GLOBAL_CACHE_MS;
   if (globalFresh) {
     const payload = buildPayloadFromGlobalCache(bbox);
+    if (payload.count === 0 && !bboxAgenciesPolledInGlobalCache(bbox, agencies)) {
+      const fresh = await refreshAgenciesForBbox(bbox, agencies);
+      viewportCache.set(cacheKey, { fetchedAt: Date.now(), payload: fresh });
+      return fresh;
+    }
     viewportCache.set(cacheKey, { fetchedAt: Date.now(), payload });
     return payload;
   }
 
   if (globalCache && !globalRefreshPromise) {
+    const stalePayload = buildPayloadFromGlobalCache(bbox);
+    if (stalePayload.count === 0 && !bboxAgenciesPolledInGlobalCache(bbox, agencies)) {
+      const fresh = await refreshAgenciesForBbox(bbox, agencies);
+      viewportCache.set(cacheKey, { fetchedAt: Date.now(), payload: fresh });
+      return fresh;
+    }
     scheduleGlobalRefresh(bbox, agencies);
-    const payload = buildPayloadFromGlobalCache(bbox);
-    viewportCache.set(cacheKey, { fetchedAt: Date.now(), payload });
-    return payload;
+    viewportCache.set(cacheKey, { fetchedAt: Date.now(), payload: stalePayload });
+    return stalePayload;
   }
 
   const payload = await refreshAgenciesForBbox(bbox, agencies);

@@ -65,6 +65,34 @@ export function searchBbox(area, radiusMiles) {
   return boundingBox(center.lat, center.lon, radiusMiles);
 }
 
+/**
+ * EMS / PulsePoint fetch region: when the map viewport is near the configured home
+ * area, expand to the full home radius so county-wide dispatch stays visible while
+ * zoomed in (e.g. St Louis County FPDs outside a tight Saint Peters viewport).
+ */
+export function emsFetchBbox(area) {
+  const viewportBbox = searchBbox(area, area.queryRadiusMiles || area.radiusMiles || 500);
+  const homeLat = area.lat;
+  const homeLon = area.lon;
+  const homeRadius = area.radiusMiles || area.queryRadiusMiles || 85;
+  if (!area.viewport || !Number.isFinite(homeLat) || !Number.isFinite(homeLon)) {
+    return viewportBbox;
+  }
+
+  const homeBbox = boundingBox(homeLat, homeLon, homeRadius);
+  const viewCenter = bboxCenter(area.viewport);
+  if (distanceMiles(homeLat, homeLon, viewCenter.lat, viewCenter.lon) > homeRadius) {
+    return viewportBbox;
+  }
+
+  return {
+    west: Math.min(viewportBbox.west, homeBbox.west),
+    south: Math.min(viewportBbox.south, homeBbox.south),
+    east: Math.max(viewportBbox.east, homeBbox.east),
+    north: Math.max(viewportBbox.north, homeBbox.north),
+  };
+}
+
 export function pointInSearchRegion(lat, lon, area, radiusMiles) {
   if (area.viewport) {
     return pointInBoundingBox(lat, lon, area.viewport);

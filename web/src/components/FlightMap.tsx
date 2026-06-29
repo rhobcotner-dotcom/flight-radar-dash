@@ -963,7 +963,7 @@ export function FlightMap({
     readLayerFlag(LAYER_KEYS.occupancy, false)
   );
   const [emergencyServicesEnabled, setEmergencyServicesEnabled] = useState(() =>
-    readLayerFlag(LAYER_KEYS.emergencyServices, false)
+    readLayerFlag(LAYER_KEYS.emergencyServices, true)
   );
 
   useEffect(() => {

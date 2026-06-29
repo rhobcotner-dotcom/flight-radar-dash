@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   attachViewportToArea,
   bboxRadiusMiles,
+  emsFetchBbox,
   filterInSearchRegion,
   maxAisVesselsForBbox,
   parseViewportBBox,
@@ -63,4 +64,25 @@ test('maxAisVesselsForBbox scales with viewport area', () => {
 test('bboxRadiusMiles covers viewport corners', () => {
   const radius = bboxRadiusMiles({ west: -74.5, south: 40.4, east: -73.5, north: 41.2 });
   assert.ok(radius > 25 && radius < 200);
+});
+
+test('emsFetchBbox expands to home radius when viewport is near home', () => {
+  const area = attachViewportToArea(
+    { lat: 38.787, lon: -90.629, radiusMiles: 85 },
+    { west: -90.75, south: 38.65, east: -90.51, north: 38.92 }
+  );
+  const emsBbox = emsFetchBbox(area);
+  assert.ok(emsBbox.west < -90.75, 'west should expand toward home bbox');
+  assert.ok(emsBbox.east > -90.51, 'east should expand toward home bbox');
+  assert.ok(emsBbox.south < 38.65, 'south should expand toward home bbox');
+  assert.ok(emsBbox.north > 38.92, 'north should expand toward home bbox');
+  assert.ok(emsBbox.east > -90.32, 'should include eastern STL county (Affton / Richmond Heights)');
+});
+
+test('emsFetchBbox stays viewport-scoped when map is far from home', () => {
+  const area = attachViewportToArea(
+    { lat: 38.787, lon: -90.629, radiusMiles: 85 },
+    { west: -74.5, south: 40.4, east: -73.5, north: 41.2 }
+  );
+  assert.deepEqual(emsFetchBbox(area), area.viewport);
 });
