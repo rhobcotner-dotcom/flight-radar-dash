@@ -70,11 +70,15 @@ async function main() {
 
   console.log('\nManual (email verification required — cannot automate fully):');
   console.log('  APRS_FI_API_KEY  → https://aprs.fi (Login → My account → API key)');
-  console.log('  METRO_API_KEY    → https://metrolinktrains.com/about/gtfs/gtfs-rt-access/');
+  console.log('  METRO_API_KEY    → https://metrolinktrains.com/about/gtfs/gtfs-rt-access/ (Southern CA Metrolink; STL is open)');
   console.log('  METRA_API_TOKEN  → https://metra.com/developers');
   console.log('  API_511_KEY      → https://511.org/open-data/token');
+  console.log('  MTA_API_KEY      → https://api.mta.info');
+  console.log('  CTA_API_KEY      → https://www.transitchicago.com/developers/bustracker/');
+  console.log('  WMATA_API_KEY    → https://developer.wmata.com');
   console.log('  RAILSTATE_API_TOKEN → paid: https://railstate.com');
   console.log('  APRS_CALLSIGN    → licensed ham callsign for direct APRS-IS freight');
+  console.log('\nOptional automation: PLAYWRIGHT_EMAIL=you@example.com node scripts/provision-transit-keys.mjs');
 }
 
 main().catch((err) => {

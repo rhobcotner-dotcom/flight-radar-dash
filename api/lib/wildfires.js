@@ -1,4 +1,5 @@
 import { boundingBox, distanceMiles } from '../../lib/geo.js';
+import { enrichWildfireOccupancy } from './occupancyEnrichment.js';
 
 const FIRMS_BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv/VIIRS_SNPP_NRT';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -62,7 +63,7 @@ export async function fetchWildfireHotspots(lat, lon, radiusMiles = 200) {
       const hotspotLat = Number(row.latitude);
       const hotspotLon = Number(row.longitude);
       if (!Number.isFinite(hotspotLat) || !Number.isFinite(hotspotLon)) return null;
-      return {
+      return enrichWildfireOccupancy({
         lat: hotspotLat,
         lon: hotspotLon,
         brightness: Number(row.bright_ti4 || row.bright_ti5) || null,
@@ -72,7 +73,7 @@ export async function fetchWildfireHotspots(lat, lon, radiusMiles = 200) {
         satellite: row.satellite || 'VIIRS',
         distanceMiles:
           Math.round(distanceMiles(lat, lon, hotspotLat, hotspotLon) * 10) / 10,
-      };
+      });
     })
     .filter(Boolean)
     .filter((row) => row.distanceMiles <= radiusMiles)

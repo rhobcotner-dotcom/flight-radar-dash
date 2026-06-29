@@ -23,7 +23,7 @@ interface MapLayerFilterBoxProps {
   float?: boolean;
 }
 
-const DEFAULT_QUICK_IDS = ['flights', 'rail', 'radar', 'cameras'];
+const DEFAULT_QUICK_IDS = ['flights', 'rail', 'metro', 'radar', 'cameras'];
 
 function flattenItems(sections: MapLayerFilterSection[]) {
   const byId = new Map<string, MapLayerFilterItem>();

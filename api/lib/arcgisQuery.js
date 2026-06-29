@@ -9,6 +9,21 @@ export async function queryArcGisGeoJson(baseUrl, layerId, options = {}) {
     resultRecordCount: String(options.limit || 2000),
   });
 
+  if (options.geometry) {
+    params.set('geometry', options.geometry);
+    params.set('geometryType', 'esriGeometryEnvelope');
+    params.set('inSR', '4326');
+    params.set('spatialRel', 'esriSpatialRelIntersects');
+  }
+
+  if (options.orderByFields) {
+    params.set('orderByFields', options.orderByFields);
+  }
+
+  if (options.outSR) {
+    params.set('outSR', String(options.outSR));
+  }
+
   const url = `${baseUrl}/${layerId}/query?${params.toString()}`;
   const res = await fetch(url, {
     headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },

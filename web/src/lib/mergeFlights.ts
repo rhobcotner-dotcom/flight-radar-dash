@@ -1,5 +1,4 @@
 import type { Flight } from '../types';
-import { flightKey } from './flightUtils';
 
 const LIVE_FIELDS = ['lat', 'lon', 'alt', 'gspeed', 'vspeed', 'track', 'squawk', 'timestamp', 'distanceMiles'] as const;
 
@@ -24,6 +23,20 @@ const ROUTE_FIELDS = [
   'googleFlightsUrl',
 ] as const;
 
+function flightKey(flight: Flight) {
+  return flight.fr24_id || flight.hex || `${flight.lat}-${flight.lon}`;
+}
+
+function hasDefinedRouteField(flight: Flight, field: (typeof ROUTE_FIELDS)[number]) {
+  const value = flight[field];
+  return value !== undefined && value !== null && value !== '';
+}
+
+/** Fast position refreshes (enrich=0) omit route fields — only merge when enrich sent them. */
+function incomingHasRouteData(flight: Flight) {
+  return ROUTE_FIELDS.some((field) => hasDefinedRouteField(flight, field));
+}
+
 /** Keep stable object references when only live position fields change. */
 export function mergeFlightList(prev: Flight[], incoming: Flight[]): Flight[] {
   if (!incoming.length) return prev;
@@ -36,7 +49,9 @@ export function mergeFlightList(prev: Flight[], incoming: Flight[]): Flight[] {
     if (!previous) return next;
 
     const liveChanged = LIVE_FIELDS.some((field) => previous[field] !== next[field]);
-    const routeChanged = ROUTE_FIELDS.some((field) => previous[field] !== next[field]);
+    const routePayload = incomingHasRouteData(next);
+    const routeChanged =
+      routePayload && ROUTE_FIELDS.some((field) => previous[field] !== next[field]);
     if (!liveChanged && !routeChanged) return previous;
 
     const merged: Flight = { ...previous };
@@ -47,7 +62,9 @@ export function mergeFlightList(prev: Flight[], incoming: Flight[]): Flight[] {
     }
     if (routeChanged) {
       for (const field of ROUTE_FIELDS) {
-        merged[field] = next[field];
+        if (hasDefinedRouteField(next, field)) {
+          merged[field] = next[field];
+        }
       }
     }
     return merged;

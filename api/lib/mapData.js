@@ -1,16 +1,13 @@
 import { fetchViewportFlights, resolveFlightViewport } from './flightViewport.js';
+import { stableViewportCacheKey } from '../../lib/viewportCacheKey.js';
 
 const LAST_GOOD_MAX_MS = Number(process.env.FLIGHT_LAST_GOOD_MS || 5 * 60_000);
 const lastGoodByViewport = new Map();
+/** @type {Map<string, Promise<unknown>>} */
+const inFlightByViewport = new Map();
 
 function viewportCacheKey(viewport) {
-  return [
-    viewport.west.toFixed(1),
-    viewport.south.toFixed(1),
-    viewport.east.toFixed(1),
-    viewport.north.toFixed(1),
-    String(Math.round(viewport.zoom ?? 10)),
-  ].join(':');
+  return stableViewportCacheKey(viewport);
 }
 
 export async function fetchAreaFlights(area, query = {}) {
@@ -18,39 +15,55 @@ export async function fetchAreaFlights(area, query = {}) {
   const enrich = query.enrich !== '0' && query.enrich !== 'false';
   const cacheKey = viewportCacheKey(viewport);
 
-  try {
-    const payload = await fetchViewportFlights(viewport, area, { enrich });
-    lastGoodByViewport.set(cacheKey, { ts: Date.now(), payload });
-    return payload;
-  } catch (err) {
-    const cached = lastGoodByViewport.get(cacheKey);
-    if (cached && Date.now() - cached.ts < LAST_GOOD_MAX_MS) {
-      const message =
-        err?.status === 429 || err?.status === 420
-          ? 'ADSB.lol rate limited — showing last good aircraft data.'
-          : err?.message || 'Flight feed temporarily unavailable — showing last good data.';
-      return {
-        ...cached.payload,
-        dataWarning: message,
-        stale: true,
-      };
-    }
-
-    if (err?.status === 429 || err?.status === 420) {
-      return {
-        flights: [],
-        homeFlights: [],
-        viewport,
-        dataSource: 'adsb.lol',
-        dataWarning:
-          'ADSB.lol is rate limiting requests. Aircraft will reload automatically in about a minute — or click Refresh.',
-        inViewCount: 0,
-        homeCount: 0,
-        thinned: false,
-        stale: true,
-      };
-    }
-
-    throw err;
+  const cached = lastGoodByViewport.get(cacheKey);
+  if (cached && Date.now() - cached.ts < 10_000 && !enrich) {
+    return cached.payload;
   }
+
+  const pending = inFlightByViewport.get(cacheKey);
+  if (pending) {
+    return pending;
+  }
+
+  const task = (async () => {
+    try {
+      const payload = await fetchViewportFlights(viewport, area, { enrich });
+      lastGoodByViewport.set(cacheKey, { ts: Date.now(), payload });
+      return payload;
+    } catch (err) {
+      if (cached && Date.now() - cached.ts < LAST_GOOD_MAX_MS) {
+        const message =
+          err?.status === 429 || err?.status === 420
+            ? 'ADSB.lol rate limited — showing last good aircraft data.'
+            : err?.message || 'Flight feed temporarily unavailable — showing last good data.';
+        return {
+          ...cached.payload,
+          dataWarning: message,
+          stale: true,
+        };
+      }
+
+      if (err?.status === 429 || err?.status === 420) {
+        return {
+          flights: [],
+          homeFlights: [],
+          viewport,
+          dataSource: 'adsb.lol',
+          dataWarning:
+            'ADSB.lol is rate limiting requests. Aircraft will reload automatically in about a minute — or click Refresh.',
+          inViewCount: 0,
+          homeCount: 0,
+          thinned: false,
+          stale: true,
+        };
+      }
+
+      throw err;
+    } finally {
+      inFlightByViewport.delete(cacheKey);
+    }
+  })();
+
+  inFlightByViewport.set(cacheKey, task);
+  return task;
 }

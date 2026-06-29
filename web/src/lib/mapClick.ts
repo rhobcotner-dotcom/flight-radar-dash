@@ -1,5 +1,13 @@
 import type L from 'leaflet';
 
+type MapWithPopup = L.Map & { _popup?: L.Popup };
+
+/** Leaflet 1.x has no public map.isPopupOpen — check the internal open popup layer. */
+export function isMapPopupOpen(map: L.Map): boolean {
+  const popup = (map as MapWithPopup)._popup;
+  return popup != null && map.hasLayer(popup);
+}
+
 /** True when the click is on open map area (tiles, overlays), not popups/markers/tooltips. */
 export function isMapDeadSpaceClick(event: L.LeafletMouseEvent): boolean {
   const target = event.originalEvent.target;

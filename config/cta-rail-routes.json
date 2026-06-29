@@ -1,0 +1,4 @@
+{
+  "routeIds": ["Red", "Blue", "Brn", "G", "Grn", "Org", "P", "Pink", "Y"],
+  "description": "CTA L route_id values from GTFS (route_type 1). Purely numeric route_ids are treated as bus."
+}

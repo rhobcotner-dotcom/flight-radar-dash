@@ -1,5 +1,6 @@
 import type { Satellite } from '../types';
 import { formatAzimuth } from '../lib/satelliteUtils';
+import { formatOccupancyLine } from '../lib/occupancyUtils';
 
 interface Props {
   satellite: Satellite;
@@ -33,6 +34,9 @@ export function SatelliteDetails({ satellite, compact = false }: Props) {
       <div className="muted">
         Ground track {satellite.lat.toFixed(2)}°, {satellite.lon.toFixed(2)}°
       </div>
+      {satellite.occupancyLabel ? (
+        <div className="muted">{formatOccupancyLine(satellite)?.value || satellite.occupancyLabel}</div>
+      ) : null}
     </div>
   );
 }

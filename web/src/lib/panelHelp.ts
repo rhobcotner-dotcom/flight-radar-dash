@@ -2,7 +2,9 @@ export const MAP_LAYER_HELP = {
   flights:
     'All aircraft in the current map view from OpenSky + ADSB.lol — planes, jets, helicopters, and GA. Turn off to hide every flight marker while keeping other layers.',
   rail:
-    'Live rail traffic for the current map view: Amtrak nationwide, regional GTFS-RT (MBTA, Metra, MetroLink, 511 Bay Area), and freight where APRS/crossing feeds exist. Pan the map to load trains in that region.',
+    'Amtrak, freight, crossings, and OpenStreetMap track lines for the current map view. Does not include urban metro/subway/commuter — use Metro for those.',
+  metro:
+    'Urban and regional transit rail nationwide: MetroLink, CTA, Metra, MBTA, SEPTA, WMATA, BART/511, Twin Cities, Denver RTD, LIRR/MNR, and more. Teal/red/amber dots for live vehicles; lilac lines for light-rail track geometry from OpenStreetMap.',
   weatherAlerts:
     'NWS warning polygons on the map: tornado, severe thunderstorm, flood, flash flood, winter, and heat alerts for MO/IL/IA/AR/KS. Refreshes every minute.',
   lightning:
@@ -12,7 +14,7 @@ export const MAP_LAYER_HELP = {
   rivers:
     'Live USGS river gauge stage and flow on the Missouri/Mississippi near STL. Useful for flood context alongside weather alerts.',
   transit:
-    'MetroLink and MetroBus vehicle positions from Metro GTFS-RT. Requires METRO_API_KEY in .env — request a free key at metrolinktrains.com.',
+    'Deprecated map layer — MetroLink vehicles now use the Metro toggle. This checkbox no longer draws markers on the map.',
   roads:
     'Missouri DOT road conditions: closures, work zones, traffic delays, and winter impacts from mapping.modot.org. Red = closed, yellow = delay, cyan = winter.',
   aisVessels:
@@ -37,8 +39,14 @@ export const MAP_LAYER_HELP = {
     'Ham radio APRS positions (weather stations, balloons, vehicles). Requires free APRS_FI_API_KEY from aprs.fi account settings.',
   drought:
     'US Drought Monitor polygons (IEM) — shows abnormally dry through exceptional drought areas near STL.',
+  railNetwork:
+    'OpenStreetMap track geometry. Gray = freight/mainline rail (Rail toggle). Lilac/purple = light rail & tram (Metro toggle). Blue/red = subway. Enable this layer to show all track types regardless of Rail/Metro.',
   satellites:
     'Satellites above 5° elevation at your location (ISS, GPS, weather sats, etc.). Positions computed from CelesTrak TLEs — not ground tracks.',
+  occupancy:
+    'Capacity/crowding heat overlay on the map. Solid circles = measured agency data (GTFS-RT crowding, TSA waits, crossing sensors). Dashed circles = inferred proxies (flight phase, AIS draft ratio, river fill, road impact). Green → red ramp by load %.',
+  emergencyServices:
+    'NIFC/USFS wildfire perimeters (containment %, acres, cause), FEMA active disaster counties, nationwide NWS watches/warnings/emergencies, IPAWS public alerts, and city fire/EMS dispatches (NYC, Seattle). Orange/red polygons = active fire; purple = FEMA; NWS/IPAWS polygons by severity.',
   radar:
     'NEXRAD base reflectivity overlay (IEM, ~3–5 min scan lag). Composite tiles scale above zoom 9; with Radar on, click a storm cell for a meteorologist-style briefing (clear sky clicks do nothing). Between refreshes, recent frames are blended so echoes drift smoothly instead of jumping.',
   stormLiveOnly:

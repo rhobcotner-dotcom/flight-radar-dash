@@ -3,6 +3,8 @@ import { fetchAprsStations } from './aprs.js';
 import { fetchAprsFiMapStations } from './aprsFiMap.js';
 import { fetchAprsIsStations, getAprsIsStatus } from './aprsIs.js';
 import { parseTrainSymbol } from './freightSymbolParser.js';
+import { nearestPointOnPolyline } from './overpassQuery.js';
+import { getRailNetworkForBbox, normalizeRailOperator } from './railNetwork.js';
 import { searchCenter } from './viewportQuery.js';
 
 const RAIL_KEYWORDS =
@@ -16,6 +18,32 @@ const NON_RAIL_COMMENT =
 const NON_RAIL_PI = /\bpi\s*\d+[a-z0-9]*\b/i;
 
 const RAIL_SYMBOL = /^[A-Z]{1,4}[0-9]{2,5}$/i;
+
+/** Known railroad-related APRS callsign prefixes (Class I + major regionals). */
+export const RAIL_CALLSIGN_PATTERNS = [
+  /^BNSF/i,
+  /^BN[0-9]{1,4}[A-Z0-9-]*$/i,
+  /^CSX/i,
+  /^NS[0-9]{1,4}[A-Z0-9-]*$/i,
+  /^UP[0-9]{1,4}[A-Z0-9-]*$/i,
+  /^UPRR/i,
+  /^KCS/i,
+  /^CPKC/i,
+  /^CN[0-9]{1,4}[A-Z0-9-]*$/i,
+  /^CP[0-9]{1,4}[A-Z0-9-]*$/i,
+  /^AMTK/i,
+  /^METRA/i,
+  /^METX/i,
+  /^NJT/i,
+  /^MARC/i,
+  /^VIA/i,
+];
+
+export function matchesRailCallsign(callsign) {
+  const call = String(callsign || '').trim();
+  if (!call) return false;
+  return RAIL_CALLSIGN_PATTERNS.some((pattern) => pattern.test(call));
+}
 
 function hasRailEvidence(callsign, comment) {
   const haystack = `${callsign} ${comment}`.trim();
@@ -52,6 +80,68 @@ export function hasFreightCargoClue(stationOrTrain) {
   return RAIL_KEYWORDS.test(haystack);
 }
 
+const SNAP_THRESHOLD_MILES = 0.5;
+
+/**
+ * Snap a position to the nearest cached track segment within threshold.
+ * @param {number} lat
+ * @param {number} lon
+ * @param {import('./railNetwork.js').RailSegment[]} railNetwork
+ */
+export function snapToNearestTrack(lat, lon, railNetwork) {
+  if (!Array.isArray(railNetwork) || railNetwork.length === 0) {
+    return { lat, lon, snappedLat: null, snappedLon: null, inferredRailroad: null };
+  }
+
+  let best = null;
+  let bestSegment = null;
+  for (const segment of railNetwork) {
+    const hit = nearestPointOnPolyline(lat, lon, segment.coordinates);
+    if (!hit || hit.distanceMiles > SNAP_THRESHOLD_MILES) continue;
+    if (!best || hit.distanceMiles < best.distanceMiles) {
+      best = hit;
+      bestSegment = segment;
+    }
+  }
+
+  if (!best || !bestSegment) {
+    return { lat, lon, snappedLat: null, snappedLon: null, inferredRailroad: null };
+  }
+
+  return {
+    lat,
+    lon,
+    snappedLat: best.lat,
+    snappedLon: best.lon,
+    inferredRailroad: normalizeRailOperator(bestSegment.operator) || null,
+  };
+}
+
+function resolveSearchBbox(area, radiusMiles) {
+  if (area.viewport) return area.viewport;
+  const center = searchCenter(area);
+  const latDelta = radiusMiles / 69;
+  const lonDelta = radiusMiles / (69 * Math.cos((center.lat * Math.PI) / 180));
+  return {
+    south: center.lat - latDelta,
+    north: center.lat + latDelta,
+    west: center.lon - lonDelta,
+    east: center.lon + lonDelta,
+  };
+}
+
+function applyTrackSnap(train, railNetwork) {
+  const snap = snapToNearestTrack(train.lat, train.lon, railNetwork);
+  if (snap.snappedLat == null || snap.snappedLon == null) return train;
+  return {
+    ...train,
+    snappedLat: snap.snappedLat,
+    snappedLon: snap.snappedLon,
+    inferredRailroad: snap.inferredRailroad || train.railroad,
+    railroad: train.railroad || snap.inferredRailroad || null,
+  };
+}
+
 export function normalizeAprsRailTrain(station) {
   if (!station || !isAprsRailEntry(station)) return null;
 
@@ -62,7 +152,8 @@ export function normalizeAprsRailTrain(station) {
   if (Number.isFinite(speedMph) && (speedMph > 70 || speedMph < 1)) speedMph = null;
 
   const railroad = comment.match(RAILROAD_IN_COMMENT)?.[1]?.toUpperCase().replace('CPKC', 'KCS') || null;
-  const cargoClue = hasFreightCargoClue({ ...station, callsign, comment, railroad });
+  const knownRailCallsign = matchesRailCallsign(callsign);
+  const cargoClue = knownRailCallsign || hasFreightCargoClue({ ...station, callsign, comment, railroad });
 
   return {
     trainNum: callsign.slice(0, 12),
@@ -167,6 +258,8 @@ export async function fetchAprsRailTrains(area, radiusMiles) {
     return station.distanceMiles == null || station.distanceMiles <= radiusMiles;
   });
 
+  const { segments: railNetwork } = getRailNetworkForBbox(resolveSearchBbox(area, radiusMiles));
+
   const trains = stations
     .map(normalizeAprsRailTrain)
     .filter(Boolean)
@@ -181,6 +274,7 @@ export async function fetchAprsRailTrains(area, radiusMiles) {
         ? pointInBoundingBox(train.lat, train.lon, area.viewport)
         : train.distanceMiles <= radiusMiles
     )
+    .map((train) => applyTrackSnap(train, railNetwork))
     .sort((a, b) => {
       if (Boolean(a.cargoClue) !== Boolean(b.cargoClue)) return a.cargoClue ? -1 : 1;
       return a.distanceMiles - b.distanceMiles;

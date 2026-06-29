@@ -1,11 +1,12 @@
 import { detectAlerts, isLikelyMilGov, summarizeCategories } from '../lib/alerts.js';
-import { resolveB52Flights } from '../lib/b52Watch.js';
+import { mergeB52Flights, resolveB52Flights } from '../lib/b52Watch.js';
 import { assertFr24PullEnabled } from '../lib/local-only.js';
 import { resolveArea } from '../lib/area.js';
 import { insertSnapshot } from '../db/snapshots.js';
 import { buildAirportHub } from '../lib/airportHub.js';
 import { loadDefaultArea } from '../lib/area.js';
 import { fetchAreaFlights } from '../lib/mapData.js';
+import { enrichAirportTsaOccupancy } from '../lib/tsaWaitTimes.js';
 
 function emptyAirportHub(airportCode, fetchedAt, error) {
   return {
@@ -36,10 +37,11 @@ function emptyAirportHub(airportCode, fetchedAt, error) {
 
 export async function handleMapRefresh(req, res) {
   const area = resolveArea(req.query);
+  const enrich = req.query.enrich !== '0' && req.query.enrich !== 'false';
   const payload = await fetchAreaFlights(area, req.query);
   const { flights, homeFlights, viewport, dataSource, dataWarning, inViewCount, homeCount } = payload;
   const govFlights = flights.filter(isLikelyMilGov);
-  const b52Flights = await resolveB52Flights(flights);
+  const b52Flights = enrich ? await resolveB52Flights(flights) : mergeB52Flights(flights);
   const alerts = detectAlerts(homeFlights);
   const fetchedAt = new Date().toISOString();
   const recordSnapshot = req.query.snapshot !== 'false';
@@ -84,7 +86,7 @@ export async function handleAirportHub(req, res) {
   const fetchedAt = new Date().toISOString();
 
   try {
-    const airport = await buildAirportHub(airportCode);
+    const airport = await enrichAirportTsaOccupancy(await buildAirportHub(airportCode), airportCode);
     res.json({
       airport,
       fetchedAt,

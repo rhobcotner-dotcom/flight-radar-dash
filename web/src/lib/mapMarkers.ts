@@ -11,6 +11,7 @@ import {
   flightMarkerLabelMode,
   mapFlightMarkerLabels,
 } from './mapMarkerLabels';
+import { mapAmtrakTrainMarkerLabels, type MarkerRouteEndpoints } from './trainUtils';
 
 const MAP_PLANE_SIZE = 38;
 const MAP_PLANE_ACTIVE = 48;
@@ -65,11 +66,29 @@ type MarkerSubLabel = {
   tone: 'from' | 'to';
 };
 
+function routeEndpointsLabelHtml(route: MarkerRouteEndpoints | null | undefined) {
+  if (!route?.to && !route?.from) return '';
+
+  const to = route.to ? escapeHtml(route.to) : '–';
+  const from = route.from ? escapeHtml(route.from) : '–';
+
+  return `<div class="map-marker-label-route map-marker-label-route-amtrak">${to} – ${from}</div>`;
+}
+
 function markerLabelHtml(
   primary: string | null | undefined,
   sub: MarkerSubLabel | null | undefined,
-  className: string
+  className: string,
+  route?: MarkerRouteEndpoints | null
 ) {
+  if (route?.to || route?.from) {
+    return `
+    <div class="map-marker-label-stack ${className}">
+      <div class="map-marker-label map-marker-label-primary ${className}">${escapeHtml(primary || '')}</div>
+      ${routeEndpointsLabelHtml(route)}
+    </div>
+  `;
+  }
   if (!primary && !sub) return '';
   if (!primary && sub) {
     return `<div class="map-marker-label map-marker-label-sub map-marker-label-sub-${sub.tone} ${className}">${escapeHtml(sub.text)}</div>`;
@@ -85,7 +104,12 @@ function markerLabelHtml(
   `;
 }
 
-function markerLabelHeight(primary: string | null | undefined, sub: MarkerSubLabel | null | undefined) {
+function markerLabelHeight(
+  primary: string | null | undefined,
+  sub: MarkerSubLabel | null | undefined,
+  route?: MarkerRouteEndpoints | null
+) {
+  if (route?.to || route?.from) return primary ? 26 : 14;
   if (!primary && !sub) return 0;
   return sub ? 34 : 18;
 }
@@ -250,15 +274,16 @@ function buildRotatedMarkerIcon(options: {
   className: string;
   bottomLabel?: string | null;
   bottomSubLabel?: MarkerSubLabel | null;
+  bottomRoute?: MarkerRouteEndpoints | null;
   bottomLabelClass?: string;
   bodyHeight?: number;
   anchorY?: number;
 }) {
-  const { html, size, rotation, className, bottomLabel, bottomSubLabel, bottomLabelClass = '' } = options;
+  const { html, size, rotation, className, bottomLabel, bottomSubLabel, bottomRoute, bottomLabelClass = '' } = options;
   const bodyHeight = options.bodyHeight ?? size;
   const anchorY = options.anchorY ?? size / 2;
-  const labelHtml = markerLabelHtml(bottomLabel, bottomSubLabel, bottomLabelClass);
-  const labelHeight = markerLabelHeight(bottomLabel, bottomSubLabel);
+  const labelHtml = markerLabelHtml(bottomLabel, bottomSubLabel, bottomLabelClass, bottomRoute);
+  const labelHeight = markerLabelHeight(bottomLabel, bottomSubLabel, bottomRoute);
   const totalHeight = bodyHeight + labelHeight;
 
   return L.divIcon({
@@ -346,37 +371,76 @@ export async function buildFlightMapIcon(
 }
 
 function trainMarkerBodyClass(train: Train, highlighted: boolean) {
+  const kind = train.trainKind;
+  if (kind === 'light_rail' || kind === 'subway' || kind === 'commuter') {
+    const base = `map-train-body-local map-train-body-local-${kind}`;
+    return highlighted ? `${base} map-train-active` : base;
+  }
   const base =
-    train.trainKind === 'freight'
+    kind === 'freight'
       ? 'map-train-body-freight'
-      : train.trainKind === 'crossing'
+      : kind === 'crossing'
         ? 'map-train-body-crossing'
-        : train.trainKind === 'yard'
+        : kind === 'yard'
           ? 'map-train-body-yard'
-          : train.trainKind === 'corridor'
+          : kind === 'corridor'
             ? 'map-train-body-corridor'
             : 'map-train-body';
   return highlighted ? `${base} map-train-active` : base;
 }
 
+function isLocalTransitTrain(train: Train) {
+  return (
+    train.trainKind === 'light_rail' ||
+    train.trainKind === 'subway' ||
+    train.trainKind === 'commuter'
+  );
+}
+
+function localTransitDotHtml(trainKind: Train['trainKind']) {
+  const kind =
+    trainKind === 'subway' ? 'subway' : trainKind === 'commuter' ? 'commuter' : 'light_rail';
+  return `<div class="map-transit-dot map-transit-dot-${kind}"></div>`;
+}
+
 export function buildTrainMapIcon(train: Train, highlighted: boolean): L.DivIcon {
-  const size = highlighted ? MAP_TRAIN_ACTIVE : MAP_TRAIN_SIZE;
+  const localTransit = isLocalTransitTrain(train);
+  const size = localTransit
+    ? highlighted
+      ? 14
+      : 11
+    : highlighted
+      ? MAP_TRAIN_ACTIVE
+      : MAP_TRAIN_SIZE;
   const rotation = COMPASS_DEGREES[String(train.heading || '').toUpperCase()] ?? 90;
   const classes = trainMarkerBodyClass(train, highlighted);
-  const inner =
-    train.trainKind === 'crossing'
+  const inner = localTransit
+    ? localTransitDotHtml(train.trainKind)
+    : train.trainKind === 'crossing'
       ? '<div class="map-train-crossing-glyph">✕</div>'
       : train.trainKind === 'yard'
         ? '<div class="map-train-yard-glyph">Y</div>'
         : train.trainKind === 'corridor'
           ? '<div class="map-train-corridor-glyph">≡</div>'
           : trainSvg();
+  const { bottomLabel, bottomRoute } = mapAmtrakTrainMarkerLabels(train);
+  const labelClass =
+    bottomLabel != null
+      ? 'map-marker-label-train map-marker-label-amtrak'
+      : train.trainKind === 'freight'
+        ? 'map-marker-label-train-freight'
+        : train.trainKind === 'crossing'
+          ? 'map-marker-label-train-crossing'
+          : 'map-marker-label-train';
 
   return buildRotatedMarkerIcon({
-    html: `<div class="map-rotating-marker" style="width:${size}px;height:${size}px;transform:rotate(${train.trainKind === 'crossing' ? 0 : rotation}deg);"><div class="${classes}">${inner}</div></div>`,
+    html: `<div class="map-rotating-marker" style="width:${size}px;height:${size}px;transform:rotate(${localTransit || train.trainKind === 'crossing' ? 0 : rotation}deg);"><div class="${classes}">${inner}</div></div>`,
     size,
     rotation: 0,
     className: 'map-train-marker',
+    bottomLabel,
+    bottomRoute,
+    bottomLabelClass: labelClass,
   });
 }
 

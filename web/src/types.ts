@@ -97,6 +97,10 @@ export interface Flight {
   carrierName?: string | null;
   carrierLabel?: string;
   googleFlightsUrl?: string;
+  occupancyLabel?: string | null;
+  occupancyLevel?: number | null;
+  occupancySource?: string | null;
+  occupancyKind?: string | null;
 }
 
 export interface WeatherConditions {
@@ -176,19 +180,40 @@ export interface TrainStop {
   scheduledDeparture: string | null;
 }
 
-export type TrainKind = 'passenger' | 'freight' | 'crossing' | 'yard' | 'corridor';
+export type TrainKind =
+  | 'passenger'
+  | 'subway'
+  | 'light_rail'
+  | 'commuter'
+  | 'freight'
+  | 'crossing'
+  | 'yard'
+  | 'corridor';
 
 export interface Train {
   trainNum: string;
   trainId: string;
   routeName: string;
+  routeId?: string | null;
   lat: number;
   lon: number;
-  heading?: string | null;
+  snappedLat?: number | null;
+  snappedLon?: number | null;
+  inferredRailroad?: string | null;
+  heading?: string | number | null;
   velocityMph?: number | null;
   timely?: string | null;
+  observedAt?: string | null;
+  direction?: string | null;
+  headsign?: string | null;
+  lineCode?: string | null;
+  tripStartTime?: string | null;
+  delayMinutes?: number | null;
+  tripId?: string | null;
   originCode?: string | null;
   destCode?: string | null;
+  originName?: string | null;
+  destName?: string | null;
   trainState?: string | null;
   trainKind?: TrainKind;
   railroad?: string | null;
@@ -196,6 +221,17 @@ export interface Train {
   sourceLabel?: string | null;
   cargoClue?: boolean;
   nextStop?: TrainStop | null;
+  previousStop?: TrainStop | null;
+  originStop?: TrainStop | null;
+  destStop?: TrainStop | null;
+  stopsRemaining?: number | null;
+  lineName?: string | null;
+  occupancyLabel?: string | null;
+  occupancyLevel?: number | null;
+  occupancySource?: string | null;
+  occupancyKind?: string | null;
+  vehicleId?: string | null;
+  activeAlerts?: Array<{ header: string; description?: string | null; url?: string | null }> | null;
   distanceMiles?: number;
 }
 
@@ -210,6 +246,8 @@ export interface Satellite {
   azimuthDeg: number;
   rangeKm: number;
   velocityKmh?: number | null;
+  occupancyLabel?: string | null;
+  occupancyLevel?: number | null;
 }
 
 export interface TrendPoint {

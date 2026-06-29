@@ -1,4 +1,5 @@
 import type { AisVessel } from '../lib/mapLayers';
+import { formatOccupancyLine, occupancyDetailLabel } from '../lib/occupancyUtils';
 import { vesselSizeLabel, vesselTypeLabel } from '../lib/vesselUtils';
 import { VesselVisual } from './VesselVisual';
 
@@ -43,6 +44,15 @@ export function VesselDetails({ vessel, compact = false, showVisual = true }: Pr
         <div><dt>MMSI</dt><dd>{vessel.mmsi}</dd></div>
         <div><dt>Speed</dt><dd>{vessel.speedKnots ?? '—'} kn · course {vessel.course ?? '—'}°</dd></div>
         {vessel.destination ? <div><dt>Destination</dt><dd>{vessel.destination}</dd></div> : null}
+        {vessel.occupancyLabel ? (
+          <div>
+            <dt>{occupancyDetailLabel(vessel.occupancyKind)}</dt>
+            <dd>{formatOccupancyLine(vessel)?.value || vessel.occupancyLabel}</dd>
+          </div>
+        ) : null}
+        {vessel.draughtMeters != null ? (
+          <div><dt>Draft</dt><dd>{vessel.draughtMeters.toFixed(1)} m</dd></div>
+        ) : null}
         <div><dt>Distance</dt><dd>{vessel.distanceMiles.toFixed(1)} mi from you</dd></div>
         {vessel.sourceLabel ? <div><dt>Source</dt><dd>{vessel.sourceLabel}</dd></div> : null}
       </dl>

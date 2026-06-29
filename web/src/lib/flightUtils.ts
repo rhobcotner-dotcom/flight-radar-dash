@@ -6,7 +6,7 @@ import militaryAircraftPhotos from '../../../config/military-aircraft-photos.jso
 import { isLikelyMilGov, resolveMilPhotoType } from './military';
 import typeNames from '../../../config/aircraft-type-names.json';
 import typicalSeats from '../../../config/aircraft-typical-seats.json';
-import { mapFlightRouteSubLabel as mapFlightRouteSubLabelCore } from '../../../lib/flightRouteLabels.js';
+import { mapFlightRouteSubLabel as mapFlightRouteSubLabelCore, flightDepartureLabel as routeDepartureLabel, flightDestinationLabel as routeDestinationLabel } from '../../../lib/flightRouteLabels.js';
 import { withLocalAirportInference } from '../../../lib/localAirportInference.js';
 
 export function flightKey(flight: Flight) {
@@ -106,8 +106,8 @@ export function mapFlightRouteSubLabel(
 
 export function routeLabel(flight: Flight) {
   const enriched = withLocalAirportInference(flight) as Flight;
-  const from = endpointLabel(enriched, 'orig');
-  const to = endpointLabel(enriched, 'dest');
+  const from = routeDepartureLabel(enriched) ?? '?';
+  const to = routeDestinationLabel(enriched) ?? '?';
   if (from !== '?' || to !== '?') return `${from} → ${to}`;
 
   const codes = routeCodesLabel(flight);
@@ -125,8 +125,14 @@ export function routeLabel(flight: Flight) {
 }
 
 export function routeCodesLabel(flight: Flight) {
-  const from = flight.orig_iata || flight.orig_icao;
-  const to = flight.dest_iata || flight.dest_icao;
+  const from =
+    (flight as Flight & { orig_inferred?: boolean }).orig_inferred
+      ? null
+      : flight.orig_iata || flight.orig_icao;
+  const to =
+    (flight as Flight & { dest_inferred?: boolean }).dest_inferred
+      ? null
+      : flight.dest_iata || flight.dest_icao;
   if (!from && !to) return null;
   return `${from || '?'} → ${to || '?'}`;
 }

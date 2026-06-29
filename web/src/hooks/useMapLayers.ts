@@ -48,7 +48,7 @@ const REFRESH_MS = {
   drought: 6 * 60 * 60_000,
 };
 
-const VIEWPORT_QUERY_DEBOUNCE_MS = 300;
+const VIEWPORT_QUERY_DEBOUNCE_MS = 75;
 
 async function fetchJson<T>(url: string): Promise<T> {
   let res: Response;
@@ -83,7 +83,7 @@ export function useMapLayers(
   const [aprs, setAprs] = useState<AprsPayload | null>(null);
   const [drought, setDrought] = useState<DroughtCollection | null>(null);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
-  const inFlight = useRef(new Set<string>());
+  const loadGenerationRef = useRef(0);
   const [debouncedQueryString, setDebouncedQueryString] = useState(queryString);
 
   useEffect(() => {
@@ -94,22 +94,25 @@ export function useMapLayers(
   }, [queryString]);
 
   const loadLayer = useCallback(
-    async (key: keyof LayerToggles, url: string, setter: (value: never) => void) => {
+    async (
+      key: keyof LayerToggles,
+      url: string,
+      setter: (value: never) => void,
+      generation: number
+    ) => {
       if (!enabled || !toggles[key]) return;
-      if (inFlight.current.has(key)) return;
-      inFlight.current.add(key);
 
       try {
         const data = await fetchJson(url);
+        if (generation !== loadGenerationRef.current) return;
         setter(data as never);
         setErrors((prev) => ({ ...prev, [key]: null }));
       } catch (err) {
+        if (generation !== loadGenerationRef.current) return;
         setErrors((prev) => ({
           ...prev,
           [key]: friendlyApiError(err instanceof Error ? err.message : 'Layer unavailable'),
         }));
-      } finally {
-        inFlight.current.delete(key);
       }
     },
     [enabled, toggles]
@@ -117,6 +120,9 @@ export function useMapLayers(
 
   useEffect(() => {
     if (!enabled) return undefined;
+
+    loadGenerationRef.current += 1;
+    const generation = loadGenerationRef.current;
 
     const jobs: Array<{ key: keyof LayerToggles; url: string; setter: (value: never) => void }> = [
       {
@@ -190,10 +196,10 @@ export function useMapLayers(
 
     for (const job of jobs) {
       if (!toggles[job.key]) continue;
-      void loadLayer(job.key, job.url, job.setter);
+      void loadLayer(job.key, job.url, job.setter, generation);
       intervals.push(
         window.setInterval(() => {
-          void loadLayer(job.key, job.url, job.setter);
+          void loadLayer(job.key, job.url, job.setter, loadGenerationRef.current);
         }, REFRESH_MS[job.key])
       );
     }

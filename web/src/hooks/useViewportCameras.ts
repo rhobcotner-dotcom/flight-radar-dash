@@ -369,7 +369,7 @@ export function useViewportCameras(
         });
     };
 
-    const timer = window.setTimeout(() => load(false), bounds ? 250 : 0);
+    const timer = window.setTimeout(() => load(false), bounds ? 0 : 0);
 
     return () => {
       window.clearTimeout(timer);

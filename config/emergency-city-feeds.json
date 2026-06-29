@@ -1,0 +1,170 @@
+[
+  {
+    "id": "nyc-fdny",
+    "city": "New York City",
+    "agency": "FDNY",
+    "url": "https://data.cityofnewyork.us/resource/8m42-w767.json",
+    "orderField": "incident_datetime",
+    "hoursBack": 168,
+    "staleFallbackHours": 2160,
+    "latField": null,
+    "lonField": null,
+    "geocode": true,
+    "timingClass": "delayed",
+    "timingNote": "Dispatch records; portal data lagged ~90 days as of 2026-06",
+    "enabled": true
+  },
+  {
+    "id": "seattle-fire-911",
+    "city": "Seattle",
+    "agency": "Seattle Fire",
+    "url": "https://data.seattle.gov/resource/kzjm-xkqj.json",
+    "orderField": "datetime",
+    "hoursBack": 48,
+    "latField": "latitude",
+    "lonField": "longitude",
+    "geocode": false,
+    "timingClass": "real-time",
+    "timingNote": "Updated every ~5 minutes per portal",
+    "enabled": true
+  },
+  {
+    "id": "dallas-fire-dispatch",
+    "city": "Dallas",
+    "agency": "Dallas Fire-Rescue",
+    "url": "https://www.dallasopendata.com/resource/9fxf-t2tr.json",
+    "orderField": "date",
+    "hoursBack": 24,
+    "latField": null,
+    "lonField": null,
+    "addressField": "location",
+    "geocode": "census",
+    "geocodeCity": "Dallas",
+    "geocodeState": "TX",
+    "geocodeNote": "Census geocoded · intersections only (~19% of active rows geocode successfully)",
+    "timingClass": "real-time",
+    "timingNote": "Live dispatch rows; coordinates geocoded via Census Bureau (not GPS-sourced)",
+    "enabled": true
+  },
+  {
+    "id": "la-lafd",
+    "city": "Los Angeles",
+    "agency": "LAFD",
+    "url": "https://data.lacity.org/resource/n44u-wxe4.json",
+    "orderField": "incident_creation_time_gmt",
+    "hoursBack": 12,
+    "latField": null,
+    "lonField": null,
+    "geocode": false,
+    "timingClass": "delayed",
+    "timingNote": "Response metrics without map coordinates in raw feed",
+    "enabled": false,
+    "gapNote": "n44u-wxe4 lacks coordinates; LAFD ArcGIS (firegis.lafd.org) only publishes 2024 aggregate incident points — no live CAD feed found"
+  },
+  {
+    "id": "chicago-fire",
+    "city": "Chicago",
+    "agency": "Chicago FD",
+    "url": "https://data.cityofchicago.org/resource/dr26-vqib.json",
+    "orderField": "incident_date",
+    "hoursBack": 6,
+    "latField": "latitude",
+    "lonField": "longitude",
+    "geocode": false,
+    "timingClass": "real-time",
+    "timingNote": "Former Real-Time Fire Incidents dataset",
+    "enabled": false,
+    "gapNote": "dr26-vqib removed (404). No replacement Socrata feed — Chicago OIG publishes weekly OEMC dashboards only (not API)"
+  },
+  {
+    "id": "houston-fire",
+    "city": "Houston",
+    "agency": "HFD",
+    "url": "https://cohgis-mycity.opendata.arcgis.com/",
+    "orderField": null,
+    "hoursBack": 6,
+    "enabled": false,
+    "gapNote": "No verified live Socrata EMS dispatch dataset found on data.houstontx.gov (2026-06 audit)"
+  },
+  {
+    "id": "phoenix-fire",
+    "city": "Phoenix",
+    "agency": "Phoenix Fire",
+    "url": "https://www.phoenix.gov/opendata",
+    "orderField": null,
+    "hoursBack": 6,
+    "enabled": false,
+    "gapNote": "Portal redirects; no public lat/lon dispatch API identified"
+  },
+  {
+    "id": "philadelphia-fire",
+    "city": "Philadelphia",
+    "agency": "PFD",
+    "url": "https://www.opendataphilly.org/",
+    "orderField": null,
+    "hoursBack": 6,
+    "enabled": false,
+    "gapNote": "OpenDataPhilly catalog has no live CAD dispatch with coordinates"
+  },
+  {
+    "id": "san-antonio-fire",
+    "city": "San Antonio",
+    "agency": "SAFD",
+    "enabled": false,
+    "gapNote": "No public live fire dispatch Socrata feed found (2026-06 audit)"
+  },
+  {
+    "id": "san-diego-fire",
+    "city": "San Diego",
+    "agency": "SDFD",
+    "url": "https://data.sandiego.gov",
+    "enabled": false,
+    "gapNote": "data.sandiego.gov has no verified live EMS dispatch dataset with coordinates"
+  },
+  {
+    "id": "san-jose-fire",
+    "city": "San Jose",
+    "agency": "SJFD",
+    "url": "https://data.sanjoseca.gov",
+    "enabled": false,
+    "gapNote": "No live dispatch dataset with coordinates on San Jose portal"
+  },
+  {
+    "id": "austin-fire",
+    "city": "Austin",
+    "agency": "AFD",
+    "url": "https://data.austintexas.gov",
+    "enabled": false,
+    "gapNote": "No live fire/EMS dispatch dataset with coordinates found"
+  },
+  {
+    "id": "jacksonville-fire",
+    "city": "Jacksonville",
+    "agency": "JFRD",
+    "enabled": false,
+    "gapNote": "jaxpublicsafety.org endpoint unreachable; no alternate API confirmed"
+  },
+  {
+    "id": "columbus-fire",
+    "city": "Columbus",
+    "agency": "CFD",
+    "enabled": false,
+    "gapNote": "No public live dispatch open data feed identified"
+  },
+  {
+    "id": "indianapolis-fire",
+    "city": "Indianapolis",
+    "agency": "IFD",
+    "url": "https://data.indy.gov",
+    "enabled": false,
+    "gapNote": "data.indy.gov portal redirects; no live EMS dispatch API confirmed"
+  },
+  {
+    "id": "charlotte-fire",
+    "city": "Charlotte",
+    "agency": "CFD",
+    "url": "https://data.charlottenc.gov",
+    "enabled": false,
+    "gapNote": "Portal redirects; no live dispatch dataset with coordinates found"
+  }
+]

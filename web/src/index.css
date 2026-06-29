@@ -11,6 +11,7 @@
   --danger: #ef4444;
   --warn: #f59e0b;
   --info: #06b6d4;
+  --tracking-banner-height: 2.85rem;
   font-family: Inter, system-ui, -apple-system, sans-serif;
   line-height: 1.5;
 }
@@ -83,25 +84,140 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 520;
+  z-index: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.35rem 0.55rem;
-  padding: 0.45rem 0.85rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
-  background: rgba(15, 23, 42, 0.88);
-  border-top: 1px solid rgba(71, 85, 105, 0.65);
+  min-height: var(--tracking-banner-height);
+  padding: 0.5rem 0.85rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(15, 23, 42, 0.94);
+  border-top: 2px solid rgba(148, 163, 184, 0.45);
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.42);
   color: #e2e8f0;
   font-size: 0.86rem;
   line-height: 1.35;
   pointer-events: none;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  isolation: isolate;
+}
+
+.map-tracking-banner-loading {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.map-app .leaflet-container .leaflet-control-attribution {
+  margin-bottom: calc(var(--tracking-banner-height) + env(safe-area-inset-bottom, 0px));
 }
 
 .map-tracking-banner-label,
 .map-tracking-banner-scope {
   color: #94a3b8;
+}
+
+.map-tracking-banner-emergency {
+  color: #fda4af;
+}
+
+.map-tracking-banner-clickable {
+  pointer-events: auto;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(253, 164, 175, 0.35);
+  text-underline-offset: 0.15em;
+}
+
+.map-tracking-banner-clickable:hover,
+.map-tracking-banner-clickable.is-open {
+  color: #fecdd3;
+  text-decoration-color: rgba(254, 205, 211, 0.75);
+}
+
+.map-tracking-banner-menu {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.45rem);
+  transform: translateX(-50%);
+  width: min(24rem, calc(100vw - 1.5rem));
+  max-height: min(22rem, 42vh);
+  overflow: auto;
+  pointer-events: auto;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.97);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  padding: 0.65rem;
+}
+
+.map-tracking-banner-menu-title {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.map-tracking-banner-menu-scope {
+  margin: 0 0 0.45rem;
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.map-tracking-banner-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.map-tracking-banner-menu-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.55);
+  color: #e2e8f0;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.map-tracking-banner-menu-item:hover {
+  border-color: rgba(253, 164, 175, 0.45);
+  background: rgba(51, 65, 85, 0.75);
+}
+
+.map-tracking-banner-menu-item-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #fecdd3;
+}
+
+.map-tracking-banner-menu-item-subtitle,
+.map-tracking-banner-menu-item-time {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.map-tracking-banner-menu-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.map-tracking-banner-sep-emergency {
+  color: #9f1239;
 }
 
 .map-tracking-banner-sep {
@@ -2317,7 +2433,8 @@ body {
 .leaflet-popup-content .notam-popup,
 .leaflet-popup-content .earthquake-popup,
 .leaflet-popup-content .sonde-popup,
-.leaflet-popup-content .wildfire-popup {
+.leaflet-popup-content .wildfire-popup,
+.leaflet-popup-content .emergency-popup {
   font-size: 0.95rem;
   line-height: 1.45;
 }
@@ -2829,6 +2946,43 @@ body {
   line-height: 1;
 }
 
+.map-train-body-local {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-transit-dot {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(15, 23, 42, 0.75);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.45);
+}
+
+.map-transit-dot-light_rail {
+  background: #2dd4bf;
+  box-shadow: 0 0 7px rgba(45, 212, 191, 0.55);
+}
+
+.map-transit-dot-subway {
+  background: #f87171;
+  box-shadow: 0 0 7px rgba(248, 113, 113, 0.5);
+}
+
+.map-transit-dot-commuter {
+  background: #fbbf24;
+  box-shadow: 0 0 7px rgba(251, 191, 36, 0.45);
+}
+
+.map-transit-dot-active,
+.map-train-body-local.map-train-active .map-transit-dot {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px rgba(248, 250, 252, 0.35);
+}
+
 .map-marker-label-train-freight {
   color: #d1d5db;
 }
@@ -2899,6 +3053,35 @@ body {
 
 .map-marker-label-sub-to {
   color: #86efac;
+}
+
+.map-marker-label-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  max-width: 140px;
+  line-height: 1.15;
+}
+
+.map-marker-label-route-amtrak {
+  display: block;
+  flex-wrap: nowrap;
+  max-width: none;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: #94a3b8;
+}
+
+.map-marker-label-amtrak.map-marker-label-primary,
+.map-marker-label-amtrak.map-marker-label-stack .map-marker-label-primary {
+  font-size: 11px;
+  font-weight: 700;
+  max-width: none;
+  color: #e2e8f0;
 }
 
 .flight-map-radar-noir .map-marker-label-sub-from {
@@ -2991,6 +3174,16 @@ body {
 
 .train-details dd {
   margin: 0;
+}
+
+.train-details-metro .train-details-metro-direction {
+  color: #5eead4;
+  font-weight: 650;
+  margin-top: 0.15rem;
+}
+
+.train-details-metro > strong {
+  font-size: 1.05rem;
 }
 
 .freight-carrying {
@@ -3315,7 +3508,7 @@ th button {
 .hearing-toast-stack {
   position: fixed;
   right: 1rem;
-  bottom: 1rem;
+  bottom: calc(var(--tracking-banner-height) + 1rem + env(safe-area-inset-bottom, 0px));
   z-index: 10000;
   display: grid;
   gap: 0.75rem;
@@ -3958,25 +4151,6 @@ th button {
   transform: scale(1.12);
 }
 
-.rail-camera-dot {
-  width: 18px;
-  height: 18px;
-  background: #fbbf24;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 2px rgba(146, 64, 14, 0.9),
-    0 0 14px rgba(251, 191, 36, 0.85);
-}
-
-.rail-camera-marker {
-  z-index: 410 !important;
-}
-
-.camera-marker:hover .rail-camera-dot {
-  background: #fde68a;
-}
-
 .weather-camera-marker {
   z-index: 340 !important;
 }
@@ -4398,4 +4572,23 @@ th button {
     width: min(320px, calc(100vw - 2rem));
     max-height: 34vh;
   }
+}
+
+.pp-marker-cluster {
+  background: transparent;
+}
+
+.pp-cluster-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(234, 88, 12, 0.92);
+  color: #fff7ed;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid #fdba74;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }

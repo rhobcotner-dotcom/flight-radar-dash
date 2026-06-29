@@ -2,6 +2,7 @@ import { distanceMiles, pointInBoundingBox } from '../../lib/geo.js';
 import { aisShipTypeLabel, aisVesselLengthMeters, isSignificantVessel } from '../../lib/aisVesselFilter.js';
 import { inferVesselPhotoType, vesselPhotoTypeLabel } from '../../lib/vesselPhotoType.js';
 import { bboxCenter } from './viewportQuery.js';
+import { enrichVesselOccupancy } from './occupancyEnrichment.js';
 
 const AXIOM_URL = 'https://axiomoverwatch.io/api/v1/positions/latest';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -68,7 +69,7 @@ function normalizeAxiomFeature(feature) {
     vessel.typeLabel = vesselPhotoTypeLabel(vessel.photoType);
   }
 
-  return vessel;
+  return enrichVesselOccupancy(vessel);
 }
 
 function formatAxiomType(type) {

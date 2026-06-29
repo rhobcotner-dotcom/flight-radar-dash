@@ -5,24 +5,120 @@
     "railroad": "MBTA",
     "format": "gtfs-json",
     "url": "https://cdn.mbta.com/realtime/VehiclePositions.json",
+    "trainKind": "passenger",
+    "status": "active",
     "enabled": true
   },
   {
-    "id": "metrolink-stl",
-    "name": "MetroLink",
+    "id": "septa",
+    "name": "SEPTA",
+    "railroad": "SEPTA",
+    "format": "gtfs-protobuf",
+    "url": "https://www3.septa.org/gtfsrt/septa-pa-us/Vehicle/rtVehiclePosition.pb",
+    "trainKind": "passenger",
+    "status": "active",
+    "enabled": true
+  },
+  {
+    "id": "rtd-denver",
+    "name": "RTD",
+    "railroad": "RTD",
+    "format": "gtfs-protobuf",
+    "url": "https://www.rtd-denver.com/files/gtfs-rt/VehiclePosition.pb",
+    "trainKind": "light_rail",
+    "status": "active",
+    "enabled": true
+  },
+  {
+    "id": "metro-transit-mn",
+    "name": "Metro Transit",
+    "railroad": "Metro Transit",
+    "format": "gtfs-protobuf",
+    "url": "https://svc.metrotransit.org/mtgtfs/vehiclepositions.pb",
+    "trainKind": "light_rail",
+    "status": "active",
+    "enabled": true
+  },
+  {
+    "id": "metro-stl",
+    "name": "Metro St. Louis",
     "railroad": "MetroLink",
-    "format": "metrolink-json",
-    "url": "https://metrolink-gtfsrt.gbsdigital.us/extended/vehicles",
+    "format": "gtfs-protobuf",
+    "url": "https://www.metrostlouis.org/RealTimeData/StlRealTimeVehicles.pb",
+    "tripUpdatesUrl": "https://www.metrostlouis.org/RealTimeData/StlRealTimeTrips.pb",
+    "alertsUrl": "https://www.metrostlouis.org/RealTimeData/StlRealTimeAlerts.pb",
+    "trainKind": "light_rail",
+    "status": "active",
+    "enabled": true
+  },
+  {
+    "id": "mta-lirr",
+    "name": "MTA LIRR",
+    "railroad": "LIRR",
+    "format": "gtfs-protobuf",
+    "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/lirr%2Fgtfs-lirr",
+    "trainKind": "commuter",
+    "status": "active",
+    "enabled": true
+  },
+  {
+    "id": "mta-mnr",
+    "name": "MTA Metro-North",
+    "railroad": "Metro-North",
+    "format": "gtfs-protobuf",
+    "url": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/mnr%2Fgtfs-mnr",
+    "trainKind": "commuter",
+    "status": "active",
+    "enabled": true
+  },
+  {
+    "id": "wmata-rail",
+    "name": "WMATA",
+    "railroad": "WMATA",
+    "format": "gtfs-protobuf",
+    "url": "https://api.wmata.com/gtfs/rail-gtfsrt-vehiclepositions.pb",
+    "authEnv": "WMATA_API_KEY",
+    "authHeader": "api_key",
+    "trainKind": "subway",
+    "status": "active",
+    "enabled": true
+  },
+  {
+    "id": "cta-rail",
+    "name": "CTA",
+    "railroad": "CTA",
+    "format": "gtfs-protobuf",
+    "url": "https://gtfsapi.transitchicago.com/gtfspublic/vehicles/vehicles.pb",
+    "authEnv": "CTA_API_KEY",
+    "authQuery": "key",
+    "trainKind": "subway",
+    "railRouteFilter": "cta-rail",
+    "status": "pending_key",
+    "enabled": true
+  },
+  {
+    "id": "metrolink-ca",
+    "name": "Metrolink CA",
+    "railroad": "Metrolink",
+    "format": "gtfs-protobuf",
+    "url": "https://metrolink-gtfsrt.gbsdigital.us/feed/gtfsrt-vehicles",
     "authEnv": "METRO_API_KEY",
-    "authHeader": "X-Api-Key"
+    "authHeader": "X-Api-Key",
+    "trainKind": "commuter",
+    "status": "active",
+    "enabled": true
   },
   {
     "id": "metra-chicago",
     "name": "Metra",
     "railroad": "Metra",
-    "format": "metra-json",
+    "format": "gtfs-protobuf",
     "url": "https://gtfspublic.metrarr.com/gtfs/public/positions",
     "authEnv": "METRA_API_TOKEN",
-    "authQuery": "api_token"
+    "authQuery": "api_token",
+    "authBearer": true,
+    "trainKind": "commuter",
+    "status": "pending_key",
+    "enabled": true
   }
 ]

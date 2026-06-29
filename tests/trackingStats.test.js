@@ -15,4 +15,15 @@ test('fetchTrackingStats returns nationwide tracking counts', async () => {
   assert.ok(stats.boats >= 0);
   assert.ok(stats.trains >= 0);
   assert.equal(typeof stats.sources.flights, 'string');
+  assert.ok(stats.emergency);
+  assert.equal(typeof stats.emergency.liveIncidents, 'number');
+  assert.equal(typeof stats.emergency.wildfirePerimeters, 'number');
+  assert.equal(typeof stats.emergency.nwsAlerts, 'number');
+  assert.equal(typeof stats.emergency.ipawsAlerts, 'number');
+  assert.equal(typeof stats.emergency.approximate, 'boolean');
+  assert.equal(typeof stats.emergency.pulsePointLive, 'number');
+  assert.ok(stats.emergency.recent);
+  assert.ok(Array.isArray(stats.emergency.recent.ems));
+  assert.ok(Array.isArray(stats.emergency.recent.wildfirePerimeters));
+  assert.ok(Array.isArray(stats.emergency.recent.nwsAlerts));
 });

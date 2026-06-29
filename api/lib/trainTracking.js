@@ -5,6 +5,12 @@ import {
 } from './viewportQuery.js';
 import { fetchFreightTrains, trainRadiusMiles as passengerRadiusMiles } from './freightTrainSources.js';
 import { fetchRegionalRailTrains } from './gtfsRtRail.js';
+import {
+  attachOccupancy,
+  enrichCrossingOccupancy,
+  enrichFreightOccupancy,
+  occupancyLevelFromLabel,
+} from './occupancyEnrichment.js';
 
 const MARCMAP_URL = 'https://amtrak-api.marcmap.app/get-trains';
 const AMTRAKER_URL = 'https://api.amtraker.com/v3/trains';
@@ -46,6 +52,8 @@ function normalizePassengerTrain(raw) {
 
   const stations = Array.isArray(raw.stations) ? raw.stations : [];
   const nextStop = stations.find((station) => station?.status && station.status !== 'Departed') || null;
+  const originStation = stations[0] || null;
+  const destStation = stations.length ? stations[stations.length - 1] : null;
 
   return {
     trainNum,
@@ -56,8 +64,10 @@ function normalizePassengerTrain(raw) {
     heading: raw.heading || null,
     velocityMph: raw.velocity != null ? Math.round(Number(raw.velocity)) : null,
     timely: raw.trainTimely || null,
-    originCode: raw.origCode || null,
-    destCode: raw.destCode || null,
+    originCode: raw.origCode || originStation?.code || null,
+    destCode: raw.destCode || destStation?.code || null,
+    originName: originStation?.name || originStation?.code || raw.origCode || null,
+    destName: destStation?.name || destStation?.code || raw.destCode || null,
     trainState: raw.trainState || null,
     trainKind: 'passenger',
     railroad: 'Amtrak',
@@ -131,6 +141,26 @@ function dedupeTrains(trains) {
   return [...byId.values()];
 }
 
+function finalizeTrainOccupancy(train) {
+  if (train.trainKind === 'crossing') return enrichCrossingOccupancy(train);
+  if (train.trainKind === 'freight') return enrichFreightOccupancy(train);
+  if (train.occupancyLabel) {
+    if (train.occupancyLevel == null) {
+      train.occupancyLevel = occupancyLevelFromLabel(train.occupancyLabel);
+    }
+    return train;
+  }
+  if (['passenger', 'subway', 'light_rail', 'commuter'].includes(train.trainKind)) {
+    return attachOccupancy(train, {
+      label: `${train.sourceLabel || train.railroad || 'Transit'} · load not in public feed`,
+      level: null,
+      source: 'agency-feed-gap',
+      kind: 'passenger',
+    });
+  }
+  return train;
+}
+
 export async function fetchAreaTrains(area) {
   const radius = area.viewport ? area.queryRadiusMiles : trainRadiusMiles(area);
   const [passengerResult, freightResult, regionalResult] = await Promise.allSettled([
@@ -158,9 +188,9 @@ export async function fetchAreaTrains(area) {
     regionalTrains = regionalResult.value.trains;
   }
 
-  const trains = dedupeTrains([...passengerTrains, ...regionalTrains, ...freightTrains]).sort(
-    (a, b) => a.distanceMiles - b.distanceMiles
-  );
+  const trains = dedupeTrains([...passengerTrains, ...regionalTrains, ...freightTrains])
+    .map(finalizeTrainOccupancy)
+    .sort((a, b) => a.distanceMiles - b.distanceMiles);
 
   const passengerCount = trains.filter((train) => train.trainKind === 'passenger').length;
   const freightCount = trains.filter((train) => train.trainKind === 'freight').length;
@@ -178,7 +208,7 @@ export async function fetchAreaTrains(area) {
     ...(freightMeta?.sourceCounts || {}),
   };
 
-  let coverage = 'Amtrak nationwide + regional GTFS-RT rail (MBTA, MetroLink, Metra, 511)';
+  let coverage = 'Amtrak nationwide + GTFS-RT transit (MBTA, SEPTA, RTD, Twin Cities, Metra, MetroLink, 511 Bay Area)';
   if (area.viewport) {
     coverage = `${coverage}; filtered to current map viewport`;
   }

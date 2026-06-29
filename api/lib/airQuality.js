@@ -1,7 +1,8 @@
+import { enrichAirQualityOccupancy } from './occupancyEnrichment.js';
+
 const OPEN_METEO = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const AIRNOW_URL = 'https://www.airnowapi.org/aq/observation/latLong/current/';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
-const CACHE_MS = 10 * 60 * 1000;
 
 let cache = { fetchedAt: 0, data: null };
 
@@ -115,6 +116,6 @@ export async function fetchAirQuality(lat, lon) {
     supplementalSource: airNow ? openMeteo.source : null,
   };
 
-  cache = { fetchedAt: Date.now(), data: { cacheKey, payload } };
-  return payload;
+  cache = { fetchedAt: Date.now(), data: { cacheKey, payload: enrichAirQualityOccupancy(payload) } };
+  return enrichAirQualityOccupancy(payload);
 }

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import compression from 'compression';
 import express from 'express';
 import { warmNationwideCameraPool } from './lib/usTrafficCameras.js';
+import { warmRegionalRailNetworkCache } from './lib/railNetwork.js';
 import {
   handleDashboardRefresh,
   handleLiveAlerts,
@@ -37,6 +38,9 @@ import { handleReverseGeocode } from './routes/reverseGeocode.js';
 import { handleRadarFrames } from './routes/radar.js';
 import { handleStormAnalysis } from './routes/stormAnalysis.js';
 import { handleLiveTrains } from './routes/trains.js';
+import { handleOccupancyOverlay } from './routes/occupancy.js';
+import { handleEmergencyServices } from './routes/emergencyServices.js';
+import { handleFeedHealth } from './routes/feedHealth.js';
 import { handleFreightDreamState } from './routes/freightDreamState.js';
 import { handleLiveSatellites } from './routes/satellites.js';
 import { handleFunStatus } from './routes/fun.js';
@@ -57,6 +61,7 @@ import {
   handleCameraImage,
   handleCameraHls,
   handleCameraHlsSegment,
+  handleRailNetwork,
 } from './routes/liveData.js';
 import { isFr24PullEnabled } from './lib/local-only.js';
 
@@ -82,6 +87,7 @@ function asyncHandler(fn) {
 app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
+    feedsEndpoint: '/api/health/feeds',
     mapDataSource: 'adsb.lol',
     routeDataSource: 'adsbdb.com',
     fr24PullsEnabled: isFr24PullEnabled(),
@@ -114,6 +120,8 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+app.get('/api/health/feeds', asyncHandler(handleFeedHealth));
+
 app.get('/api/live/refresh', asyncHandler(handleDashboardRefresh));
 app.get('/api/live/airport', asyncHandler(handleAirportHub));
 
@@ -121,6 +129,8 @@ app.get('/api/live/flights', asyncHandler(handleLiveFlights));
 app.get('/api/live/flights/gov', asyncHandler(handleLiveGovFlights));
 app.get('/api/live/flights/count', asyncHandler(handleLiveCount));
 app.get('/api/live/trains', asyncHandler(handleLiveTrains));
+app.get('/api/live/occupancy', asyncHandler(handleOccupancyOverlay));
+app.get('/api/live/emergency-services', asyncHandler(handleEmergencyServices));
 app.get('/api/trains/dream-state', asyncHandler(handleFreightDreamState));
 app.post('/api/trains/dream-state', asyncHandler(handleFreightDreamState));
 app.get('/api/live/satellites', asyncHandler(handleLiveSatellites));
@@ -167,6 +177,7 @@ app.get('/api/live/river-forecast', asyncHandler(handleRiverForecast));
 app.get('/api/live/ebird', asyncHandler(handleEbird));
 app.get('/api/live/inaturalist', asyncHandler(handleINaturalist));
 app.get('/api/live/aprs', asyncHandler(handleAprs));
+app.get('/api/rail-network', asyncHandler(handleRailNetwork));
 app.get('/api/weather/drought', asyncHandler(handleDrought));
 app.get('/api/live/miso-grid', asyncHandler(handleMisoGrid));
 app.get('/api/live/sports-schedule', asyncHandler(handleSportsSchedule));
@@ -204,6 +215,7 @@ if (!isServerless) {
       warmNationwideCameraPool().catch((err) => {
         console.warn('Nationwide camera pool warm failed:', err.message);
       });
+      warmRegionalRailNetworkCache();
     });
   });
 }

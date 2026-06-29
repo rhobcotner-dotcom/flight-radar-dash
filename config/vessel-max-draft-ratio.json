@@ -1,0 +1,13 @@
+{
+  "_comment": "Typical loaded draft / overall length ratios by AIS ship type bucket. Used to convert live AIS draft into a load ratio vs type max.",
+  "defaults": { "maxDraftRatio": 0.14, "lightRatio": 0.05, "moderateRatio": 0.09 },
+  "byTypeKeyword": {
+    "cargo": { "maxDraftRatio": 0.13, "lightRatio": 0.05, "moderateRatio": 0.085 },
+    "tanker": { "maxDraftRatio": 0.12, "lightRatio": 0.045, "moderateRatio": 0.08 },
+    "bulk": { "maxDraftRatio": 0.13, "lightRatio": 0.05, "moderateRatio": 0.085 },
+    "container": { "maxDraftRatio": 0.115, "lightRatio": 0.045, "moderateRatio": 0.075 },
+    "tug": { "maxDraftRatio": 0.18, "lightRatio": 0.08, "moderateRatio": 0.12 },
+    "passenger": { "maxDraftRatio": 0.1, "lightRatio": 0.04, "moderateRatio": 0.07 },
+    "ferry": { "maxDraftRatio": 0.1, "lightRatio": 0.04, "moderateRatio": 0.07 }
+  }
+}

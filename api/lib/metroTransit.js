@@ -1,75 +1,77 @@
 import { distanceMiles } from '../../lib/geo.js';
+import { extractVehiclePositions, fetchGtfsRtPayload } from './gtfsRtClient.js';
+import { buildTripUpdateIndex, enrichVehicleRow } from './gtfsTransitDetails.js';
+import { resolveStopName } from './gtfsStopNames.js';
+import { enrichTransitMotion } from './transitMotion.js';
+import { enrichTransitVehicleOccupancy } from './occupancyEnrichment.js';
 
-const METRO_VEHICLES_URL = 'https://metrolink-gtfsrt.gbsdigital.us/extended/vehicles';
-const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
+const STL_VEHICLES_URL = 'https://www.metrostlouis.org/RealTimeData/StlRealTimeVehicles.pb';
+const STL_TRIPS_URL = 'https://www.metrostlouis.org/RealTimeData/StlRealTimeTrips.pb';
 const CACHE_MS = 20 * 1000;
 
 let cache = { fetchedAt: 0, data: null };
 
-function normalizeVehicle(raw) {
-  const lat = Number(raw?.latitude ?? raw?.lat);
-  const lon = Number(raw?.longitude ?? raw?.lon);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-
-  const routeId = String(raw?.routeId || raw?.route_id || '').trim();
-  const vehicleId = String(raw?.vehicleId || raw?.vehicle_id || raw?.id || '').trim();
-  if (!vehicleId) return null;
-
+function normalizeVehicle(row, details = {}) {
   return {
-    vehicleId,
-    routeId: routeId || null,
-    routeName: raw?.routeShortName || raw?.route_short_name || routeId || 'Metro',
-    lat,
-    lon,
-    bearing: raw?.bearing != null ? Number(raw.bearing) : null,
-    speedMph: raw?.speed != null ? Math.round(Number(raw.speed) * 2.23694) : null,
-    tripId: raw?.tripId || raw?.trip_id || null,
-    label: raw?.label || vehicleId,
+    vehicleId: row.vehicleId,
+    routeId: row.routeId,
+    routeName: row.routeId ? `MetroLink ${row.routeId}` : 'MetroLink',
+    lat: row.lat,
+    lon: row.lon,
+    bearing: row.bearing,
+    speedMph: row.speedMph,
+    tripId: row.tripId,
+    label: row.label,
+    direction: details.direction || null,
+    headsign: details.headsign || null,
+    nextStopName: details.nextStop?.name || null,
+    occupancyLabel: details.occupancyLabel || null,
+    occupancyLevel: details.occupancyLevel ?? null,
+    occupancySource: details.occupancySource || null,
   };
 }
 
 export async function fetchMetroTransit(area) {
-  const apiKey = String(process.env.METRO_API_KEY || '').trim();
-  if (!apiKey) {
-    return {
-      enabled: false,
-      source: 'metrolink-gtfsrt.gbsdigital.us',
-      message: 'Set METRO_API_KEY in .env to enable MetroLink / MetroBus live vehicles.',
-      count: 0,
-      vehicles: [],
-      fetchedAt: new Date().toISOString(),
-    };
-  }
-
   if (cache.data && Date.now() - cache.fetchedAt < CACHE_MS) {
     return cache.data;
   }
 
-  const res = await fetch(METRO_VEHICLES_URL, {
-    headers: {
-      'User-Agent': USER_AGENT,
-      Accept: 'application/json',
-      'X-Api-Key': apiKey,
-    },
-  });
+  const [vehiclePayload, tripPayload] = await Promise.all([
+    fetchGtfsRtPayload(STL_VEHICLES_URL, { headers: { Accept: 'application/x-protobuf' } }),
+    fetchGtfsRtPayload(STL_TRIPS_URL, { headers: { Accept: 'application/x-protobuf' } }).catch(() => null),
+  ]);
 
-  if (!res.ok) {
-    throw new Error(`Metro transit unavailable (${res.status})`);
-  }
-
-  const body = await res.json();
-  const rows = Array.isArray(body?.vehicles)
-    ? body.vehicles
-    : Array.isArray(body?.entity)
-      ? body.entity.map((row) => row?.vehicle || row).filter(Boolean)
-      : Array.isArray(body)
-        ? body
-        : [];
+  const tripIndex = tripPayload ? buildTripUpdateIndex(tripPayload.message) : null;
+  const stopNameLookup = (stopId) => resolveStopName('metro-stl', stopId);
+  const positions = extractVehiclePositions(vehiclePayload.message);
 
   const radius = Math.max(Number(area.radiusMiles) || 30, 35);
-  const vehicles = rows
-    .map(normalizeVehicle)
-    .filter(Boolean)
+  const vehicles = positions
+    .map((row) => {
+      const motion = enrichTransitMotion(
+        'metro-stl-transit',
+        row.vehicleId,
+        row.lat,
+        row.lon,
+        row.bearing,
+        row.speedMps
+      );
+      const details = enrichVehicleRow(row, { tripIndex, stopNameLookup });
+      const vehicle = normalizeVehicle(
+        {
+          vehicleId: row.vehicleId,
+          routeId: row.routeId,
+          label: row.label,
+          lat: row.lat,
+          lon: row.lon,
+          bearing: motion.heading,
+          speedMph: motion.speedMph,
+          tripId: row.tripId,
+        },
+        details
+      );
+      return enrichTransitVehicleOccupancy(vehicle, details);
+    })
     .map((vehicle) => ({
       ...vehicle,
       distanceMiles: distanceMiles(area.lat, area.lon, vehicle.lat, vehicle.lon),
@@ -77,15 +79,15 @@ export async function fetchMetroTransit(area) {
     .filter((vehicle) => vehicle.distanceMiles <= radius)
     .sort((a, b) => a.distanceMiles - b.distanceMiles);
 
-  const payload = {
+  const result = {
     enabled: true,
-    source: 'metrolink-gtfsrt.gbsdigital.us',
+    source: 'metrostlouis.org',
     fetchedAt: new Date().toISOString(),
     count: vehicles.length,
     radiusMiles: radius,
     vehicles,
   };
 
-  cache = { fetchedAt: Date.now(), data: payload };
-  return payload;
+  cache = { fetchedAt: Date.now(), data: result };
+  return result;
 }

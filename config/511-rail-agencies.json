@@ -1,12 +1,6 @@
 [
-  { "code": "CT", "railroad": "Caltrain", "name": "Caltrain" },
-  { "code": "CE", "railroad": "ACE", "name": "Altamont Corridor Express" },
-  { "code": "RG", "railroad": "SMART", "name": "SMART" },
-  { "code": "BA", "railroad": "BART", "name": "BART" },
-  { "code": "SC", "railroad": "VTA", "name": "VTA" },
-  { "code": "SR", "railroad": "SIR", "name": "Staten Island Railway" },
-  { "code": "GG", "railroad": "Golden Gate", "name": "Golden Gate Transit" },
-  { "code": "SF", "railroad": "Muni", "name": "SF Muni" },
-  { "code": "NC", "railroad": "Capitol Corridor", "name": "Capitol Corridor" },
-  { "code": "SS", "railroad": "San Joaquins", "name": "San Joaquins" }
+  { "code": "BA", "railroad": "BART", "name": "BART", "trainKind": "subway" },
+  { "code": "CT", "railroad": "Caltrain", "name": "Caltrain", "trainKind": "commuter" },
+  { "code": "CE", "railroad": "ACE", "name": "Altamont Corridor Express", "trainKind": "commuter" },
+  { "code": "SM", "railroad": "SMART", "name": "SMART", "trainKind": "commuter" }
 ]

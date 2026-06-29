@@ -31,12 +31,11 @@ export function aircraftMotionHint(flight: Pick<Flight, 'alt' | 'gspeed' | 'trac
     };
   }
 
-  const minAirborneMph = 120;
   const speedMph =
     reportedMph != null && reportedMph > 15
       ? reportedMph
       : headingDeg != null
-        ? minAirborneMph
+        ? 180
         : reportedMph;
 
   return { speedMph, headingDeg };

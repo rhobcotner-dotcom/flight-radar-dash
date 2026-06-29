@@ -1,5 +1,6 @@
 import { distanceMiles } from '../../lib/geo.js';
 import { queryArcGisGeoJson } from './arcgisQuery.js';
+import { enrichRoadConditionOccupancy } from './occupancyEnrichment.js';
 
 const MODOT_BASE =
   'https://mapping.modot.org/arcgis/rest/services/TravelerInformation/TravelerInformationMod/MapServer';
@@ -103,11 +104,11 @@ export async function fetchModotRoadConditions(lat, lon, radiusMiles = 85) {
     .flat()
     .map((feature) => ({
       ...feature,
-      properties: {
+      properties: enrichRoadConditionOccupancy({
         ...feature.properties,
         distanceMiles:
           Math.round(distanceMiles(lat, lon, feature.properties.lat, feature.properties.lon) * 10) / 10,
-      },
+      }),
     }))
     .filter((feature) => feature.properties.distanceMiles <= radiusMiles)
     .sort((a, b) => a.properties.distanceMiles - b.properties.distanceMiles)

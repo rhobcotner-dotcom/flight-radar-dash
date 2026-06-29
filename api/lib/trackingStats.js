@@ -6,6 +6,7 @@ import { getCameraPoolStatus, warmNationwideCameraPool } from './usTrafficCamera
 import { fetchPassengerTrainsRaw } from './trainTracking.js';
 import { fetchAllRegionalRailTrains } from './gtfsRtRail.js';
 import { countSignificantVesselsInBbox } from './axiomVessels.js';
+import { fetchEmergencyTrackingStats } from './emergencyTrackingStats.js';
 
 const CACHE_MS = 60_000;
 const CONUS_BBOX = { west: -130, south: 24, east: -66, north: 50 };
@@ -71,21 +72,22 @@ export async function fetchTrackingStats() {
   }
 
   const cameraStatusBefore = getCameraPoolStatus();
-  const cameraPoolReady = cameraStatusBefore.poolCount > 0 && !cameraStatusBefore.partial;
-  const cameraPoolPromise = cameraPoolReady
+  const catalogReady = cameraStatusBefore.catalogCount > 0;
+  const cameraPoolPromise = catalogReady
     ? Promise.resolve()
     : warmNationwideCameraPool();
-  if (cameraPoolReady) void warmNationwideCameraPool();
+  if (catalogReady) void warmNationwideCameraPool();
 
-  const [cameraPoolResult, flightResult, boatResult, trainResult] = await Promise.allSettled([
+  const [cameraPoolResult, flightResult, boatResult, trainResult, emergencyResult] = await Promise.allSettled([
     cameraPoolPromise,
     fetchConusFlightCount(),
     countSignificantVesselsInBbox(CONUS_BBOX),
     fetchNationwideTrainCount(),
+    fetchEmergencyTrackingStats(),
   ]);
 
   const cameraStatus = getCameraPoolStatus();
-  const cameras = cameraStatus.poolCount || 0;
+  const cameras = cameraStatus.catalogCount;
 
   const flights =
     flightResult.status === 'fulfilled'
@@ -99,6 +101,38 @@ export async function fetchTrackingStats() {
     trainResult.status === 'fulfilled'
       ? trainResult.value
       : { count: 0, passenger: 0, regional: 0 };
+  const emergency =
+    emergencyResult.status === 'fulfilled'
+      ? emergencyResult.value
+      : {
+          liveIncidents: 0,
+          pulsePointLive: 0,
+          socrataLive: 0,
+          arcgisLive: 0,
+          wildfirePerimeters: 0,
+          wildfireIncidents: 0,
+          femaCounties: 0,
+          nwsAlerts: 0,
+          ipawsAlerts: 0,
+          approximate: true,
+          recentScope: 'nationwide',
+          recent: {
+            ems: [],
+            wildfirePerimeters: [],
+            nwsAlerts: [],
+            femaZones: [],
+            ipawsAlerts: [],
+          },
+          partial: {
+            pulsePoint: true,
+            nifc: true,
+            fema: true,
+            nws: true,
+            ipaws: true,
+            socrata: true,
+            arcgis: true,
+          },
+        };
 
   const payload = {
     fetchedAt: new Date().toISOString(),
@@ -106,17 +140,20 @@ export async function fetchTrackingStats() {
     cameras,
     boats: boats.count,
     trains: trains.count,
+    emergency,
     sources: {
       flights: flights.source,
       cameras: 'traffic-camera-pool',
       boats: boats.source,
       trains: 'amtrak + gtfs-rt',
+      emergency: 'pulsepoint + nws + nifc + fema + city CAD',
     },
     partial: {
-      cameras: Boolean(cameraPoolResult.status !== 'fulfilled' || cameraStatus.partial),
+      cameras: false,
       flights: flightResult.status !== 'fulfilled',
       boats: boatResult.status !== 'fulfilled',
       trains: trainResult.status !== 'fulfilled',
+      emergency: emergencyResult.status !== 'fulfilled',
     },
   };
 

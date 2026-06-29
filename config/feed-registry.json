@@ -1,0 +1,135 @@
+{
+  "version": "2026-06-29",
+  "feeds": [
+    {
+      "id": "nifc-wfigs",
+      "name": "NIFC WFIGS wildfire perimeters + incidents",
+      "group": "emergency",
+      "timingClass": "real-time",
+      "staleAfterMs": 3600000,
+      "endpoint": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Interagency_Perimeters/FeatureServer"
+    },
+    {
+      "id": "fema-open",
+      "name": "FEMA OpenFEMA disaster declarations",
+      "group": "emergency",
+      "timingClass": "static",
+      "endpoint": "https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries"
+    },
+    {
+      "id": "nws-cap-emergency",
+      "name": "NWS CAP active alerts (emergency overlay)",
+      "group": "emergency",
+      "timingClass": "real-time",
+      "staleAfterMs": 300000,
+      "endpoint": "https://api.weather.gov/alerts/active?status=actual"
+    },
+    {
+      "id": "ipaws-cap",
+      "name": "FEMA IPAWS All-Hazards CAP feed",
+      "group": "emergency",
+      "timingClass": "real-time",
+      "staleAfterMs": 300000,
+      "endpoint": "https://apps.fema.gov/IPAWSOPEN_EAS_SERVICE/rest/public/recent"
+    },
+    {
+      "id": "adsb-lol",
+      "name": "adsb.lol flight positions",
+      "group": "platform",
+      "timingClass": "real-time",
+      "staleAfterMs": 60000,
+      "probeUrl": "https://api.adsb.lol/v2/lat/38.6/lon/-90.2/dist/25",
+      "accept": "application/json"
+    },
+    {
+      "id": "nws-alerts-regional",
+      "name": "NWS regional weather alerts",
+      "group": "platform",
+      "timingClass": "real-time",
+      "staleAfterMs": 300000,
+      "probeUrl": "https://api.weather.gov/alerts/active?area=MO,IL",
+      "accept": "application/geo+json"
+    },
+    {
+      "id": "usgs-earthquakes",
+      "name": "USGS earthquake feed",
+      "group": "platform",
+      "timingClass": "real-time",
+      "staleAfterMs": 600000,
+      "probeUrl": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+      "accept": "application/json"
+    },
+    {
+      "id": "firms-wildfires",
+      "name": "NASA FIRMS VIIRS hotspots",
+      "group": "platform",
+      "timingClass": "real-time",
+      "staleAfterMs": 3600000,
+      "endpoint": "https://firms.modaps.eosdis.nasa.gov/api/area/csv",
+      "authEnv": "NASA_FIRMS_MAP_KEY"
+    },
+    {
+      "id": "axiom-ais",
+      "name": "Axiom AIS vessel positions",
+      "group": "platform",
+      "timingClass": "real-time",
+      "staleAfterMs": 120000,
+      "endpoint": "https://api.axiomdata.io/ais/v1/positions"
+    },
+    {
+      "id": "mbta-gtfs-rt",
+      "name": "MBTA GTFS-RT (occupancy REAL)",
+      "group": "transit",
+      "timingClass": "real-time",
+      "occupancyClass": "real",
+      "probeUrl": "https://cdn.mbta.com/realtime/VehiclePositions.json",
+      "accept": "application/json"
+    },
+    {
+      "id": "septa-gtfs-rt",
+      "name": "SEPTA GTFS-RT (occupancy REAL)",
+      "group": "transit",
+      "timingClass": "real-time",
+      "occupancyClass": "real",
+      "probeUrl": "https://www3.septa.org/gtfsrt/septa-pa-us/Vehicle/rtVehiclePosition.pb"
+    },
+    {
+      "id": "rtd-denver-gtfs-rt",
+      "name": "RTD Denver GTFS-RT (occupancy REAL)",
+      "group": "transit",
+      "timingClass": "real-time",
+      "occupancyClass": "real",
+      "probeUrl": "https://www.rtd-denver.com/files/gtfs-rt/VehiclePosition.pb"
+    },
+    {
+      "id": "dart-dallas-gtfs-rt",
+      "name": "DART Dallas GTFS-RT",
+      "group": "transit",
+      "timingClass": "real-time",
+      "occupancyClass": "error",
+      "enabled": false,
+      "gapNote": "Public VehiclePositions.pb URL returns 404 — RT feed shared with Google/Transit apps only; contact gtfs@ridedart.com",
+      "probeUrl": "https://www.dart.org/transitdata/gtfsrealtime/VehiclePositions.pb"
+    },
+    {
+      "id": "marta-gtfs-rt",
+      "name": "MARTA Atlanta GTFS-RT",
+      "group": "transit",
+      "timingClass": "real-time",
+      "occupancyClass": "error",
+      "enabled": false,
+      "gapNote": "itsmarta.com/google/vehiclepositions.pb returns HTTP 500 as of 2026-06",
+      "probeUrl": "https://itsmarta.com/google/vehiclepositions.pb"
+    },
+    {
+      "id": "sfmta-gtfs-rt",
+      "name": "SF Muni GTFS-RT",
+      "group": "transit",
+      "timingClass": "real-time",
+      "occupancyClass": "error",
+      "enabled": false,
+      "gapNote": "gtfs.sfmta.com endpoints unreachable — check MobilityData registry for current URL",
+      "probeUrl": "https://gtfs.sfmta.com/trrip/VehiclePositions.pb"
+    }
+  ]
+}

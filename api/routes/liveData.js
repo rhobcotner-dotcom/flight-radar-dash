@@ -9,6 +9,7 @@ import { fetchLiveDashboard } from '../lib/liveDashboard.js';
 import { fetchMisoGrid } from '../lib/misoGrid.js';
 import { fetchSportsSchedule } from '../lib/sportsSchedule.js';
 import { fetchFaaNasStatus } from '../lib/faaNasStatus.js';
+import { getRailNetworkForBbox, segmentsToGeoJson } from '../lib/railNetwork.js';
 
 function parseLatLon(req) {
   const lat = Number(req.query.lat);
@@ -215,4 +216,20 @@ export async function handleSportsSchedule(_req, res) {
 
 export async function handleNasStatus(_req, res) {
   res.json(await fetchFaaNasStatus());
+}
+
+export async function handleRailNetwork(req, res) {
+  const bbox = parseBbox(req);
+  if (!bbox) {
+    return res.status(400).json({ error: 'west, south, east, and north query params required' });
+  }
+
+  const { segments, warming } = getRailNetworkForBbox(bbox);
+  const geojson = segmentsToGeoJson(segments);
+  res.json({
+    ...geojson,
+    count: segments.length,
+    warming,
+    bbox,
+  });
 }

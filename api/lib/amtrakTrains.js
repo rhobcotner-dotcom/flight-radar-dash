@@ -40,6 +40,8 @@ function normalizeTrain(raw) {
 
   const stations = Array.isArray(raw.stations) ? raw.stations : [];
   const nextStop = stations.find((station) => station?.status && station.status !== 'Departed') || null;
+  const originStation = stations[0] || null;
+  const destStation = stations.length ? stations[stations.length - 1] : null;
 
   return {
     trainNum,
@@ -50,8 +52,10 @@ function normalizeTrain(raw) {
     heading: raw.heading || null,
     velocityMph: raw.velocity != null ? Math.round(Number(raw.velocity)) : null,
     timely: raw.trainTimely || null,
-    originCode: raw.origCode || null,
-    destCode: raw.destCode || null,
+    originCode: raw.origCode || originStation?.code || null,
+    destCode: raw.destCode || destStation?.code || null,
+    originName: originStation?.name || originStation?.code || raw.origCode || null,
+    destName: destStation?.name || destStation?.code || raw.destCode || null,
     trainState: raw.trainState || null,
     nextStop: nextStop
       ? {

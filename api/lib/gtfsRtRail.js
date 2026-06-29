@@ -1,5 +1,26 @@
-import bundledFeeds from '../../config/gtfs-rt-rail-feeds.json' with { type: 'json' };
 import bundled511 from '../../config/511-rail-agencies.json' with { type: 'json' };
+import ctaRailRoutes from '../../config/cta-rail-routes.json' with { type: 'json' };
+import {
+  extractVehiclePositions,
+  fetchGtfsRtPayload,
+  flatten511Activities,
+  parse511VehicleActivity,
+} from './gtfsRtClient.js';
+import {
+  buildTripUpdateIndex,
+  buildRouteAlertIndex,
+  enrichVehicleRow,
+  formatDirectionLabel,
+} from './gtfsTransitDetails.js';
+import { resolveStopName } from './gtfsStopNames.js';
+import {
+  feedUrlWithAuth,
+  parseTransitFeedList,
+  readEnv,
+  resolveTrainKind,
+} from './transitAgencies.js';
+import { occupancyLevelFromLabel } from './occupancyEnrichment.js';
+import { enrichTransitMotion } from './transitMotion.js';
 import { filterInSearchRegion } from './viewportQuery.js';
 
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -9,20 +30,7 @@ const CACHE_TTL_MS = 25 * 1000;
 const feedCache = new Map();
 let siri511Cache = { fetchedAt: 0, key: '', vehicles: [] };
 
-function readEnv(name) {
-  return String(process.env[name] || '').trim();
-}
-
-function parseFeedList() {
-  const raw = readEnv('GTFS_RT_RAIL_FEEDS');
-  if (!raw) return bundledFeeds.filter((feed) => feed.enabled !== false);
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length ? parsed : bundledFeeds;
-  } catch {
-    return bundledFeeds;
-  }
-}
+const CTA_RAIL_ROUTE_IDS = new Set(ctaRailRoutes.routeIds || []);
 
 function parse511Agencies() {
   const raw = readEnv('API_511_RAIL_AGENCIES');
@@ -55,7 +63,7 @@ async function fetchWithTimeout(url, options = {}) {
 
 function metersPerSecondToMph(value) {
   const speed = Number(value);
-  if (!Number.isFinite(speed)) return null;
+  if (!Number.isFinite(speed) || speed <= 0.5) return null;
   return Math.round(speed * 2.23694);
 }
 
@@ -63,6 +71,7 @@ function normalizeRegionalTrain({
   vehicleId,
   label,
   routeName,
+  routeId,
   railroad,
   sourceLabel,
   lat,
@@ -70,62 +79,161 @@ function normalizeRegionalTrain({
   bearing,
   speedMph,
   tripId,
+  trainKind = 'passenger',
+  observedAt = null,
+  direction = null,
+  headsign = null,
+  lineCode = null,
+  routeLabel = null,
+  vehicleStatus = null,
+  tripStartTime = null,
+  delayMinutes = null,
+  originStop = null,
+  destStop = null,
+  previousStop = null,
+  nextStop = null,
+  stopsRemaining = null,
+  activeAlerts = null,
+  lineName = null,
+  occupancyLabel = null,
+  occupancySource = null,
+  originName = null,
+  destName = null,
+  originCode = null,
+  destCode = null,
 }) {
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
   const id = String(vehicleId || label || `${lat}:${lon}`).trim();
   if (!id) return null;
 
+  const heading =
+    bearing != null && Number.isFinite(Number(bearing)) && Number(bearing) !== 0
+      ? Math.round(Number(bearing))
+      : null;
+
   return {
-    trainNum: String(label || id).slice(0, 12),
+    trainNum: String(routeLabel || label || id).slice(0, 40),
     trainId: `${sourceLabel}:${id}`.toLowerCase().replace(/\s+/g, '-'),
     routeName: routeName || railroad || sourceLabel,
+    routeId: routeId || null,
     lat,
     lon,
-    heading: bearing != null ? Math.round(Number(bearing)) : null,
+    heading,
     velocityMph: speedMph != null ? Math.round(Number(speedMph)) : null,
-    timely: tripId || null,
-    originCode: routeName || null,
-    destCode: null,
-    trainState: 'live',
-    trainKind: 'passenger',
+    timely: observedAt || null,
+    observedAt,
+    direction,
+    headsign,
+    lineCode,
+    lineName,
+    tripStartTime,
+    delayMinutes,
+    originCode: originCode || null,
+    destCode: destCode || null,
+    originName: originName || originStop?.name || null,
+    destName: destName || destStop?.name || headsign || null,
+    trainState: vehicleStatus || 'live',
+    trainKind,
     railroad: railroad || sourceLabel,
     crossingStatus: null,
     sourceLabel,
+    nextStop,
+    previousStop,
+    originStop,
+    destStop,
+    stopsRemaining,
+    activeAlerts: activeAlerts?.length ? activeAlerts : null,
+    occupancyLabel,
+    occupancyLevel: occupancyLevelFromLabel(occupancyLabel),
+    occupancySource: occupancyLabel ? occupancySource || 'gtfs-rt' : null,
+    vehicleId: vehicleId || null,
+    tripId: tripId || null,
   };
 }
 
-function parseGtfsJsonFeed(body, feed) {
-  const entities = Array.isArray(body?.entity) ? body.entity : [];
-  const trains = [];
+function isCtaRailRoute(routeId) {
+  if (!routeId) return false;
+  const id = String(routeId).trim();
+  if (CTA_RAIL_ROUTE_IDS.has(id)) return true;
+  return !/^\d+$/.test(id);
+}
 
-  for (const entity of entities) {
-    const vehicle = entity?.vehicle;
-    const position = vehicle?.position;
-    const lat = Number(position?.latitude);
-    const lon = Number(position?.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+function resolveCtaTrainKind(routeId) {
+  const id = String(routeId || '').trim();
+  if (/^(Brn|G|Grn|Y|Pink)$/i.test(id)) return 'light_rail';
+  return 'subway';
+}
 
-    const vehicleId = vehicle?.vehicle?.id || entity.id;
-    const label = vehicle?.vehicle?.label || vehicleId;
-    const routeId = vehicle?.trip?.routeId || vehicle?.trip?.route_id;
+function filterPositionsForFeed(positions, feed) {
+  if (feed.railRouteFilter !== 'cta-rail') return positions;
+  return positions.filter((row) => isCtaRailRoute(row.routeId));
+}
 
-    trains.push(
-      normalizeRegionalTrain({
-        vehicleId,
-        label,
-        routeName: routeId ? `${feed.railroad || feed.name} ${routeId}` : feed.name,
+function positionsToTrains(positions, feed, tripIndex = null) {
+  const defaultKind = resolveTrainKind(feed);
+  const stopNameLookup = (stopId) => resolveStopName(feed.id, stopId);
+
+  return positions
+    .map((row) => {
+      const trainKind =
+        feed.railRouteFilter === 'cta-rail' ? resolveCtaTrainKind(row.routeId) : defaultKind;
+      const motion = enrichTransitMotion(
+        feed.id,
+        row.vehicleId,
+        row.lat,
+        row.lon,
+        row.bearing,
+        row.speedMps
+      );
+      const details = enrichVehicleRow(row, { tripIndex, stopNameLookup, routeAlerts: feed.routeAlerts });
+      const direction =
+        details.direction ||
+        (row.directionId != null
+          ? formatDirectionLabel(row.directionId === 0 || row.directionId === '0' ? 'Inbound' : 'Outbound')
+          : null);
+
+      return normalizeRegionalTrain({
+        vehicleId: row.vehicleId,
+        label: row.label,
+        routeLabel: details.routeLabel,
+        routeName: row.routeId ? `${feed.railroad || feed.name} ${row.routeId}` : feed.name,
+        routeId: row.routeId,
         railroad: feed.railroad || feed.name,
         sourceLabel: feed.name,
-        lat,
-        lon,
-        bearing: vehicle?.position?.bearing ?? vehicle?.bearing,
-        speedMph: metersPerSecondToMph(vehicle?.position?.speed ?? vehicle?.speed),
-        tripId: vehicle?.trip?.tripId || vehicle?.trip?.trip_id,
-      })
-    );
-  }
+        lat: row.lat,
+        lon: row.lon,
+        bearing: motion.heading,
+        speedMph: motion.speedMph,
+        tripId: row.tripId,
+        trainKind,
+        observedAt: details.observedAt,
+        direction,
+        headsign: details.headsign,
+        lineCode: details.lineCode,
+        vehicleStatus: details.vehicleStatus,
+        tripStartTime: details.tripStartTime,
+        delayMinutes: details.delayMinutes,
+        originStop: details.originStop,
+        destStop: details.destStop,
+        previousStop: details.previousStop,
+        nextStop: details.nextStop,
+        stopsRemaining: details.stopsRemaining,
+        activeAlerts: details.activeAlerts,
+        lineName: details.lineName,
+        occupancyLabel: details.occupancyLabel,
+        occupancySource: details.occupancySource,
+        vehicleId: row.vehicleId,
+        originName: details.originName,
+        destName: details.destName,
+        originCode: details.originCode,
+        destCode: details.destCode,
+      });
+    })
+    .filter(Boolean);
+}
 
-  return trains.filter(Boolean);
+function parseGtfsJsonFeed(body, feed, tripIndex = null) {
+  return positionsToTrains(filterPositionsForFeed(extractVehiclePositions(body), feed), feed, tripIndex);
 }
 
 function parseMetrolinkJson(body, feed) {
@@ -142,7 +250,7 @@ function parseMetrolinkJson(body, feed) {
       const lat = Number(row?.latitude ?? row?.lat);
       const lon = Number(row?.longitude ?? row?.lon);
       const vehicleId = String(row?.vehicleId || row?.vehicle_id || row?.id || '').trim();
-      if (!vehicleId) return null;
+      if (!vehicleId || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
 
       return normalizeRegionalTrain({
         vehicleId,
@@ -155,116 +263,73 @@ function parseMetrolinkJson(body, feed) {
         bearing: row?.bearing,
         speedMph: row?.speed != null ? Math.round(Number(row.speed) * 2.23694) : null,
         tripId: row?.tripId || row?.trip_id,
+        trainKind: resolveTrainKind(feed),
       });
     })
     .filter(Boolean);
-}
-
-function parseMetraJson(body, feed) {
-  const entities = Array.isArray(body?.entity)
-    ? body.entity
-    : Array.isArray(body?.vehicles)
-      ? body.vehicles
-      : Array.isArray(body?.data)
-        ? body.data
-        : [];
-
-  if (entities.length && entities[0]?.vehicle?.position) {
-    return parseGtfsJsonFeed(body, feed);
-  }
-
-  return entities
-    .map((row) => {
-      const lat = Number(row?.latitude ?? row?.lat ?? row?.position?.latitude);
-      const lon = Number(row?.longitude ?? row?.lon ?? row?.position?.longitude);
-      const vehicleId = String(row?.vehicleId || row?.vehicle_id || row?.id || '').trim();
-      if (!vehicleId) return null;
-
-      return normalizeRegionalTrain({
-        vehicleId,
-        label: row?.label || row?.vehicleLabel || vehicleId,
-        routeName: row?.routeName || row?.routeId || row?.route_id || feed.name,
-        railroad: feed.railroad || 'Metra',
-        sourceLabel: feed.name,
-        lat,
-        lon,
-        bearing: row?.bearing ?? row?.heading,
-        speedMph: row?.speedMph ?? metersPerSecondToMph(row?.speed),
-        tripId: row?.tripId || row?.trip_id,
-      });
-    })
-    .filter(Boolean);
-}
-
-function flatten511Activities(body) {
-  const deliveries = body?.ServiceDelivery?.VehicleMonitoringDelivery;
-  if (!Array.isArray(deliveries)) return [];
-
-  const activities = [];
-  for (const delivery of deliveries) {
-    const rows = delivery?.VehicleActivity;
-    if (Array.isArray(rows)) activities.push(...rows);
-  }
-  return activities;
 }
 
 function parse511Activity(activity, agency) {
-  const journey = activity?.MonitoredVehicleJourney;
-  const location = journey?.VehicleLocation || journey?.vehicleLocation;
-  const lat = Number(location?.Latitude ?? location?.latitude);
-  const lon = Number(location?.Longitude ?? location?.longitude);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-
-  const lineRef = journey?.LineRef || journey?.PublishedLineName?.[0] || agency.name;
-  const vehicleRef = journey?.VehicleRef || journey?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef;
-  const vehicleId = String(vehicleRef || lineRef || `${lat}:${lon}`).trim();
+  const row = parse511VehicleActivity(activity);
+  if (!row) return null;
 
   return normalizeRegionalTrain({
-    vehicleId,
-    label: String(journey?.VehicleRef || vehicleId).slice(0, 12),
-    routeName: String(lineRef).replace(/^.*:/, ''),
+    vehicleId: row.vehicleId,
+    label: row.label,
+    routeName: row.routeName || agency.name,
     railroad: agency.railroad,
     sourceLabel: `511 ${agency.name}`,
-    lat,
-    lon,
-    bearing: journey?.Bearing ?? journey?.bearing,
-    speedMph: metersPerSecondToMph(journey?.Velocity ?? journey?.velocity),
-    tripId: journey?.FramedVehicleJourneyRef?.DatedVehicleJourneyRef,
+    lat: row.lat,
+    lon: row.lon,
+    bearing: row.bearing,
+    speedMph: metersPerSecondToMph(row.speedMps),
+    tripId: row.tripId,
+    trainKind: agency.trainKind || 'passenger',
   });
 }
 
 async function fetchGtfsFeed(feed) {
-  const authEnv = feed.authEnv ? readEnv(feed.authEnv) : '';
-  if (feed.authEnv && !authEnv) {
-    return { trains: [], configured: false, skipped: `${feed.authEnv} not set` };
+  const auth = feedUrlWithAuth(feed);
+  if (auth.skipped) {
+    return { trains: [], configured: false, skipped: auth.skipped };
   }
 
-  const cacheKey = `${feed.id}:${authEnv ? 'auth' : 'open'}`;
+  const cacheKey = `${feed.id}:${auth.configured ? 'auth' : 'open'}`;
   const cached = feedCache.get(cacheKey);
   if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
     return cached.result;
   }
 
-  const headers = {};
-  if (feed.authHeader && authEnv) headers[feed.authHeader] = authEnv;
-
-  let url = feed.url;
-  if (feed.authQuery && authEnv) {
-    const parsed = new URL(url);
-    parsed.searchParams.set(feed.authQuery, authEnv);
-    url = parsed.toString();
-  }
-
-  const res = await fetchWithTimeout(url, { headers });
-  if (!res.ok) {
-    throw new Error(`${feed.name} unavailable (${res.status})`);
-  }
-
-  const body = await res.json();
   let trains = [];
-  if (feed.format === 'metrolink-json') trains = parseMetrolinkJson(body, feed);
-  else if (feed.format === 'metra-json') trains = parseMetraJson(body, feed);
-  else trains = parseGtfsJsonFeed(body, feed);
+
+  if (feed.format === 'metrolink-json') {
+    const res = await fetchWithTimeout(auth.url, { headers: auth.headers });
+    if (!res.ok) throw new Error(`${feed.name} unavailable (${res.status})`);
+    const body = await res.json();
+    trains = parseMetrolinkJson(body, feed);
+  } else if (feed.format === 'gtfs-json') {
+    const res = await fetchWithTimeout(auth.url, { headers: auth.headers });
+    if (!res.ok) throw new Error(`${feed.name} unavailable (${res.status})`);
+    const body = await res.json();
+    trains = parseGtfsJsonFeed(body, feed);
+  } else {
+    const tripUpdatesUrl = feed.tripUpdatesUrl || null;
+    const alertsUrl = feed.alertsUrl || null;
+    const [vehiclePayload, tripPayload, alertsPayload] = await Promise.all([
+      fetchGtfsRtPayload(auth.url, { headers: auth.headers }),
+      tripUpdatesUrl
+        ? fetchGtfsRtPayload(tripUpdatesUrl, { headers: auth.headers }).catch(() => null)
+        : Promise.resolve(null),
+      alertsUrl
+        ? fetchGtfsRtPayload(alertsUrl, { headers: auth.headers }).catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    const tripIndex = tripPayload ? buildTripUpdateIndex(tripPayload.message) : null;
+    feed.routeAlerts = alertsPayload ? buildRouteAlertIndex(alertsPayload.message) : null;
+    const positions = filterPositionsForFeed(extractVehiclePositions(vehiclePayload.message), feed);
+    trains = positionsToTrains(positions, feed, tripIndex);
+    delete feed.routeAlerts;
+  }
 
   const result = { trains, configured: true, count: trains.length };
   feedCache.set(cacheKey, { fetchedAt: Date.now(), result });
@@ -292,7 +357,7 @@ async function fetch511Agency(agency, apiKey) {
 async function fetch511RailTrains() {
   const apiKey = readEnv('API_511_KEY');
   if (!apiKey) {
-    return { trains: [], configured: false };
+    return { trains: [], configured: false, skipped: 'API_511_KEY not set' };
   }
 
   const agencies = parse511Agencies();
@@ -324,7 +389,7 @@ async function fetch511RailTrains() {
 }
 
 export async function fetchRegionalRailTrains(area, radiusMiles) {
-  const feeds = parseFeedList();
+  const feeds = parseTransitFeedList();
   const feedResults = await Promise.allSettled(feeds.map((feed) => fetchGtfsFeed(feed)));
   const siri511Result = await fetch511RailTrains();
 
@@ -356,8 +421,8 @@ export async function fetchRegionalRailTrains(area, radiusMiles) {
     Object.assign(sourceCounts, siri511Result.sourceCounts || {});
     sourceCounts['511_total'] = siri511Result.trains.length;
     trains.push(...siri511Result.trains);
-  } else if (readEnv('API_511_KEY')) {
-    sources.push('511-rail');
+  } else if (siri511Result.skipped) {
+    sourceCounts['511-rail'] = siri511Result.skipped;
   }
 
   const nearby = filterInSearchRegion(trains, area, radiusMiles);
@@ -378,7 +443,7 @@ export async function fetchRegionalRailTrains(area, radiusMiles) {
 
 /** All live regional rail positions (not filtered to a map viewport). */
 export async function fetchAllRegionalRailTrains() {
-  const feeds = parseFeedList();
+  const feeds = parseTransitFeedList();
   const feedResults = await Promise.allSettled(feeds.map((feed) => fetchGtfsFeed(feed)));
   const siri511Result = await fetch511RailTrains();
 
@@ -407,6 +472,8 @@ export async function fetchAllRegionalRailTrains() {
     Object.assign(sourceCounts, siri511Result.sourceCounts || {});
     sourceCounts['511_total'] = siri511Result.trains.length;
     trains.push(...siri511Result.trains);
+  } else if (siri511Result.skipped) {
+    sourceCounts['511-rail'] = siri511Result.skipped;
   }
 
   const byId = new Map();

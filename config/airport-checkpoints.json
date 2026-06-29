@@ -1,0 +1,27 @@
+{
+  "STL": {
+    "name": "St. Louis Lambert",
+    "lat": 38.7487,
+    "lon": -90.3700,
+    "checkpoints": [
+      { "id": "stl-main", "name": "Terminal 1 · Main checkpoint", "lat": 38.7489, "lon": -90.3702 }
+    ]
+  },
+  "ORD": {
+    "name": "Chicago O'Hare",
+    "lat": 41.9742,
+    "lon": -87.9073,
+    "checkpoints": [
+      { "id": "ord-t1", "name": "Terminal 1", "lat": 41.9786, "lon": -87.9048 },
+      { "id": "ord-t3", "name": "Terminal 3", "lat": 41.9772, "lon": -87.9082 }
+    ]
+  },
+  "ATL": {
+    "name": "Hartsfield-Jackson Atlanta",
+    "lat": 33.6407,
+    "lon": -84.4277,
+    "checkpoints": [
+      { "id": "atl-main", "name": "Main checkpoint", "lat": 33.6407, "lon": -84.4277 }
+    ]
+  }
+}

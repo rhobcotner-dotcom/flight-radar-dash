@@ -1,5 +1,6 @@
 import type { Flight } from '../types';
 import { carrierLabel, carrierName } from '../lib/airlineNames';
+import { formatOccupancyLine, occupancyDetailLabel } from '../lib/occupancyUtils';
 import {
   arrivalStatus,
   flightLabel,
@@ -78,6 +79,12 @@ export function FlightDetails({ flight, compact = false, showVisual = true }: Pr
         <div><dt>Aircraft</dt><dd>{flight.type || '—'}{flight.reg ? ` · ${flight.reg}` : ''}</dd></div>
         <div><dt>Altitude</dt><dd>{flight.alt ?? '—'} ft ({verticalTrend(flight.vspeed)})</dd></div>
         <div><dt>Speed</dt><dd>{formatFlightSpeedMph(flight.gspeed) || '—'} · track {flight.track ?? '—'}°</dd></div>
+        {flight.occupancyLabel ? (
+          <div>
+            <dt>{occupancyDetailLabel(flight.occupancyKind)}</dt>
+            <dd>{formatOccupancyLine(flight)?.value || flight.occupancyLabel}</dd>
+          </div>
+        ) : null}
         <div><dt>Squawk</dt><dd>{flight.squawk ?? '—'}</dd></div>
         <div><dt>Status</dt><dd>{status}</dd></div>
         {eta ? <div><dt>ETA</dt><dd>{eta}</dd></div> : null}

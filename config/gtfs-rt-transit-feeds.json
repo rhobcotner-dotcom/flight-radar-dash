@@ -1,0 +1,62 @@
+[
+  {
+    "id": "king-county-metro",
+    "name": "King County Metro",
+    "agency": "King County Metro",
+    "format": "gtfs-protobuf",
+    "url": "https://api.pugetsound.onebusaway.org/api/gtfs_realtime/vehicle-positions-for-agency/1.pb",
+    "authEnv": "OBA_API_KEY",
+    "authQuery": "key",
+    "authOptional": true,
+    "occupancyClass": "gap",
+    "occupancyNote": "Vehicle feed reachable; occupancy_status not on wire (protobuf defaults only)",
+    "enabled": true
+  },
+  {
+    "id": "sound-transit",
+    "name": "Sound Transit",
+    "agency": "Sound Transit",
+    "format": "gtfs-protobuf",
+    "url": "https://api.pugetsound.onebusaway.org/api/gtfs_realtime/vehicle-positions-for-agency/40.pb",
+    "authEnv": "OBA_API_KEY",
+    "authQuery": "key",
+    "authOptional": true,
+    "occupancyClass": "gap",
+    "enabled": true
+  },
+  {
+    "id": "trimet",
+    "name": "TriMet Portland",
+    "agency": "TriMet",
+    "format": "gtfs-protobuf",
+    "url": "https://developer.trimet.org/ws/V1/gtfs/VehiclePositions",
+    "authEnv": "TRIMET_APP_ID",
+    "authQuery": "appID",
+    "occupancyClass": "unknown",
+    "occupancyNote": "Requires free TRIMET_APP_ID; occupancy historically published when APC enabled",
+    "enabled": true
+  },
+  {
+    "id": "la-metro-swiftly",
+    "name": "LA Metro",
+    "agency": "LA Metro",
+    "format": "gtfs-protobuf",
+    "url": "https://api.goswift.ly/lametro/gtfs-rt/vehicle-positions",
+    "authEnv": "LA_METRO_SWIFTLY_KEY",
+    "authHeader": "Authorization",
+    "occupancyClass": "unknown",
+    "occupancyNote": "Swiftly feed; LA Metro publishes crowding to Google Maps when APC active",
+    "enabled": true
+  },
+  {
+    "id": "cta-bus",
+    "name": "CTA Bus",
+    "agency": "CTA",
+    "format": "gtfs-protobuf",
+    "url": "https://gtfsapi.transitchicago.com/gtfspublic/bustatus/vehiclepositions.pb",
+    "authEnv": "CTA_API_KEY",
+    "authQuery": "key",
+    "occupancyClass": "unknown",
+    "enabled": true
+  }
+]

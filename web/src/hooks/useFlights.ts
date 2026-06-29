@@ -77,6 +77,7 @@ interface RefreshOptions {
   silent?: boolean;
   generation?: number;
   enrich?: boolean;
+  replace?: boolean;
 }
 
 function applyRefreshPayload(
@@ -97,9 +98,18 @@ function applyRefreshPayload(
     setHasLoaded: Dispatch<SetStateAction<boolean>>;
     setLoading: Dispatch<SetStateAction<boolean>>;
     setTrendsKey: Dispatch<SetStateAction<number>>;
+    setViewportFlightsReady: Dispatch<SetStateAction<boolean>>;
+    setViewportLoading: Dispatch<SetStateAction<boolean>>;
   }
 ) {
-  if (options.silent) {
+  const replace = options.replace || !options.silent;
+
+  if (replace) {
+    setters.setFlights(incoming);
+    setters.setGovFlights(data.govFlights || []);
+    setters.setB52Flights(data.b52Flights || []);
+    setters.setAlerts(data.alerts || []);
+  } else if (options.silent) {
     if (incoming.length > 0) {
       if (hasLoadedRef.current) {
         setters.setFlights((prev) => {
@@ -121,17 +131,25 @@ function applyRefreshPayload(
   }
 
   setters.setFetchedAt(data.fetchedAt || new Date().toISOString());
-  setters.setInViewCount(data.count ?? incoming.length);
+  if (replace || incoming.length > 0) {
+    setters.setInViewCount(data.count ?? incoming.length);
+  }
   setters.setHomeCount(data.homeCount ?? 0);
   setters.setError(null);
   setters.setDataWarning(data.dataWarning || null);
   setters.setHasLoaded(true);
   hasLoadedRef.current = true;
+  if (replace || incoming.length > 0) {
+    setters.setViewportFlightsReady(true);
+  }
   setters.setLoading(false);
+  setters.setViewportLoading(false);
   if (options.snapshot !== false && !options.silent) {
     setters.setTrendsKey((k) => k + 1);
   }
 }
+
+const VIEWPORT_FLIGHT_DEBOUNCE_MS = 75;
 
 export function useFlights(queryString: string, viewportBounds: MapViewportBounds) {
   const [flights, setFlights] = useState<Flight[]>([]);
@@ -142,6 +160,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   const [homeCount, setHomeCount] = useState(0);
   const [airport, setAirport] = useState<AirportHub | null>(null);
   const [loading, setLoading] = useState(false);
+  const [viewportLoading, setViewportLoading] = useState(false);
   const [airportLoading, setAirportLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dataWarning, setDataWarning] = useState<string | null>(null);
@@ -149,6 +168,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
   const [airportFetchedAt, setAirportFetchedAt] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [viewportFlightsReady, setViewportFlightsReady] = useState(false);
   const [trendsKey, setTrendsKey] = useState(0);
   const [positionRefreshSeq, setPositionRefreshSeq] = useState(0);
   const [autoRefreshSeconds, setAutoRefreshSecondsState] = useState<AutoRefreshSeconds>(readAutoRefreshSeconds);
@@ -159,120 +179,136 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   const loadGenerationRef = useRef(0);
   const hasLoadedRef = useRef(false);
   const enrichViewportKeyRef = useRef<string | null>(null);
+  const viewportDebounceRef = useRef<number | null>(null);
+  const viewportBoundsRef = useRef(viewportBounds);
+  const viewportKeyRef = useRef(stableViewportKey(viewportBounds));
+  const queryStringRef = useRef(queryString);
   const viewportKey = useMemo(() => stableViewportKey(viewportBounds), [viewportBounds]);
 
   useEffect(() => {
     hasLoadedRef.current = hasLoaded;
   }, [hasLoaded]);
 
-  const refreshMap = useCallback(
-    async (options: RefreshOptions = {}) => {
-      const enrich = options.enrich !== false;
-      const inFlightRef = enrich ? enrichRefreshInFlight : fastRefreshInFlight;
-      const pendingRef = enrich ? pendingEnrichRefreshRef : pendingFastRefreshRef;
+  useEffect(() => {
+    viewportBoundsRef.current = viewportBounds;
+    viewportKeyRef.current = viewportKey;
+    queryStringRef.current = queryString;
+  }, [viewportBounds, viewportKey, queryString]);
 
-      if (inFlightRef.current) {
-        pendingRef.current = options;
-        return;
-      }
+  const refreshMap = useCallback(async (options: RefreshOptions = {}) => {
+    const enrich = options.enrich !== false;
+    const inFlightRef = enrich ? enrichRefreshInFlight : fastRefreshInFlight;
+    const pendingRef = enrich ? pendingEnrichRefreshRef : pendingFastRefreshRef;
 
-      inFlightRef.current = true;
-      const generation = options.generation ?? loadGenerationRef.current;
-      const showLoading = !hasLoadedRef.current && !enrich;
-      let scheduleEnrichment = false;
+    if (inFlightRef.current) {
+      pendingRef.current = options;
+      return;
+    }
 
-      if (showLoading) {
-        setLoading(true);
-      }
-      if (!options.silent) {
-        setError(null);
+    inFlightRef.current = true;
+    const generation = options.generation ?? loadGenerationRef.current;
+    const showLoading = !hasLoadedRef.current && !enrich && !options.silent;
+    let scheduleEnrichment = false;
+
+    if (showLoading) {
+      setLoading(true);
+    }
+    if (!options.silent) {
+      setError(null);
+      if (!options.replace) {
         setDataWarning(null);
       }
+    }
 
-      const params = viewportSearchParams(queryString, viewportBounds);
-      if (options.snapshot === false) {
-        params.set('snapshot', 'false');
+    const params = viewportSearchParams(queryStringRef.current, viewportBoundsRef.current);
+    if (options.snapshot === false) {
+      params.set('snapshot', 'false');
+    }
+    if (!enrich) {
+      params.set('enrich', '0');
+    }
+
+    try {
+      const res = await fetch(`/api/live/refresh?${params.toString()}`, {
+        priority: enrich || options.replace ? 'high' : 'high',
+      });
+      const data: MapRefreshPayload = await res.json();
+
+      const incoming = data.flights || [];
+      const isStale = generation !== loadGenerationRef.current;
+      if (isStale) return;
+      if (!res.ok) throw new Error(data.error || 'Failed to load flights');
+
+      applyRefreshPayload(
+        data,
+        incoming,
+        options,
+        hasLoadedRef,
+        {
+          setFlights,
+          setGovFlights,
+          setB52Flights,
+          setAlerts,
+          setFetchedAt,
+          setInViewCount,
+          setHomeCount,
+          setError,
+          setDataWarning,
+          setHasLoaded,
+          setLoading,
+          setTrendsKey,
+          setViewportFlightsReady,
+          setViewportLoading,
+        }
+      );
+
+      if (enrich) {
+        enrichViewportKeyRef.current = viewportKeyRef.current;
       }
+
+      if (
+        !enrich &&
+        incoming.length > 0 &&
+        enrichViewportKeyRef.current !== viewportKeyRef.current
+      ) {
+        scheduleEnrichment = true;
+      }
+
       if (!enrich) {
-        params.set('enrich', '0');
+        setPositionRefreshSeq((seq) => seq + 1);
       }
-
-      try {
-        const res = await fetch(`/api/live/refresh?${params.toString()}`);
-        const data: MapRefreshPayload = await res.json();
-
-        const incoming = data.flights || [];
-        const isStale = generation !== loadGenerationRef.current;
-        if (isStale && (hasLoadedRef.current || incoming.length === 0)) return;
-        if (!res.ok) throw new Error(data.error || 'Failed to load flights');
-
-        applyRefreshPayload(
-          data,
-          incoming,
-          options,
-          hasLoadedRef,
-          {
-            setFlights,
-            setGovFlights,
-            setB52Flights,
-            setAlerts,
-            setFetchedAt,
-            setInViewCount,
-            setHomeCount,
-            setError,
-            setDataWarning,
-            setHasLoaded,
-            setLoading,
-            setTrendsKey,
-          }
-        );
-
-        if (
-          !enrich &&
-          incoming.length > 0 &&
-          enrichViewportKeyRef.current !== viewportKey
-        ) {
-          scheduleEnrichment = true;
-        }
-
-        if (!enrich && !isStale) {
-          setPositionRefreshSeq((seq) => seq + 1);
-        }
-      } catch (err) {
-        if (generation !== loadGenerationRef.current && hasLoadedRef.current) return;
-        const message = friendlyApiError(err instanceof Error ? err.message : 'Unknown error');
-        if (!options.silent && !enrich) {
-          if (hasLoadedRef.current) {
-            setDataWarning(message);
-            setError(null);
-          } else {
-            setError(message);
-            setLoading(false);
-          }
-        }
-      } finally {
-        inFlightRef.current = false;
-        const pending = pendingRef.current;
-        pendingRef.current = null;
-        if (pending) {
-          void refreshMap(pending);
-        } else if (showLoading && !hasLoadedRef.current) {
+    } catch (err) {
+      if (generation !== loadGenerationRef.current) return;
+      setViewportLoading(false);
+      const message = friendlyApiError(err instanceof Error ? err.message : 'Unknown error');
+      if (!options.silent && !enrich) {
+        if (hasLoadedRef.current) {
+          setDataWarning(message);
+          setError(null);
+        } else {
+          setError(message);
           setLoading(false);
-        } else if (scheduleEnrichment) {
-          enrichViewportKeyRef.current = viewportKey;
-          window.setTimeout(() => {
-            void refreshMap({
-              snapshot: false,
-              silent: true,
-              enrich: true,
-              generation: loadGenerationRef.current,
-            });
-          }, 0);
         }
       }
-    },
-    [queryString, viewportBounds, viewportKey]
-  );
+    } finally {
+      inFlightRef.current = false;
+      const pending = pendingRef.current;
+      pendingRef.current = null;
+      if (pending) {
+        void refreshMap(pending);
+      } else if (showLoading && !hasLoadedRef.current) {
+        setLoading(false);
+      } else if (scheduleEnrichment && generation === loadGenerationRef.current) {
+        enrichViewportKeyRef.current = viewportKeyRef.current;
+        void refreshMap({
+          snapshot: false,
+          silent: true,
+          enrich: true,
+          generation: loadGenerationRef.current,
+        });
+      }
+    }
+  }, []);
 
   const loadAirport = useCallback(async () => {
     setAirportLoading(true);
@@ -298,19 +334,33 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   }, []);
 
   useEffect(() => {
-    loadGenerationRef.current += 1;
-    enrichViewportKeyRef.current = null;
-    const generation = loadGenerationRef.current;
-    const delay = hasLoadedRef.current ? 150 : 0;
-    const timer = window.setTimeout(() => {
+    if (viewportDebounceRef.current != null) {
+      window.clearTimeout(viewportDebounceRef.current);
+    }
+
+    viewportDebounceRef.current = window.setTimeout(() => {
+      viewportDebounceRef.current = null;
+      loadGenerationRef.current += 1;
+      enrichViewportKeyRef.current = null;
+      const generation = loadGenerationRef.current;
+      setViewportLoading(true);
+      if (!hasLoadedRef.current) {
+        setLoading(true);
+      }
       void refreshMap({
         snapshot: false,
-        silent: hasLoadedRef.current,
+        silent: false,
         generation,
         enrich: false,
+        replace: true,
       });
-    }, delay);
-    return () => window.clearTimeout(timer);
+    }, VIEWPORT_FLIGHT_DEBOUNCE_MS);
+
+    return () => {
+      if (viewportDebounceRef.current != null) {
+        window.clearTimeout(viewportDebounceRef.current);
+      }
+    };
     // Reload when the watched area or viewport changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryString, viewportKey]);
@@ -333,7 +383,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
   useEffect(() => {
     if (!dataWarning) return undefined;
     const id = window.setTimeout(() => setDataWarning(null), 12_000);
-    return () => window.clearTimeout(id);
+    return () => window.clearInterval(id);
   }, [dataWarning]);
 
   return {
@@ -345,6 +395,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
     homeCount,
     airport,
     loading,
+    viewportLoading,
     airportLoading,
     error,
     dataWarning,
@@ -352,6 +403,7 @@ export function useFlights(queryString: string, viewportBounds: MapViewportBound
     fetchedAt,
     airportFetchedAt,
     hasLoaded,
+    viewportFlightsReady,
     trendsKey,
     positionRefreshSeq,
     autoRefreshSeconds,

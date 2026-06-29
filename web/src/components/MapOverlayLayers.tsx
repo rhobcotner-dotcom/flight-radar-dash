@@ -100,12 +100,12 @@ function riverIcon(stageFt: number | null) {
   });
 }
 
-function transitIcon(routeName: string, highlighted: boolean) {
+function transitDotIcon(highlighted: boolean) {
   return L.divIcon({
     className: 'transit-marker',
-    html: `<div class="transit-badge${highlighted ? ' transit-badge-active' : ''}">${routeName}</div>`,
-    iconSize: [48, 22],
-    iconAnchor: [24, 11],
+    html: `<div class="map-transit-dot map-transit-dot-light_rail${highlighted ? ' map-transit-dot-active' : ''}"></div>`,
+    iconSize: [11, 11],
+    iconAnchor: [5, 5],
   });
 }
 
@@ -173,6 +173,7 @@ function formatRoadPopup(props: RoadConditionCollection['features'][number]['pro
       <strong>${props.title}</strong>
       <div class="muted">${props.label}${props.county ? ` · ${props.county} County` : ''}</div>
       <div class="muted">${props.distanceMiles} mi away</div>
+      ${props.occupancyLabel ? `<div>${props.occupancyLabel}</div>` : ''}
       ${props.comment ? `<div>${props.comment}</div>` : ''}
     </div>
   `;
@@ -183,6 +184,7 @@ function formatAqiPopup(payload: AirQualityPayload) {
     <div class="aqi-popup">
       <strong>Air quality · ${payload.category}</strong>
       <div>US AQI ${payload.usAqi ?? '—'} · PM2.5 ${payload.pm25 ?? '—'} · PM10 ${payload.pm10 ?? '—'}</div>
+      ${payload.occupancyLabel ? `<div>${payload.occupancyLabel}</div>` : ''}
       <div class="muted">Source: ${payload.source}${payload.reportingArea ? ` · ${payload.reportingArea}` : ''}</div>
     </div>
   `;
@@ -238,6 +240,7 @@ function formatEarthquakePopup(event: EarthquakePayload['events'][number]) {
     <div class="earthquake-popup">
       <strong>M${event.magnitude ?? '?'} · ${event.place}</strong>
       <div class="muted">${event.distanceMiles} mi away · depth ${event.depthKm ?? '—'} km</div>
+      ${event.occupancyLabel ? `<div>${event.occupancyLabel}${event.occupancyLevel != null ? ` · ${event.occupancyLevel}%` : ''}</div>` : ''}
       ${event.time ? `<div class="muted">${new Date(event.time).toLocaleString()}</div>` : ''}
     </div>
   `;
@@ -259,6 +262,7 @@ function formatWildfirePopup(hotspot: WildfirePayload['hotspots'][number]) {
       <strong>VIIRS hotspot</strong>
       <div class="muted">${hotspot.distanceMiles} mi away · ${hotspot.satellite}</div>
       <div>FRP ${hotspot.frp ?? '—'} · confidence ${hotspot.confidence ?? '—'}</div>
+      ${hotspot.occupancyLabel ? `<div>${hotspot.occupancyLabel}</div>` : ''}
     </div>
   `;
 }
@@ -269,6 +273,7 @@ function formatMetarPopup(station: MetarPayload['stations'][number]) {
       <strong>${station.icaoId}</strong>
       <div>${station.name}</div>
       <div class="muted">${station.flightCategory} · ${station.temperatureF ?? '—'}°F · wind ${station.windDirectionDeg ?? '—'}° @ ${station.windSpeedMph ?? '—'} mph</div>
+      ${station.occupancyLabel ? `<div>${station.occupancyLabel}</div>` : ''}
       <div class="metar-raw">${station.rawOb}</div>
       ${station.taf?.rawTaf ? `<div class="metar-taf"><strong>TAF</strong><div class="metar-raw">${station.taf.rawTaf}</div></div>` : ''}
     </div>
@@ -292,6 +297,7 @@ function formatRiverPopup(gauge: RiverGaugePayload['gauges'][number]) {
       <strong>${gauge.name}</strong>
       <div class="muted">${gauge.siteId} · ${gauge.distanceMiles} mi away</div>
       <div>Stage ${gauge.stageFt ?? '—'} ft · Flow ${gauge.flowCfs ?? '—'} cfs</div>
+      ${gauge.occupancyLabel ? `<div>${gauge.occupancyLabel}</div>` : ''}
     </div>
   `;
 }
@@ -301,7 +307,9 @@ function formatTransitPopup(vehicle: TransitVehicle) {
     <div class="transit-popup">
       <strong>${vehicle.routeName}</strong>
       <div class="muted">${vehicle.label} · ${vehicle.distanceMiles?.toFixed(1) ?? '—'} mi away</div>
-      <div>${vehicle.speedMph ?? '—'} mph · route ${vehicle.routeId || '—'}</div>
+      ${vehicle.nextStopName ? `<div>Next: ${vehicle.nextStopName}</div>` : ''}
+      ${vehicle.occupancyLabel ? `<div>${vehicle.occupancyLabel}</div>` : `<div class="muted">Crowding not reported in agency feed</div>`}
+      <div>${vehicle.speedMph != null && vehicle.speedMph > 0 ? `${vehicle.speedMph} mph` : 'speed unavailable'} · route ${vehicle.routeId || '—'}</div>
     </div>
   `;
 }
@@ -457,7 +465,7 @@ export function TransitLayer({
           <Marker
             key={id}
             position={[vehicle.lat, vehicle.lon]}
-            icon={transitIcon(vehicle.routeName, highlighted)}
+            icon={transitDotIcon(highlighted)}
             zIndexOffset={highlighted ? 650 : 420}
             eventHandlers={mapHandlers?.(id)}
           >
@@ -652,14 +660,11 @@ function cameraIcon(kind: 'road' | 'rail' | 'weather' = 'road') {
       iconAnchor: [8, 8],
     });
   }
-  const dotClass = kind === 'rail' ? 'camera-dot rail-camera-dot' : 'camera-dot';
-  const size = kind === 'rail' ? 20 : 9;
-  const anchor = size / 2;
   return L.divIcon({
-    className: kind === 'rail' ? 'camera-marker rail-camera-marker' : 'camera-marker',
-    html: `<div class="${dotClass}" aria-hidden="true"></div>`,
-    iconSize: [size, size],
-    iconAnchor: [anchor, anchor],
+    className: 'camera-marker',
+    html: `<div class="camera-dot" aria-hidden="true"></div>`,
+    iconSize: [9, 9],
+    iconAnchor: [4.5, 4.5],
   });
 }
 
@@ -986,6 +991,68 @@ export function DroughtLayer({ collection }: { collection: DroughtCollection | n
         if (!props) return;
         layer.bindTooltip(`<strong>${props.label}</strong>`, TOOLTIP_OPTIONS);
       }}
+    />
+  );
+}
+
+function isMetroTrackType(railwayType: string) {
+  return railwayType === 'light_rail' || railwayType === 'tram' || railwayType === 'subway';
+}
+
+function filterRailNetworkCollection(
+  collection: {
+    type: 'FeatureCollection';
+    features: Array<{ type: string; geometry: { type: string; coordinates: number[][] }; properties?: Record<string, unknown> }>;
+    count?: number;
+  },
+  options: { railEnabled: boolean; metroEnabled: boolean; showAllTracks: boolean }
+) {
+  if (options.showAllTracks) return collection;
+  const features = collection.features.filter((feature) => {
+    const railwayType = String(feature?.properties?.railwayType || 'rail');
+    if (isMetroTrackType(railwayType)) return options.metroEnabled;
+    return options.railEnabled;
+  });
+  if (!features.length) return null;
+  return { ...collection, features, count: features.length };
+}
+
+function railNetworkStyle(feature?: { properties?: Record<string, unknown> } | null): PathOptions {
+  const railwayType = String(feature?.properties?.railwayType || 'rail');
+  const railroad = String(feature?.properties?.railroad || feature?.properties?.operator || '').toUpperCase();
+
+  if (railwayType === 'subway') {
+    if (railroad.includes('CTA')) return { color: '#ef4444', weight: 2, opacity: 0.85 };
+    if (railroad.includes('WMATA')) return { color: '#2563eb', weight: 2, opacity: 0.85 };
+    if (railroad.includes('BART')) return { color: '#f59e0b', weight: 2, opacity: 0.85 };
+    return { color: '#2563eb', weight: 2, opacity: 0.85 };
+  }
+  if (railwayType === 'light_rail' || railwayType === 'tram') {
+    return { color: '#c084fc', weight: 2.5, opacity: 0.92 };
+  }
+  return { color: '#94a3b8', weight: 2.5, opacity: 0.95 };
+}
+
+export function RailNetworkLayer({
+  collection,
+  railEnabled = true,
+  metroEnabled = true,
+  showAllTracks = false,
+}: {
+  collection: { type: 'FeatureCollection'; features: Array<{ type: string; geometry: { type: string; coordinates: number[][] }; properties?: Record<string, unknown> }> } | null;
+  railEnabled?: boolean;
+  metroEnabled?: boolean;
+  showAllTracks?: boolean;
+}) {
+  const visible = collection
+    ? filterRailNetworkCollection(collection, { railEnabled, metroEnabled, showAllTracks })
+    : null;
+  if (!visible?.features?.length) return null;
+  return (
+    <GeoJSON
+      key={`rail-network-${visible.features.length}`}
+      data={visible}
+      style={(feature) => railNetworkStyle(feature)}
     />
   );
 }

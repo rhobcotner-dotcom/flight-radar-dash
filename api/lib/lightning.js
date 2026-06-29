@@ -1,4 +1,5 @@
 import { boundingBox, distanceMiles } from '../../lib/geo.js';
+import { enrichLightningOccupancy } from './occupancyEnrichment.js';
 
 const BLITZORTUNG_URL = 'https://map.blitzortung.org/GEOjson/getjson.php?f=s&n=00';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -22,14 +23,14 @@ function normalizeStrike(row, lat, lon, radiusMiles) {
     ? Math.max(0, Math.round((Date.now() - parsed) / 60000))
     : null;
 
-  return {
+  return enrichLightningOccupancy({
     lat: strikeLat,
     lon: strikeLon,
     observedAt: Number.isFinite(parsed) ? new Date(parsed).toISOString() : null,
     ageMinutes,
     distanceMiles: Math.round(distance * 10) / 10,
     intensity: Number(row[5]) || null,
-  };
+  });
 }
 
 export async function fetchLightningStrikes(lat, lon, radiusMiles = 85) {

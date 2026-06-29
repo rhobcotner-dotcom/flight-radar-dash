@@ -1,4 +1,5 @@
 import { distanceMiles } from '../../lib/geo.js';
+import { enrichNwpsGaugeOccupancy } from './occupancyEnrichment.js';
 
 const NWPS_GAUGES = 'https://api.water.noaa.gov/nwps/v1/gauges';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -55,7 +56,7 @@ export async function fetchNwpsRiverForecast(lat, lon, radiusMiles = 85) {
       const status = gauge.status || {};
       const observed = status.observed?.primary || status.observed?.secondary || {};
       const forecast = status.forecast?.primary || status.forecast?.secondary || {};
-      return {
+      return enrichNwpsGaugeOccupancy({
         lid: gauge.lid,
         name: gauge.name,
         lat: gLat,
@@ -66,9 +67,10 @@ export async function fetchNwpsRiverForecast(lat, lon, radiusMiles = 85) {
         forecastTime: forecast.stage?.validTime || null,
         floodCategory: floodCategoryLabel(status.floodCategory?.observed),
         floodCategoryForecast: floodCategoryLabel(status.floodCategory?.forecast),
+        floodStageFt: status?.floodStages?.primary?.flood ?? status?.floodStage ?? null,
         distanceMiles:
           Math.round(distanceMiles(lat, lon, gLat, gLon) * 10) / 10,
-      };
+      });
     })
     .filter(Boolean)
     .filter((g) => g.distanceMiles <= radiusMiles)

@@ -6,7 +6,7 @@ import type { useHighlight } from '../hooks/useHighlight';
 import type { AreaSettings, Flight, Satellite, Train, WeatherConditions } from '../types';
 import type { TrafficCameraPayload } from '../lib/mapLayers';
 import { flightKey, isSquawk7700 } from '../lib/flightUtils';
-import { trainKey } from '../lib/trainUtils';
+import { trainKey, isMetroTrain, isClassicRailTrain } from '../lib/trainUtils';
 import { satelliteKey } from '../lib/satelliteUtils';
 import { parseTrainHeadingDeg } from '../lib/trackSmoothing';
 import {
@@ -36,15 +36,22 @@ import {
   TrafficCameraLayer,
   WeatherCameraLayer,
   RailCameraLayer,
-  TransitLayer,
+  RailNetworkLayer,
   WeatherAlertPolygonLayer,
   WildfireLayer,
 } from './MapOverlayLayers';
+import { buildOccupancyOverlayPoints, OccupancyOverlayLayer } from './OccupancyOverlayLayer';
+import { EmergencyServicesLayer } from './EmergencyServicesLayer';
+import { EmergencyMapFocus } from './EmergencyMapFocus';
+import type { EmergencyFocusRequest } from '../lib/emergencyRecent';
+import { useOccupancyOverlay } from '../hooks/useOccupancyOverlay';
+import { useEmergencyServices } from '../hooks/useEmergencyServices';
 import { useMapLayers } from '../hooks/useMapLayers';
 import { useViewportCameras, type StormCameraPriority } from '../hooks/useViewportCameras';
 import { useViewportRailCameras } from '../hooks/useViewportRailCameras';
+import { useRailNetwork } from '../hooks/useRailNetwork';
 import type { MapViewportBounds } from '../lib/mapViewport';
-import { stableViewportKey, viewportFromArea, viewportSearchParams } from '../lib/mapViewport';
+import { pointInViewportBounds, stableViewportKey, viewportFromArea, viewportSearchParams } from '../lib/mapViewport';
 import { CameraStreamSchedulerProvider } from '../hooks/useCameraStreamScheduler';
 import { ChartMapDecor } from './ChartMapDecor';
 import { ChartSeaMonsters } from './ChartSeaMonsters';
@@ -86,6 +93,7 @@ const SATELLITES_ENABLED_KEY = 'flight-radar-dash-satellites-enabled';
 const LAYER_KEYS = {
   flights: 'flight-radar-dash-layer-flights',
   rail: 'flight-radar-dash-layer-rail',
+  metro: 'flight-radar-dash-layer-metro',
   weatherAlerts: 'flight-radar-dash-layer-weather-alerts',
   lightning: 'flight-radar-dash-layer-lightning',
   helos: 'flight-radar-dash-layer-helos',
@@ -103,7 +111,14 @@ const LAYER_KEYS = {
   inaturalist: 'flight-radar-dash-layer-inaturalist',
   aprs: 'flight-radar-dash-layer-aprs',
   drought: 'flight-radar-dash-layer-drought',
+  railNetwork: 'flight-radar-dash-layer-rail-network',
+  occupancy: 'flight-radar-dash-layer-occupancy',
+  emergencyServices: 'flight-radar-dash-layer-emergency-services',
 } as const;
+
+function trainMapPosition(train: Train): [number, number] {
+  return [train.snappedLat ?? train.lat, train.snappedLon ?? train.lon];
+}
 
 function readLayerFlag(key: string, fallback: boolean) {
   try {
@@ -247,15 +262,15 @@ const FlightMarker = memo(function FlightMarker({
   const heloKind = helosEnabled ? classifyHelicopter(flight) : null;
   const motionHint = useMemo(() => aircraftMotionHint(flight), [flight.alt, flight.gspeed, flight.track]);
   const id = flightKey(flight);
-  const motionAnchorKey = `${flight.lat.toFixed(5)}:${flight.lon.toFixed(5)}:${flight.gspeed ?? ''}:${flight.track ?? ''}:${positionRefreshSeq}`;
+  const motionAnchorKey = `${flight.lat.toFixed(4)}:${flight.lon.toFixed(4)}:${flight.gspeed ?? ''}:${flight.track ?? ''}`;
   const altitudeTrend = useMemo(
     () => altitudeTrendForFlight(id, flight.alt),
-    [id, flight.alt]
+    [id, flight.alt, positionRefreshSeq]
   );
   const ground = isGroundLevelFlight(flight);
   const speedTrend = useMemo(
     () => speedTrendForFlight(id, flight.gspeed, !ground),
-    [id, flight.gspeed, ground]
+    [id, flight.gspeed, ground, positionRefreshSeq]
   );
   const markerPosition =
     flightRefreshIntervalMs > 0
@@ -379,6 +394,7 @@ const FlightMarker = memo(function FlightMarker({
   return (
     prev.highlighted === next.highlighted &&
     prev.helosEnabled === next.helosEnabled &&
+    prev.positionRefreshSeq === next.positionRefreshSeq &&
     prev.flight.lat === next.flight.lat &&
     prev.flight.lon === next.flight.lon &&
     prev.flight.track === next.flight.track &&
@@ -417,10 +433,23 @@ const TrainMarker = memo(function TrainMarker({
   trainRefreshIntervalMs: number;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
-  const smoothedPositionRef = useRef<[number, number]>([train.lat, train.lon]);
+  const [displayLat, displayLon] = trainMapPosition(train);
+  const smoothedPositionRef = useRef<[number, number]>([displayLat, displayLon]);
   const icon = useMemo(
     () => buildTrainMapIcon(train, highlighted),
-    [train.trainKind, train.heading, train.velocityMph, train.crossingStatus, train.railroad, highlighted]
+    [
+      train.trainKind,
+      train.heading,
+      train.velocityMph,
+      train.crossingStatus,
+      train.railroad,
+      train.sourceLabel,
+      train.originCode,
+      train.destCode,
+      train.originName,
+      train.destName,
+      highlighted,
+    ]
   );
   const id = trainKey(train);
   const motionHint = useMemo(
@@ -433,18 +462,24 @@ const TrainMarker = memo(function TrainMarker({
   const markerPosition =
     trainRefreshIntervalMs > 0
       ? smoothedPositionRef.current
-      : ([train.lat, train.lon] as [number, number]);
+      : ([displayLat, displayLon] as [number, number]);
 
   useAnimatedMarkerPosition({
     trackId: id,
-    lat: train.lat,
-    lon: train.lon,
+    lat: displayLat,
+    lon: displayLon,
     motionHint,
     refreshIntervalMs: trainRefreshIntervalMs,
-    anchorKey: `${train.lat.toFixed(5)}:${train.lon.toFixed(5)}:${train.velocityMph ?? ''}:${train.heading ?? ''}`,
+    anchorKey: `${displayLat.toFixed(5)}:${displayLon.toFixed(5)}:${train.velocityMph ?? ''}:${train.heading ?? ''}`,
     markerRef,
     positionRef: trainRefreshIntervalMs > 0 ? smoothedPositionRef : undefined,
-    profile: train.trainKind === 'passenger' ? 'passenger-rail' : 'beacon',
+    profile:
+      train.trainKind === 'passenger' ||
+      train.trainKind === 'subway' ||
+      train.trainKind === 'light_rail' ||
+      train.trainKind === 'commuter'
+        ? 'passenger-rail'
+        : 'beacon',
   });
 
   useEffect(() => {
@@ -471,10 +506,17 @@ const TrainMarker = memo(function TrainMarker({
     prev.train.trainKind === next.train.trainKind &&
     prev.train.lat === next.train.lat &&
     prev.train.lon === next.train.lon &&
+    prev.train.snappedLat === next.train.snappedLat &&
+    prev.train.snappedLon === next.train.snappedLon &&
     prev.train.heading === next.train.heading &&
     prev.train.velocityMph === next.train.velocityMph &&
     prev.train.crossingStatus === next.train.crossingStatus &&
     prev.train.railroad === next.train.railroad &&
+    prev.train.sourceLabel === next.train.sourceLabel &&
+    prev.train.originCode === next.train.originCode &&
+    prev.train.destCode === next.train.destCode &&
+    prev.train.originName === next.train.originName &&
+    prev.train.destName === next.train.destName &&
     prev.mapHandlers === next.mapHandlers
   );
 });
@@ -543,8 +585,11 @@ const FlightMapInner = memo(function FlightMapInner({
   onRadarError,
   layerToggles,
   mapLayers,
+  occupancyPoints,
+  emergencyPayload,
   cameras,
   railCameras,
+  railNetwork,
   viewportBounds,
   cameraStreamBoundsKey,
   onViewportChange,
@@ -559,6 +604,7 @@ const FlightMapInner = memo(function FlightMapInner({
   positionRefreshSeq = 0,
   mapFetchedAt,
   trainsFetchedAt,
+  emergencyFocusRequest,
 }: {
   area: AreaSettings;
   flights: Flight[];
@@ -575,6 +621,7 @@ const FlightMapInner = memo(function FlightMapInner({
   layerToggles: {
     flights: boolean;
     rail: boolean;
+    metro: boolean;
     weatherAlerts: boolean;
     lightning: boolean;
     helos: boolean;
@@ -592,10 +639,17 @@ const FlightMapInner = memo(function FlightMapInner({
     inaturalist: boolean;
     aprs: boolean;
     drought: boolean;
+    railNetwork: boolean;
+    railNetworkAll: boolean;
+    occupancy: boolean;
+    emergencyServices: boolean;
   };
   mapLayers: ReturnType<typeof useMapLayers>;
+  occupancyPoints: import('../lib/occupancyUtils').OccupancyPoint[];
+  emergencyPayload: import('../hooks/useEmergencyServices').EmergencyServicesPayload | null;
   cameras: TrafficCameraPayload | null;
   railCameras: TrafficCameraPayload | null;
+  railNetwork: ReturnType<typeof useRailNetwork>['payload'];
   viewportBounds: MapViewportBounds | null;
   cameraStreamBoundsKey: string;
   onViewportChange: (bounds: MapViewportBounds) => void;
@@ -610,6 +664,7 @@ const FlightMapInner = memo(function FlightMapInner({
   positionRefreshSeq?: number;
   mapFetchedAt?: string | null;
   trainsFetchedAt?: string | null;
+  emergencyFocusRequest?: EmergencyFocusRequest | null;
 }) {
   const focusMiles = area.mapFocusMiles ?? 12;
   const fetchMiles = area.radiusMiles;
@@ -618,17 +673,28 @@ const FlightMapInner = memo(function FlightMapInner({
   const mapZoom = viewportBounds?.zoom ?? 12;
   const homeLabel = area.address || area.name;
   const streamBounds = viewportBounds ?? viewportFromArea(area);
+  const visibleFlights = useMemo(
+    () => flights.filter((flight) => pointInViewportBounds(flight.lat, flight.lon, viewportBounds)),
+    [flights, viewportBounds]
+  );
+  const visibleTrains = useMemo(
+    () =>
+      trains.filter((train) => {
+        if (isMetroTrain(train)) return layerToggles.metro;
+        if (isClassicRailTrain(train)) return layerToggles.rail;
+        return false;
+      }),
+    [trains, layerToggles.metro, layerToggles.rail]
+  );
   const activeTrackKey = useMemo(() => {
     const parts: string[] = [];
     if (layerToggles.flights) {
-      for (const flight of flights) parts.push(flightKey(flight));
+      for (const flight of visibleFlights) parts.push(flightKey(flight));
     }
-    if (layerToggles.rail) {
-      for (const train of trains) parts.push(trainKey(train));
-    }
+    for (const train of visibleTrains) parts.push(trainKey(train));
     parts.sort();
     return parts.join('\0');
-  }, [flights, layerToggles.flights, layerToggles.rail, trains]);
+  }, [visibleFlights, layerToggles.flights, visibleTrains]);
 
   const activeTrackIds = useMemo(() => {
     const ids = new Set<string>();
@@ -676,6 +742,14 @@ const FlightMapInner = memo(function FlightMapInner({
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
       )}
+      {layerToggles.railNetwork ? (
+        <RailNetworkLayer
+          collection={railNetwork}
+          railEnabled={layerToggles.rail}
+          metroEnabled={layerToggles.metro}
+          showAllTracks={layerToggles.railNetworkAll}
+        />
+      ) : null}
       <RadarOverlay
         enabled={radarEnabled}
         opacity={fun.settings.radarNoir ? 0.68 : radarOpacity}
@@ -698,13 +772,6 @@ const FlightMapInner = memo(function FlightMapInner({
       ) : null}
       {layerToggles.lightning ? <LightningLayer payload={mapLayers.lightning} /> : null}
       {layerToggles.rivers ? <RiverGaugeLayer payload={mapLayers.rivers} /> : null}
-      {layerToggles.transit ? (
-        <TransitLayer
-          vehicles={mapLayers.transit?.vehicles || []}
-          highlightedId={highlightedId}
-          mapHandlers={mapHandlers}
-        />
-      ) : null}
       {layerToggles.roads ? <RoadConditionsLayer collection={mapLayers.roads} /> : null}
       {layerToggles.aisVessels ? <AisVesselsLayer payload={mapLayers.aisVessels} /> : null}
       {layerToggles.earthquakes ? <EarthquakeLayer payload={mapLayers.earthquakes} /> : null}
@@ -717,10 +784,13 @@ const FlightMapInner = memo(function FlightMapInner({
       {layerToggles.inaturalist ? <INaturalistLayer payload={mapLayers.inaturalist} /> : null}
       {layerToggles.aprs ? <AprsLayer payload={mapLayers.aprs} /> : null}
       {layerToggles.drought ? <DroughtLayer collection={mapLayers.drought} /> : null}
+      {layerToggles.emergencyServices ? <EmergencyServicesLayer payload={emergencyPayload} /> : null}
+      <EmergencyMapFocus request={emergencyFocusRequest ?? null} />
+      {layerToggles.occupancy ? <OccupancyOverlayLayer points={occupancyPoints} /> : null}
       <FunMapLayers
         area={area}
-        flights={layerToggles.flights ? flights : []}
-        trains={layerToggles.rail ? trains : []}
+        flights={layerToggles.flights ? visibleFlights : []}
+        trains={visibleTrains}
         weather={weather}
         settings={fun.settings}
       />
@@ -756,7 +826,7 @@ const FlightMapInner = memo(function FlightMapInner({
         </Tooltip>
       </Marker>
       {layerToggles.flights
-        ? flights.map((flight) => (
+        ? visibleFlights.map((flight) => (
             <FlightMarker
               key={flightKey(flight)}
               flight={flight}
@@ -769,8 +839,7 @@ const FlightMapInner = memo(function FlightMapInner({
             />
           ))
         : null}
-      {layerToggles.rail
-        ? trains.map((train) => (
+      {visibleTrains.map((train) => (
             <TrainMarker
               key={trainKey(train)}
               train={train}
@@ -778,8 +847,7 @@ const FlightMapInner = memo(function FlightMapInner({
               mapHandlers={mapHandlers}
               trainRefreshIntervalMs={trainRefreshIntervalMs}
             />
-          ))
-        : null}
+          ))}
       {satellites.map((satellite) => (
         <SatelliteMarker
           key={satelliteKey(satellite)}
@@ -813,6 +881,8 @@ interface Props {
   mapHandlers?: MapHighlightHandlers;
   clearHighlightNow?: () => void;
   mapFetchedAt?: string | null;
+  flightsLoaded?: boolean;
+  viewportLoading?: boolean;
   inViewCount?: number;
   onViewportChange?: (bounds: MapViewportBounds) => void;
   fullPage?: boolean;
@@ -820,6 +890,7 @@ interface Props {
   positionRefreshSeq?: number;
   trainsFetchedAt?: string | null;
   trainRefreshSeconds?: number;
+  emergencyFocusRequest?: EmergencyFocusRequest | null;
 }
 
 export function FlightMap({
@@ -832,6 +903,8 @@ export function FlightMap({
   mapHandlers,
   clearHighlightNow,
   mapFetchedAt,
+  flightsLoaded = false,
+  viewportLoading = false,
   inViewCount,
   onViewportChange,
   fullPage = false,
@@ -839,6 +912,7 @@ export function FlightMap({
   positionRefreshSeq = 0,
   trainsFetchedAt = null,
   trainRefreshSeconds = 10,
+  emergencyFocusRequest = null,
 }: Props) {
   const [mounted, setMounted] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState(() => readRadarFlag(RADAR_ENABLED_KEY, true));
@@ -846,6 +920,7 @@ export function FlightMap({
   const [satellitesEnabled, setSatellitesEnabled] = useState(() => readRadarFlag(SATELLITES_ENABLED_KEY, false));
   const [flightsEnabled, setFlightsEnabled] = useState(() => readLayerFlag(LAYER_KEYS.flights, true));
   const [railEnabled, setRailEnabled] = useState(() => readLayerFlag(LAYER_KEYS.rail, true));
+  const [metroEnabled, setMetroEnabled] = useState(() => readLayerFlag(LAYER_KEYS.metro, true));
   const [weatherAlertsEnabled, setWeatherAlertsEnabled] = useState(() =>
     readLayerFlag(LAYER_KEYS.weatherAlerts, true)
   );
@@ -881,6 +956,22 @@ export function FlightMap({
   const [droughtEnabled, setDroughtEnabled] = useState(() =>
     readLayerFlag(LAYER_KEYS.drought, false)
   );
+  const [railNetworkEnabled, setRailNetworkEnabled] = useState(() =>
+    readLayerFlag(LAYER_KEYS.railNetwork, true)
+  );
+  const [occupancyEnabled, setOccupancyEnabled] = useState(() =>
+    readLayerFlag(LAYER_KEYS.occupancy, false)
+  );
+  const [emergencyServicesEnabled, setEmergencyServicesEnabled] = useState(() =>
+    readLayerFlag(LAYER_KEYS.emergencyServices, false)
+  );
+
+  useEffect(() => {
+    if (!emergencyFocusRequest) return;
+    if (emergencyServicesEnabled) return;
+    setEmergencyServicesEnabled(true);
+    localStorage.setItem(LAYER_KEYS.emergencyServices, 'true');
+  }, [emergencyFocusRequest?.seq, emergencyServicesEnabled]);
   const [radarFrameLabel, setRadarFrameLabel] = useState<string | null>(null);
   const [radarAttribution, setRadarAttribution] = useState<{ name: string; url: string } | null>(
     null
@@ -913,6 +1004,7 @@ export function FlightMap({
     () => ({
       flights: flightsEnabled,
       rail: railEnabled,
+      metro: metroEnabled,
       weatherAlerts: weatherAlertsEnabled,
       lightning: lightningEnabled,
       helos: helosEnabled,
@@ -927,10 +1019,14 @@ export function FlightMap({
       inaturalist: inaturalistEnabled,
       aprs: aprsEnabled,
       drought: droughtEnabled,
+      railNetwork: railNetworkEnabled,
+      occupancy: occupancyEnabled,
+      emergencyServices: emergencyServicesEnabled,
     }),
     [
       flightsEnabled,
       railEnabled,
+      metroEnabled,
       weatherAlertsEnabled,
       lightningEnabled,
       helosEnabled,
@@ -945,16 +1041,22 @@ export function FlightMap({
       inaturalistEnabled,
       aprsEnabled,
       droughtEnabled,
+      railNetworkEnabled,
+      occupancyEnabled,
+      emergencyServicesEnabled,
     ]
   );
+  const showRailNetwork = railEnabled || railNetworkEnabled || metroEnabled;
   const mapDisplayToggles = useMemo(
     () => ({
       ...layerToggles,
       cameras: camerasEnabled,
       weatherCameras: weatherCamerasEnabled,
       railCameras: railCamerasEnabled,
+      railNetwork: showRailNetwork,
+      railNetworkAll: railNetworkEnabled,
     }),
-    [layerToggles, camerasEnabled, weatherCamerasEnabled, railCamerasEnabled]
+    [layerToggles, camerasEnabled, weatherCamerasEnabled, railCamerasEnabled, showRailNetwork, railNetworkEnabled]
   );
   const [stormCameraPriority, setStormCameraPriority] = useState<StormCameraPriority | null>(null);
   const handleViewportChange = useCallback(
@@ -975,16 +1077,55 @@ export function FlightMap({
   const flightRefreshIntervalMs = autoRefreshSeconds * 1000;
   const trainRefreshIntervalMs = trainRefreshSeconds * 1000;
   const mapLayers = useMapLayers(queryString, layerToggles, mounted);
+  const secondaryLayersReady = mounted;
+  const { points: apiOccupancyPoints } = useOccupancyOverlay(
+    homeQueryString,
+    viewportBounds,
+    occupancyEnabled && secondaryLayersReady
+  );
+  const { payload: emergencyPayload, error: emergencyError } = useEmergencyServices(
+    homeQueryString,
+    viewportBounds,
+    emergencyServicesEnabled && secondaryLayersReady
+  );
+  const occupancyPoints = useMemo(
+    () =>
+      buildOccupancyOverlayPoints({
+        apiPoints: apiOccupancyPoints,
+        flights,
+        trains,
+        vessels: mapLayers.aisVessels,
+        rivers: mapLayers.rivers,
+        roads: mapLayers.roads,
+        earthquakes: mapLayers.earthquakes,
+        flightsEnabled,
+        railEnabled,
+        metroEnabled,
+      }),
+    [
+      apiOccupancyPoints,
+      flights,
+      trains,
+      mapLayers.aisVessels,
+      mapLayers.rivers,
+      mapLayers.roads,
+      mapLayers.earthquakes,
+      flightsEnabled,
+      railEnabled,
+      metroEnabled,
+    ]
+  );
+  const { payload: railNetwork } = useRailNetwork(viewportBounds, showRailNetwork);
   const { cameras: viewportCameras, error: cameraError } = useViewportCameras(
     queryString,
     viewportBounds,
-    (camerasEnabled || weatherCamerasEnabled) && mounted,
+    (camerasEnabled || weatherCamerasEnabled) && secondaryLayersReady,
     stormCameraPriority
   );
   const { cameras: viewportRailCameras, error: railCameraError } = useViewportRailCameras(
     queryString,
     viewportBounds,
-    railCamerasEnabled && mounted
+    railCamerasEnabled && secondaryLayersReady
   );
   const {
     satellites,
@@ -996,20 +1137,26 @@ export function FlightMap({
     () => (helosEnabled ? flights.filter((flight) => classifyHelicopter(flight)).length : 0),
     [flights, helosEnabled]
   );
-  const liveTrains = useMemo(
+  const mapTrains = useMemo(
     () =>
-      trains.filter(
-        (train) =>
-          train.trainKind === 'passenger' || train.trainKind === 'freight' || train.trainKind === 'crossing'
-      ),
+      trains.filter((train) => {
+        if (isMetroTrain(train)) return metroEnabled;
+        if (isClassicRailTrain(train)) return railEnabled;
+        return false;
+      }),
+    [trains, railEnabled, metroEnabled]
+  );
+  const metroCount = useMemo(
+    () => trains.filter((train) => isMetroTrain(train)).length,
     [trains]
   );
   const layerErrors = useMemo(() => {
     const messages = [...new Set(Object.values(mapLayers.errors).filter(Boolean))] as string[];
     if (cameraError) messages.push(cameraError);
     if (railCameraError) messages.push(railCameraError);
+    if (emergencyError) messages.push(emergencyError);
     return messages;
-  }, [cameraError, railCameraError, mapLayers.errors]);
+  }, [cameraError, railCameraError, emergencyError, mapLayers.errors]);
 
   useEffect(() => {
     setMounted(true);
@@ -1036,6 +1183,38 @@ export function FlightMap({
             checked: railEnabled,
             onChange: setRailEnabled,
             storageKey: LAYER_KEYS.rail,
+          },
+          {
+            id: 'metro',
+            label: 'Metro',
+            tip: MAP_LAYER_HELP.metro,
+            checked: metroEnabled,
+            onChange: setMetroEnabled,
+            storageKey: LAYER_KEYS.metro,
+          },
+          {
+            id: 'emergencyServices',
+            label: 'Emergency services',
+            tip: MAP_LAYER_HELP.emergencyServices,
+            checked: emergencyServicesEnabled,
+            onChange: setEmergencyServicesEnabled,
+            storageKey: LAYER_KEYS.emergencyServices,
+          },
+          {
+            id: 'occupancy',
+            label: 'Occupancy overlay',
+            tip: MAP_LAYER_HELP.occupancy,
+            checked: occupancyEnabled,
+            onChange: setOccupancyEnabled,
+            storageKey: LAYER_KEYS.occupancy,
+          },
+          {
+            id: 'railNetwork',
+            label: 'Rail network',
+            tip: MAP_LAYER_HELP.railNetwork,
+            checked: railNetworkEnabled,
+            onChange: setRailNetworkEnabled,
+            storageKey: LAYER_KEYS.railNetwork,
           },
           {
             id: 'helos',
@@ -1235,7 +1414,7 @@ export function FlightMap({
             extra: (
               <>
                 {railCamerasEnabled && viewportRailCameras?.count ? (
-                  <span className="rail-cam-badge rail-cam-layer-status" title="Amber dots on map">
+                  <span className="rail-cam-badge rail-cam-layer-status" title="Rail cameras on map">
                     {viewportRailCameras.count} nearby
                     {viewportRailCameras.cameras?.[0]?.distanceMiles != null
                       ? ` · closest ${viewportRailCameras.cameras[0].distanceMiles} mi`
@@ -1254,6 +1433,10 @@ export function FlightMap({
     [
       flightsEnabled,
       railEnabled,
+      metroEnabled,
+      railNetworkEnabled,
+      occupancyEnabled,
+      emergencyServicesEnabled,
       helosEnabled,
       satellitesEnabled,
       aprsEnabled,
@@ -1292,7 +1475,8 @@ export function FlightMap({
                 {flightsEnabled
                   ? `${(inViewCount ?? flights.length).toLocaleString()} in view`
                   : 'Flights hidden'}
-                {railEnabled ? ` · ${trains.length} trains` : ' · Rail hidden'}
+                {railEnabled ? ` · ${trains.filter(isClassicRailTrain).length} rail` : ' · Rail hidden'}
+                {metroEnabled ? ` · ${metroCount} metro` : ' · Metro hidden'}
                 {helosEnabled && heloCount ? ` · ${heloCount} helos` : ''}
                 {satellitesEnabled && satelliteMeta ? ` · ${satelliteMeta.count} satellites overhead` : ''}
                 {' · '}pan/zoom worldwide · home ring {area.mapFocusMiles ?? 12} mi
@@ -1311,7 +1495,7 @@ export function FlightMap({
           <FlightMapInner
             area={area}
             flights={flights}
-            trains={liveTrains}
+            trains={trains}
             satellites={satellites}
             highlightedId={highlightedId}
             mapHandlers={mapHandlers}
@@ -1323,8 +1507,11 @@ export function FlightMap({
             onRadarError={setRadarError}
             layerToggles={mapDisplayToggles}
             mapLayers={mapLayers}
+            occupancyPoints={occupancyPoints}
+            emergencyPayload={emergencyPayload}
             cameras={viewportCameras}
             railCameras={viewportRailCameras}
+            railNetwork={railNetwork}
             viewportBounds={viewportBounds}
             cameraStreamBoundsKey={viewportKey}
             onViewportChange={handleViewportChange}
@@ -1339,6 +1526,7 @@ export function FlightMap({
             trainRefreshIntervalMs={trainRefreshIntervalMs}
             mapFetchedAt={mapFetchedAt}
             trainsFetchedAt={trainsFetchedAt}
+            emergencyFocusRequest={emergencyFocusRequest}
           />
           {!fullPage ? (
           <div className="map-footer">
@@ -1347,8 +1535,11 @@ export function FlightMap({
                 Aircraft in view: {(inViewCount ?? flights.length).toLocaleString()}
               </span>
             ) : null}
-            {railEnabled && trains.length ? (
-              <span className="muted">Trains on map: {trains.length}</span>
+            {mapTrains.length ? (
+              <span className="muted">Trains on map: {mapTrains.length}</span>
+            ) : null}
+            {!railEnabled && !metroEnabled ? (
+              <span className="muted">Rail and metro hidden</span>
             ) : null}
             {weatherAlertsEnabled && mapLayers.weatherAlerts?.count ? (
               <span className="muted map-tornado-legend">
@@ -1375,6 +1566,19 @@ export function FlightMap({
                   : mapLayers.transit?.count
                     ? ` · ${mapLayers.transit.count}`
                     : ' · none nearby'}
+              </span>
+            ) : null}
+            {emergencyServicesEnabled && emergencyPayload?.summary ? (
+              <span className="muted">
+                Emergency: {emergencyPayload.summary.wildfirePerimeters || 0} fire perimeters
+                {emergencyPayload.summary.femaCounties ? ` · ${emergencyPayload.summary.femaCounties} FEMA counties` : ''}
+                {emergencyPayload.summary.nwsAlerts ? ` · ${emergencyPayload.summary.nwsAlerts} NWS` : ''}
+                {emergencyPayload.summary.cityEms ? ` · ${emergencyPayload.summary.cityEms} EMS` : ''}
+              </span>
+            ) : null}
+            {occupancyEnabled && occupancyPoints.length ? (
+              <span className="muted">
+                Occupancy overlay: {occupancyPoints.length} signals
               </span>
             ) : null}
             {roadsEnabled && mapLayers.roads?.count ? (

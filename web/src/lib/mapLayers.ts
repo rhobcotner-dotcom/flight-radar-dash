@@ -126,6 +126,8 @@ export interface RiverGauge {
   flowCfs: number | null;
   observedAt: string | null;
   distanceMiles: number;
+  occupancyLabel?: string | null;
+  occupancyLevel?: number | null;
 }
 
 export interface RiverGaugePayload {
@@ -147,6 +149,11 @@ export interface TransitVehicle {
   tripId: string | null;
   label: string;
   distanceMiles?: number;
+  direction?: string | null;
+  headsign?: string | null;
+  nextStopName?: string | null;
+  occupancyLabel?: string | null;
+  occupancyLevel?: number | null;
 }
 
 export interface TransitPayload {
@@ -218,6 +225,8 @@ export interface AirQualityPayload {
   reportingArea?: string | null;
   state?: string | null;
   supplementalSource?: string | null;
+  occupancyLabel?: string | null;
+  occupancyLevel?: number | null;
 }
 
 export interface AisVessel {
@@ -236,6 +245,9 @@ export interface AisVessel {
   destination: string | null;
   distanceMiles: number;
   sourceLabel?: string | null;
+  draughtMeters?: number | null;
+  occupancyLabel?: string | null;
+  occupancyLevel?: number | null;
 }
 
 export interface AisVesselPayload {
@@ -383,6 +395,7 @@ export interface TrafficCameraPayload {
   poolStatus?: {
     partial: boolean;
     poolCount: number;
+    catalogCount?: number;
     verifiedCount: number;
     warming: boolean;
     fetchedAt: string | null;

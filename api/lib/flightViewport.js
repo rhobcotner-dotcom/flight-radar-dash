@@ -5,6 +5,7 @@ import { getStatesInBounds, isOpenSkyAvailable, isOpenSkyConfigured } from './op
 import { normalizeOpenSkyStates } from './openskyNormalize.js';
 import { enrichAndSortFlights } from './distance.js';
 import { enrichFlightsCarriers } from './airlineNames.js';
+import { enrichFlightOccupancy } from './occupancyEnrichment.js';
 import { enrichFlightsWithRoutes } from './routeLookup.js';
 import { enrichFlightsWithRegistry } from './aircraftRegistry.js';
 import { withLocalAirportInference } from '../../lib/localAirportInference.js';
@@ -146,8 +147,11 @@ export async function fetchViewportFlights(viewport, home, { enrich = true } = {
 
   if (isOpenSkyConfigured() && isOpenSkyAvailable()) {
     try {
-      flights = await fetchOpenSkyViewportFlights(viewport);
-      dataSource = 'opensky-network.org';
+      const openSkyFlights = await fetchOpenSkyViewportFlights(viewport);
+      if (openSkyFlights.length) {
+        flights = openSkyFlights;
+        dataSource = 'opensky-network.org';
+      }
     } catch (err) {
       openSkyError = err;
       if (err?.status === 429) {
@@ -189,7 +193,10 @@ export async function fetchViewportFlights(viewport, home, { enrich = true } = {
     }));
   }
   flights = enrichFlightsCarriers(flights);
-  flights = flights.map((flight) => withLocalAirportInference(flight));
+  flights = flights.map((flight) => enrichFlightOccupancy(flight));
+  if (enrich) {
+    flights = flights.map((flight) => withLocalAirportInference(flight));
+  }
 
   const homeFlights = flights.filter((flight) => (flight.distanceMiles ?? Infinity) <= homeRadius);
 

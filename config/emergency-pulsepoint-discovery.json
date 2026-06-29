@@ -1,0 +1,3045 @@
+{
+  "api": {
+    "search": "https://api.pulsepoint.org/v1/webapp?resource=searchagencies&token={query}",
+    "incidents": "https://api.pulsepoint.org/v1/webapp?resource=incidents&agencyid={id}",
+    "responseShape": {
+      "searchagencies": [
+        {
+          "Type": "Agency",
+          "Display1": "Seattle FD [WA]",
+          "Display2": "Seattle",
+          "id": "974",
+          "lat": 47.6,
+          "lng": -122.3,
+          "agencyid": "17M15"
+        }
+      ],
+      "incidents": {
+        "incidents": {
+          "active": [],
+          "recent": [],
+          "alerts": []
+        }
+      }
+    }
+  },
+  "communitySources": [
+    "https://github.com/Podskio/pulsepoint — getIncidents(agencyIds), network tab giba.php",
+    "https://www.pulsepoint.org/respond-embed-example — iframe agencies=07035,07090",
+    "https://github.com/adamcarrier/pulsepoint_scrape — Hampton Roads agency list in script",
+    "https://github.com/TrevorBagels/PulsepointScraperV2 — scans all agencies on schedule"
+  ],
+  "summary": {
+    "metros": 63,
+    "searchQueries": 172,
+    "uniqueAgencies": 81,
+    "LIVE": 77,
+    "EMPTY": 4,
+    "DEAD": 0,
+    "probedAt": "2026-06-29T03:01:06.946Z"
+  },
+  "searchLog": [
+    {
+      "metro": "Boston",
+      "state": "MA",
+      "query": "Boston",
+      "hitCount": 1
+    },
+    {
+      "metro": "Boston",
+      "state": "MA",
+      "query": "Boston Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Boston",
+      "state": "MA",
+      "query": "Suffolk County",
+      "hitCount": 1
+    },
+    {
+      "metro": "Providence",
+      "state": "RI",
+      "query": "Providence",
+      "hitCount": 4
+    },
+    {
+      "metro": "Providence",
+      "state": "RI",
+      "query": "Providence Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Hartford",
+      "state": "CT",
+      "query": "Hartford",
+      "hitCount": 1
+    },
+    {
+      "metro": "Hartford",
+      "state": "CT",
+      "query": "Hartford Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "New Haven",
+      "state": "CT",
+      "query": "New Haven",
+      "hitCount": 0
+    },
+    {
+      "metro": "New Haven",
+      "state": "CT",
+      "query": "New Haven Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Albany",
+      "state": "NY",
+      "query": "Albany",
+      "hitCount": 2
+    },
+    {
+      "metro": "Albany",
+      "state": "NY",
+      "query": "Albany Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Buffalo",
+      "state": "NY",
+      "query": "Buffalo",
+      "hitCount": 4
+    },
+    {
+      "metro": "Buffalo",
+      "state": "NY",
+      "query": "Buffalo Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Buffalo",
+      "state": "NY",
+      "query": "Erie County",
+      "hitCount": 1
+    },
+    {
+      "metro": "Pittsburgh",
+      "state": "PA",
+      "query": "Pittsburgh",
+      "hitCount": 1
+    },
+    {
+      "metro": "Pittsburgh",
+      "state": "PA",
+      "query": "Pittsburgh Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Pittsburgh",
+      "state": "PA",
+      "query": "Allegheny",
+      "hitCount": 3
+    },
+    {
+      "metro": "Philadelphia",
+      "state": "PA",
+      "query": "Philadelphia",
+      "hitCount": 1
+    },
+    {
+      "metro": "Philadelphia",
+      "state": "PA",
+      "query": "Philadelphia Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Philadelphia",
+      "state": "PA",
+      "query": "Philly",
+      "hitCount": 0
+    },
+    {
+      "metro": "Baltimore",
+      "state": "MD",
+      "query": "Baltimore",
+      "hitCount": 1
+    },
+    {
+      "metro": "Baltimore",
+      "state": "MD",
+      "query": "Baltimore City",
+      "hitCount": 0
+    },
+    {
+      "metro": "Baltimore",
+      "state": "MD",
+      "query": "Baltimore County",
+      "hitCount": 0
+    },
+    {
+      "metro": "Washington",
+      "state": "DC",
+      "query": "Washington DC",
+      "hitCount": 0
+    },
+    {
+      "metro": "Washington",
+      "state": "DC",
+      "query": "DC Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Washington",
+      "state": "DC",
+      "query": "Arlington",
+      "hitCount": 6
+    },
+    {
+      "metro": "Richmond",
+      "state": "VA",
+      "query": "Richmond",
+      "hitCount": 5
+    },
+    {
+      "metro": "Richmond",
+      "state": "VA",
+      "query": "Richmond Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Norfolk",
+      "state": "VA",
+      "query": "Norfolk",
+      "hitCount": 2
+    },
+    {
+      "metro": "Norfolk",
+      "state": "VA",
+      "query": "Virginia Beach",
+      "hitCount": 1
+    },
+    {
+      "metro": "Norfolk",
+      "state": "VA",
+      "query": "Hampton Roads",
+      "hitCount": 0
+    },
+    {
+      "metro": "Atlanta",
+      "state": "GA",
+      "query": "Atlanta",
+      "hitCount": 1
+    },
+    {
+      "metro": "Atlanta",
+      "state": "GA",
+      "query": "Atlanta Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Atlanta",
+      "state": "GA",
+      "query": "Fulton County",
+      "hitCount": 1
+    },
+    {
+      "metro": "Charlotte",
+      "state": "NC",
+      "query": "Charlotte",
+      "hitCount": 4
+    },
+    {
+      "metro": "Charlotte",
+      "state": "NC",
+      "query": "Charlotte Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Charlotte",
+      "state": "NC",
+      "query": "Mecklenburg",
+      "hitCount": 1
+    },
+    {
+      "metro": "Raleigh",
+      "state": "NC",
+      "query": "Raleigh",
+      "hitCount": 1
+    },
+    {
+      "metro": "Raleigh",
+      "state": "NC",
+      "query": "Raleigh Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Raleigh",
+      "state": "NC",
+      "query": "Wake County",
+      "hitCount": 1
+    },
+    {
+      "metro": "Durham",
+      "state": "NC",
+      "query": "Durham",
+      "hitCount": 2
+    },
+    {
+      "metro": "Durham",
+      "state": "NC",
+      "query": "Durham Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Jacksonville",
+      "state": "FL",
+      "query": "Jacksonville",
+      "hitCount": 2
+    },
+    {
+      "metro": "Jacksonville",
+      "state": "FL",
+      "query": "JFRD",
+      "hitCount": 0
+    },
+    {
+      "metro": "Jacksonville",
+      "state": "FL",
+      "query": "Duval County",
+      "hitCount": 0
+    },
+    {
+      "metro": "Orlando",
+      "state": "FL",
+      "query": "Orlando",
+      "hitCount": 4
+    },
+    {
+      "metro": "Orlando",
+      "state": "FL",
+      "query": "Orange County FL",
+      "hitCount": 0
+    },
+    {
+      "metro": "Tampa",
+      "state": "FL",
+      "query": "Tampa",
+      "hitCount": 0
+    },
+    {
+      "metro": "Tampa",
+      "state": "FL",
+      "query": "Hillsborough",
+      "hitCount": 1
+    },
+    {
+      "metro": "Tampa",
+      "state": "FL",
+      "query": "Tampa Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Miami",
+      "state": "FL",
+      "query": "Miami",
+      "hitCount": 2
+    },
+    {
+      "metro": "Miami",
+      "state": "FL",
+      "query": "Miami-Dade",
+      "hitCount": 0
+    },
+    {
+      "metro": "Miami",
+      "state": "FL",
+      "query": "Miami Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Fort Lauderdale",
+      "state": "FL",
+      "query": "Fort Lauderdale",
+      "hitCount": 1
+    },
+    {
+      "metro": "Fort Lauderdale",
+      "state": "FL",
+      "query": "Broward",
+      "hitCount": 1
+    },
+    {
+      "metro": "Nashville",
+      "state": "TN",
+      "query": "Nashville",
+      "hitCount": 0
+    },
+    {
+      "metro": "Nashville",
+      "state": "TN",
+      "query": "Nashville Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Nashville",
+      "state": "TN",
+      "query": "Davidson County",
+      "hitCount": 0
+    },
+    {
+      "metro": "Memphis",
+      "state": "TN",
+      "query": "Memphis",
+      "hitCount": 1
+    },
+    {
+      "metro": "Memphis",
+      "state": "TN",
+      "query": "Memphis Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Memphis",
+      "state": "TN",
+      "query": "Shelby County",
+      "hitCount": 0
+    },
+    {
+      "metro": "Louisville",
+      "state": "KY",
+      "query": "Louisville",
+      "hitCount": 0
+    },
+    {
+      "metro": "Louisville",
+      "state": "KY",
+      "query": "Louisville Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Louisville",
+      "state": "KY",
+      "query": "Jefferson County KY",
+      "hitCount": 0
+    },
+    {
+      "metro": "Birmingham",
+      "state": "AL",
+      "query": "Birmingham",
+      "hitCount": 2
+    },
+    {
+      "metro": "Birmingham",
+      "state": "AL",
+      "query": "Birmingham Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "New Orleans",
+      "state": "LA",
+      "query": "New Orleans",
+      "hitCount": 0
+    },
+    {
+      "metro": "New Orleans",
+      "state": "LA",
+      "query": "NOFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "New Orleans",
+      "state": "LA",
+      "query": "Orleans Parish",
+      "hitCount": 0
+    },
+    {
+      "metro": "Chicago",
+      "state": "IL",
+      "query": "Chicago",
+      "hitCount": 2
+    },
+    {
+      "metro": "Chicago",
+      "state": "IL",
+      "query": "Chicago Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Chicago",
+      "state": "IL",
+      "query": "CFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "Detroit",
+      "state": "MI",
+      "query": "Detroit",
+      "hitCount": 1
+    },
+    {
+      "metro": "Detroit",
+      "state": "MI",
+      "query": "Detroit Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Cleveland",
+      "state": "OH",
+      "query": "Cleveland",
+      "hitCount": 3
+    },
+    {
+      "metro": "Cleveland",
+      "state": "OH",
+      "query": "Cleveland Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Cleveland",
+      "state": "OH",
+      "query": "Cuyahoga",
+      "hitCount": 1
+    },
+    {
+      "metro": "Columbus",
+      "state": "OH",
+      "query": "Columbus",
+      "hitCount": 6
+    },
+    {
+      "metro": "Columbus",
+      "state": "OH",
+      "query": "Columbus Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Columbus",
+      "state": "OH",
+      "query": "Franklin County OH",
+      "hitCount": 0
+    },
+    {
+      "metro": "Cincinnati",
+      "state": "OH",
+      "query": "Cincinnati",
+      "hitCount": 1
+    },
+    {
+      "metro": "Cincinnati",
+      "state": "OH",
+      "query": "Cincinnati Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Cincinnati",
+      "state": "OH",
+      "query": "Hamilton County OH",
+      "hitCount": 0
+    },
+    {
+      "metro": "Indianapolis",
+      "state": "IN",
+      "query": "Indianapolis",
+      "hitCount": 0
+    },
+    {
+      "metro": "Indianapolis",
+      "state": "IN",
+      "query": "Indianapolis Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Indianapolis",
+      "state": "IN",
+      "query": "Marion County IN",
+      "hitCount": 0
+    },
+    {
+      "metro": "Milwaukee",
+      "state": "WI",
+      "query": "Milwaukee",
+      "hitCount": 2
+    },
+    {
+      "metro": "Milwaukee",
+      "state": "WI",
+      "query": "Milwaukee Fire",
+      "hitCount": 2
+    },
+    {
+      "metro": "Minneapolis",
+      "state": "MN",
+      "query": "Minneapolis",
+      "hitCount": 0
+    },
+    {
+      "metro": "Minneapolis",
+      "state": "MN",
+      "query": "Minneapolis Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Minneapolis",
+      "state": "MN",
+      "query": "Hennepin",
+      "hitCount": 0
+    },
+    {
+      "metro": "St Paul",
+      "state": "MN",
+      "query": "St Paul",
+      "hitCount": 1
+    },
+    {
+      "metro": "St Paul",
+      "state": "MN",
+      "query": "Saint Paul Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "St Paul",
+      "state": "MN",
+      "query": "Ramsey County",
+      "hitCount": 1
+    },
+    {
+      "metro": "Kansas City",
+      "state": "MO",
+      "query": "Kansas City",
+      "hitCount": 1
+    },
+    {
+      "metro": "Kansas City",
+      "state": "MO",
+      "query": "KCFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "Kansas City",
+      "state": "MO",
+      "query": "Jackson County MO",
+      "hitCount": 0
+    },
+    {
+      "metro": "St Louis",
+      "state": "MO",
+      "query": "St Louis",
+      "hitCount": 1
+    },
+    {
+      "metro": "St Louis",
+      "state": "MO",
+      "query": "Saint Louis Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Omaha",
+      "state": "NE",
+      "query": "Omaha",
+      "hitCount": 1
+    },
+    {
+      "metro": "Omaha",
+      "state": "NE",
+      "query": "Omaha Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Omaha",
+      "state": "NE",
+      "query": "Douglas County NE",
+      "hitCount": 0
+    },
+    {
+      "metro": "Des Moines",
+      "state": "IA",
+      "query": "Des Moines",
+      "hitCount": 0
+    },
+    {
+      "metro": "Des Moines",
+      "state": "IA",
+      "query": "Des Moines Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Dallas",
+      "state": "TX",
+      "query": "Dallas",
+      "hitCount": 2
+    },
+    {
+      "metro": "Dallas",
+      "state": "TX",
+      "query": "Dallas Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Dallas",
+      "state": "TX",
+      "query": "DFR",
+      "hitCount": 0
+    },
+    {
+      "metro": "Fort Worth",
+      "state": "TX",
+      "query": "Fort Worth",
+      "hitCount": 1
+    },
+    {
+      "metro": "Fort Worth",
+      "state": "TX",
+      "query": "Fort Worth Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Fort Worth",
+      "state": "TX",
+      "query": "Tarrant County",
+      "hitCount": 0
+    },
+    {
+      "metro": "Houston",
+      "state": "TX",
+      "query": "Houston",
+      "hitCount": 2
+    },
+    {
+      "metro": "Houston",
+      "state": "TX",
+      "query": "Houston Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Houston",
+      "state": "TX",
+      "query": "HFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "San Antonio",
+      "state": "TX",
+      "query": "San Antonio",
+      "hitCount": 3
+    },
+    {
+      "metro": "San Antonio",
+      "state": "TX",
+      "query": "SAFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "San Antonio",
+      "state": "TX",
+      "query": "Bexar County",
+      "hitCount": 0
+    },
+    {
+      "metro": "Austin",
+      "state": "TX",
+      "query": "Austin",
+      "hitCount": 1
+    },
+    {
+      "metro": "Austin",
+      "state": "TX",
+      "query": "Austin Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Austin",
+      "state": "TX",
+      "query": "AFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "El Paso",
+      "state": "TX",
+      "query": "El Paso",
+      "hitCount": 1
+    },
+    {
+      "metro": "El Paso",
+      "state": "TX",
+      "query": "El Paso Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Phoenix",
+      "state": "AZ",
+      "query": "Phoenix",
+      "hitCount": 2
+    },
+    {
+      "metro": "Phoenix",
+      "state": "AZ",
+      "query": "Phoenix Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Phoenix",
+      "state": "AZ",
+      "query": "Maricopa",
+      "hitCount": 1
+    },
+    {
+      "metro": "Tucson",
+      "state": "AZ",
+      "query": "Tucson",
+      "hitCount": 2
+    },
+    {
+      "metro": "Tucson",
+      "state": "AZ",
+      "query": "Tucson Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Tucson",
+      "state": "AZ",
+      "query": "Pima County",
+      "hitCount": 1
+    },
+    {
+      "metro": "Albuquerque",
+      "state": "NM",
+      "query": "Albuquerque",
+      "hitCount": 0
+    },
+    {
+      "metro": "Albuquerque",
+      "state": "NM",
+      "query": "Albuquerque Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Albuquerque",
+      "state": "NM",
+      "query": "Bernalillo",
+      "hitCount": 0
+    },
+    {
+      "metro": "Las Vegas",
+      "state": "NV",
+      "query": "Las Vegas",
+      "hitCount": 3
+    },
+    {
+      "metro": "Las Vegas",
+      "state": "NV",
+      "query": "Clark County",
+      "hitCount": 3
+    },
+    {
+      "metro": "Las Vegas",
+      "state": "NV",
+      "query": "Las Vegas Fire",
+      "hitCount": 2
+    },
+    {
+      "metro": "Denver",
+      "state": "CO",
+      "query": "Denver",
+      "hitCount": 1
+    },
+    {
+      "metro": "Denver",
+      "state": "CO",
+      "query": "Denver Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Denver",
+      "state": "CO",
+      "query": "Aurora CO",
+      "hitCount": 0
+    },
+    {
+      "metro": "Colorado Springs",
+      "state": "CO",
+      "query": "Colorado Springs",
+      "hitCount": 0
+    },
+    {
+      "metro": "Colorado Springs",
+      "state": "CO",
+      "query": "El Paso County CO",
+      "hitCount": 0
+    },
+    {
+      "metro": "Los Angeles",
+      "state": "CA",
+      "query": "Los Angeles",
+      "hitCount": 13
+    },
+    {
+      "metro": "Los Angeles",
+      "state": "CA",
+      "query": "LAFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "Los Angeles",
+      "state": "CA",
+      "query": "LA County Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "San Francisco",
+      "state": "CA",
+      "query": "San Francisco",
+      "hitCount": 2
+    },
+    {
+      "metro": "San Francisco",
+      "state": "CA",
+      "query": "SFFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "San Francisco",
+      "state": "CA",
+      "query": "San Francisco Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "San Jose",
+      "state": "CA",
+      "query": "San Jose",
+      "hitCount": 1
+    },
+    {
+      "metro": "San Jose",
+      "state": "CA",
+      "query": "San Jose Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "San Jose",
+      "state": "CA",
+      "query": "Santa Clara",
+      "hitCount": 5
+    },
+    {
+      "metro": "Sacramento",
+      "state": "CA",
+      "query": "Sacramento",
+      "hitCount": 4
+    },
+    {
+      "metro": "Sacramento",
+      "state": "CA",
+      "query": "Sacramento Fire",
+      "hitCount": 2
+    },
+    {
+      "metro": "Sacramento",
+      "state": "CA",
+      "query": "Sac Metro Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "San Diego",
+      "state": "CA",
+      "query": "San Diego",
+      "hitCount": 3
+    },
+    {
+      "metro": "San Diego",
+      "state": "CA",
+      "query": "San Diego Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "San Diego",
+      "state": "CA",
+      "query": "SDFD",
+      "hitCount": 0
+    },
+    {
+      "metro": "Portland",
+      "state": "OR",
+      "query": "Portland",
+      "hitCount": 3
+    },
+    {
+      "metro": "Portland",
+      "state": "OR",
+      "query": "Portland Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Portland",
+      "state": "OR",
+      "query": "Multnomah",
+      "hitCount": 0
+    },
+    {
+      "metro": "Seattle",
+      "state": "WA",
+      "query": "Seattle",
+      "hitCount": 2
+    },
+    {
+      "metro": "Seattle",
+      "state": "WA",
+      "query": "Seattle Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Seattle",
+      "state": "WA",
+      "query": "King County",
+      "hitCount": 7
+    },
+    {
+      "metro": "Spokane",
+      "state": "WA",
+      "query": "Spokane",
+      "hitCount": 9
+    },
+    {
+      "metro": "Spokane",
+      "state": "WA",
+      "query": "Spokane Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Salt Lake City",
+      "state": "UT",
+      "query": "Salt Lake",
+      "hitCount": 0
+    },
+    {
+      "metro": "Salt Lake City",
+      "state": "UT",
+      "query": "Salt Lake City Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Salt Lake City",
+      "state": "UT",
+      "query": "SLC Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Boise",
+      "state": "ID",
+      "query": "Boise",
+      "hitCount": 1
+    },
+    {
+      "metro": "Boise",
+      "state": "ID",
+      "query": "Boise Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Boise",
+      "state": "ID",
+      "query": "Ada County",
+      "hitCount": 1
+    },
+    {
+      "metro": "Anchorage",
+      "state": "AK",
+      "query": "Anchorage",
+      "hitCount": 1
+    },
+    {
+      "metro": "Anchorage",
+      "state": "AK",
+      "query": "Anchorage Fire",
+      "hitCount": 1
+    },
+    {
+      "metro": "Honolulu",
+      "state": "HI",
+      "query": "Honolulu",
+      "hitCount": 1
+    },
+    {
+      "metro": "Honolulu",
+      "state": "HI",
+      "query": "Honolulu Fire",
+      "hitCount": 0
+    },
+    {
+      "metro": "Honolulu",
+      "state": "HI",
+      "query": "HFD Hawaii",
+      "hitCount": 0
+    }
+  ],
+  "agencies": [
+    {
+      "agencyId": "23100",
+      "agencyName": "Anchorage FD [AK]",
+      "display2": "Anchorage, Chugiak, Eagle River, Girdwood",
+      "state": "AK",
+      "city": "Anchorage",
+      "region": "West",
+      "lat": 61.2180556,
+      "lng": -149.9002778,
+      "matchedQueries": [
+        "Anchorage",
+        "Anchorage Fire"
+      ],
+      "metros": [
+        "Anchorage"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 63,
+        "withCoords": 63,
+        "active": 1,
+        "recent": 62
+      },
+      "probedAt": "2026-06-29T03:01:06.262Z"
+    },
+    {
+      "agencyId": "PID371",
+      "agencyName": "Fulton Co 911 [GA]",
+      "display2": "Atlanta",
+      "state": "GA",
+      "city": "Atlanta",
+      "region": "Southeast",
+      "lat": 0,
+      "lng": 0,
+      "matchedQueries": [
+        "Atlanta",
+        "Fulton County"
+      ],
+      "metros": [
+        "Atlanta"
+      ],
+      "status": "EMPTY",
+      "counts": {
+        "total": 0,
+        "withCoords": 0,
+        "active": 0,
+        "recent": 0
+      },
+      "probedAt": "2026-06-29T03:00:33.097Z"
+    },
+    {
+      "agencyId": "EMS1169",
+      "agencyName": "Ada County EMS [ID]",
+      "display2": "Boise, Eagle, Garden City, Kuna, Meridian, Star",
+      "state": "ID",
+      "city": "Boise",
+      "region": "West",
+      "lat": 43.618746,
+      "lng": -116.214702,
+      "matchedQueries": [
+        "Boise",
+        "Ada County"
+      ],
+      "metros": [
+        "Boise"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 105,
+        "withCoords": 105,
+        "active": 5,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:01:00.589Z"
+    },
+    {
+      "agencyId": "EMS1316",
+      "agencyName": "Mecklenburg EMS [NC]",
+      "display2": "Charlotte",
+      "state": "NC",
+      "city": "Charlotte",
+      "region": "Southeast",
+      "lat": 35.227011,
+      "lng": -80.843325,
+      "matchedQueries": [
+        "Charlotte",
+        "Mecklenburg"
+      ],
+      "metros": [
+        "Charlotte"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 35,
+        "withCoords": 35,
+        "active": 0,
+        "recent": 35
+      },
+      "probedAt": "2026-06-29T03:00:33.483Z"
+    },
+    {
+      "agencyId": "PID307",
+      "agencyName": "Chicago Heights Fire [IL]",
+      "display2": "Chicago Heights",
+      "state": "IL",
+      "city": "Chicago",
+      "region": "Midwest",
+      "lat": 0,
+      "lng": 0,
+      "matchedQueries": [
+        "Chicago"
+      ],
+      "metros": [
+        "Chicago"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 19,
+        "withCoords": 19,
+        "active": 0,
+        "recent": 19
+      },
+      "probedAt": "2026-06-29T03:00:37.383Z"
+    },
+    {
+      "agencyId": "31015",
+      "agencyName": "Cincinnati Fire [OH]",
+      "display2": "Cincinnati",
+      "state": "OH",
+      "city": "Cincinnati",
+      "region": "Midwest",
+      "lat": 39.1031182,
+      "lng": -84.5120196,
+      "matchedQueries": [
+        "Cincinnati",
+        "Cincinnati Fire"
+      ],
+      "metros": [
+        "Cincinnati"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 115,
+        "withCoords": 115,
+        "active": 15,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:38.924Z"
+    },
+    {
+      "agencyId": "EMS1034",
+      "agencyName": "Chagrin Valley [OH]",
+      "display2": "Cleveland Heights",
+      "state": "OH",
+      "city": "Cleveland",
+      "region": "Midwest",
+      "lat": 41.447832,
+      "lng": -81.427615,
+      "matchedQueries": [
+        "Cleveland"
+      ],
+      "metros": [
+        "Cleveland"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 105,
+        "withCoords": 105,
+        "active": 5,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:37.770Z"
+    },
+    {
+      "agencyId": "EMS1035",
+      "agencyName": "Cleveland EMS [OH]",
+      "display2": "Cleveland",
+      "state": "OH",
+      "city": "Cleveland",
+      "region": "Midwest",
+      "lat": 41.499494,
+      "lng": -81.695408,
+      "matchedQueries": [
+        "Cleveland"
+      ],
+      "metros": [
+        "Cleveland"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 7,
+        "withCoords": 7,
+        "active": 1,
+        "recent": 6
+      },
+      "probedAt": "2026-06-29T03:00:38.137Z"
+    },
+    {
+      "agencyId": "25009",
+      "agencyName": "Columbus Fire [OH]",
+      "display2": "Bexley, Blendon Township, Brice, Canal Winchester, Clinton Township, Columbus, Franklin Township, Grandview, Grove City, Groveport, Hamilton Township, Hilliard, Lithopolis, Lockbourne, Madison Township, Minerva Park, New Albany, Obetz, Pickerington, Reynoldsburg, Westerville, Whitehall",
+      "state": "OH",
+      "city": "Columbus",
+      "region": "Midwest",
+      "lat": 39.9611755,
+      "lng": -82.9987942,
+      "matchedQueries": [
+        "Columbus"
+      ],
+      "metros": [
+        "Columbus"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 112,
+        "withCoords": 112,
+        "active": 12,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:38.540Z"
+    },
+    {
+      "agencyId": "EMS1987",
+      "agencyName": "Durham 911 [NC]",
+      "display2": "Durham",
+      "state": "NC",
+      "city": "Durham",
+      "region": "Southeast",
+      "lat": 35.9940329,
+      "lng": -78.898619,
+      "matchedQueries": [
+        "Durham"
+      ],
+      "metros": [
+        "Durham"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 111,
+        "withCoords": 111,
+        "active": 11,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:34.301Z"
+    },
+    {
+      "agencyId": "GB803",
+      "agencyName": "El Paso Fire [TX]",
+      "display2": "El Paso",
+      "state": "TX",
+      "city": "El Paso",
+      "region": "Southwest",
+      "lat": 31.761843,
+      "lng": -106.485074,
+      "matchedQueries": [
+        "El Paso",
+        "El Paso Fire"
+      ],
+      "metros": [
+        "El Paso"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 106,
+        "withCoords": 106,
+        "active": 6,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:41.626Z"
+    },
+    {
+      "agencyId": "10282",
+      "agencyName": "Broward County Fire  [FL]",
+      "display2": "Cooper City, Dania Beach, Deerfield Beach, Hallandale Beach, Hillsboro Beach, Lauderdale Lakes, Pembroke Park, West Park, Weston",
+      "state": "FL",
+      "city": "Fort Lauderdale",
+      "region": "Southeast",
+      "lat": 26.063312,
+      "lng": -80.151781,
+      "matchedQueries": [
+        "Broward"
+      ],
+      "metros": [
+        "Fort Lauderdale"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:37.018Z"
+    },
+    {
+      "agencyId": "10192",
+      "agencyName": "Fort Lauderdale Fire [FL]",
+      "display2": "Fort Lauderdale, Lazy Lake, Wilton Manors",
+      "state": "FL",
+      "city": "Fort Lauderdale",
+      "region": "Southeast",
+      "lat": 26.122448,
+      "lng": -80.137318,
+      "matchedQueries": [
+        "Fort Lauderdale"
+      ],
+      "metros": [
+        "Fort Lauderdale"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 105,
+        "withCoords": 105,
+        "active": 5,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:36.631Z"
+    },
+    {
+      "agencyId": "PID337",
+      "agencyName": "Fort Worth FD [TX]",
+      "display2": "Fort Worth",
+      "state": "TX",
+      "city": "Fort Worth",
+      "region": "Southwest",
+      "lat": 0,
+      "lng": 0,
+      "matchedQueries": [
+        "Fort Worth",
+        "Fort Worth Fire"
+      ],
+      "metros": [
+        "Fort Worth"
+      ],
+      "status": "EMPTY",
+      "counts": {
+        "total": 0,
+        "withCoords": 0,
+        "active": 0,
+        "recent": 0
+      },
+      "probedAt": "2026-06-29T03:00:41.240Z"
+    },
+    {
+      "agencyId": "EMS1157",
+      "agencyName": "Honolulu EMS [HI]",
+      "display2": "Aiea, Ewa Beach, Hale'iwa, Hau'ula, Hawaii Kai, Honolulu, Ka'a'awa, Kahala, Kahuku, Kailua, Kane'ohe, Kapolei, La'ie, Lanikai, Ma'ili, Makaha, Manoa, Mililani, Nanakuli, Pearl City, Wahiawa, Wai'anae, Waialua, Waikiki, Waimanalo, Waipahu",
+      "state": "HI",
+      "city": "Honolulu",
+      "region": "West",
+      "lat": 21.306899,
+      "lng": -157.85848,
+      "matchedQueries": [
+        "Honolulu"
+      ],
+      "metros": [
+        "Honolulu"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 109,
+        "withCoords": 109,
+        "active": 9,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:01:06.665Z"
+    },
+    {
+      "agencyId": "04813",
+      "agencyName": "Kansas City Fire [MO]",
+      "display2": "Blue Springs, Central Jackson County Fire Protection District, Claycomo Fire, Farley, Grain Valley, Grandview, Houston Lake, Kansas City , Lake Tapawingo, North Kansas City, North Kansas City Fire, Parkville, Platte Woods, Raytown, Raytown Fire Protection District, Southern Platte Fire Protection District, Weatherby Lake",
+      "state": "MO",
+      "city": "Kansas City",
+      "region": "Midwest",
+      "lat": 39.099744,
+      "lng": -94.578412,
+      "matchedQueries": [
+        "Kansas City"
+      ],
+      "metros": [
+        "Kansas City"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 108,
+        "withCoords": 108,
+        "active": 8,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:40.509Z"
+    },
+    {
+      "agencyId": "05031",
+      "agencyName": "Clark County FD NV [NV]",
+      "display2": "Las Vegas",
+      "state": "NV",
+      "city": "Las Vegas",
+      "region": "Southwest",
+      "lat": 36.063784,
+      "lng": -115.180785,
+      "matchedQueries": [
+        "Las Vegas",
+        "Clark County"
+      ],
+      "metros": [
+        "Las Vegas"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 108,
+        "withCoords": 108,
+        "active": 8,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:42.787Z"
+    },
+    {
+      "agencyId": "03002",
+      "agencyName": "Las Vegas F&R [NV]",
+      "display2": "Las Vegas",
+      "state": "NV",
+      "city": "Las Vegas",
+      "region": "Southwest",
+      "lat": 36.114647,
+      "lng": -115.172815,
+      "matchedQueries": [
+        "Las Vegas",
+        "Las Vegas Fire"
+      ],
+      "metros": [
+        "Las Vegas"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 112,
+        "withCoords": 112,
+        "active": 12,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:43.197Z"
+    },
+    {
+      "agencyId": "X3004",
+      "agencyName": "North Las Vegas Fire [NV]",
+      "display2": "North Las Vegas",
+      "state": "NV",
+      "city": "Las Vegas",
+      "region": "Southwest",
+      "lat": 36.198911,
+      "lng": -115.117522,
+      "matchedQueries": [
+        "Las Vegas",
+        "Las Vegas Fire"
+      ],
+      "metros": [
+        "Las Vegas"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:43.571Z"
+    },
+    {
+      "agencyId": "LAC01",
+      "agencyName": "LA County FD (Div 1) [CA]",
+      "display2": "Avalon, Carson, Compton, Gardena, Hawthorne, Hermosa Beach, Lawndale, Lomita, Palos Verdes Estates, Rancho Palos Verdes, Rolling Hills, The Isthmus, Two Harbors, West Palos Verdes",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 33.916435,
+      "lng": -118.35304,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 105,
+        "withCoords": 105,
+        "active": 5,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:43.946Z"
+    },
+    {
+      "agencyId": "LAC02",
+      "agencyName": "LA County FD (Div 2) [CA]",
+      "display2": "Azusa, Baldwin Park, Bradbury, Claremont, Covina, Duarte, Glendora, Irwindale, La Verne, San Dimas",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.075692,
+      "lng": -117.95382,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 98,
+        "withCoords": 98,
+        "active": 0,
+        "recent": 98
+      },
+      "probedAt": "2026-06-29T03:00:44.334Z"
+    },
+    {
+      "agencyId": "19110",
+      "agencyName": "LA County FD (Div 3) [CA]",
+      "display2": "Agua Dulce, Altadena, Canyon Country, Castaic, Gorman, Kagel Canyon, La Cañada Flintridge, La Crescenta, Montrose, Newhall, Pasadena, San Fernando, Santa Clarita, Stevenson Ranch, Valencia",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.305295,
+      "lng": -118.460135,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 4,
+        "recent": 99
+      },
+      "probedAt": "2026-06-29T03:00:44.724Z"
+    },
+    {
+      "agencyId": "LAC04",
+      "agencyName": "LA County FD (Div 4) [CA]",
+      "display2": "Artesia, Bellflower, Cerritos, Hawaiian Gardens, La Habra, La Mirada, Lakewood, Norwalk, Paramount, Pico Rivera, Signal Hill, Whittier",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 33.902396,
+      "lng": -118.082224,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:45.101Z"
+    },
+    {
+      "agencyId": "LAC05",
+      "agencyName": "LA County FD (Div 5) [CA]",
+      "display2": "Acton, Green Valley, Lake Los Angeles, Lancaster, Leona Valley, Littlerock, Palmdale, Pearblossom, Quartz Hill",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.686869,
+      "lng": -118.1543,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:45.497Z"
+    },
+    {
+      "agencyId": "LAC06",
+      "agencyName": "LA County FD (Div 6) [CA]",
+      "display2": "Huntington Park, Inglewood, Lennox, Lynwood, South Gate, Unincorporated Los Angeles, Vernon, Willowbrook",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 33.961735,
+      "lng": -118.353373,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:45.877Z"
+    },
+    {
+      "agencyId": "LAC07",
+      "agencyName": "LA County FD (Div 7) [CA]",
+      "display2": "Agoura, Agoura Hills, Calabasas, Malibu, Marina Del Rey, Topanga, Unincorporated Los Angeles, Universal City, West Hollywood, Westlake Village",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.025879,
+      "lng": -118.779753,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 94,
+        "withCoords": 94,
+        "active": 2,
+        "recent": 92
+      },
+      "probedAt": "2026-06-29T03:00:46.237Z"
+    },
+    {
+      "agencyId": "LAC08",
+      "agencyName": "LA County FD (Div 8) [CA]",
+      "display2": "Bassett, Diamond Bar, Hacienda Heights, Industry, La Puente, Pomona, Rowland Heights, Valinda, Walnut",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.055172,
+      "lng": -117.752559,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:46.628Z"
+    },
+    {
+      "agencyId": "LAC09",
+      "agencyName": "LA County FD (Div 9) [CA]",
+      "display2": "Bell, Bell Gardens, Commerce, Cudahy, El Monte, Maywood, Rosemead, San Gabriel, South El Monte, Temple City, Unincorporated Los Angeles",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.068691,
+      "lng": -118.028048,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 106,
+        "withCoords": 106,
+        "active": 6,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:47.007Z"
+    },
+    {
+      "agencyId": "LAFDC",
+      "agencyName": "LAFD - Central [CA]",
+      "display2": "Aliso Village, Angelino Heights, Atwater Village, Boyle Heights, Bunker Hill, Central City East, Cypress Park, Eagle Rock, East Hollywood, Echo Park, El Sereno, Elysian Park, Elysian Valley, Estrada Court, Franklin Hills, Garvanza, Glassell Park, Hermon, Highland Park, Hillside Village, Lafayette Park, Lincoln Heights, Los Angeles, Los Feliz, Macarthur Park, Montecito Heights, Monterey Hills, Mount Washington, Old Bank District, Pico Gardens, Pico-Union, Pueblo Del Rio, Ramona Gardens, Rose Hills Courts, Silver Lake, Solano Canyon, South Park-Entertainment, Temple-Beaudry, University Hills, Virgil Village, Westlake",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.04663,
+      "lng": -118.268572,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:47.391Z"
+    },
+    {
+      "agencyId": "LAFDS",
+      "agencyName": "LAFD - South [CA]",
+      "display2": "Adams-Normandie, Athens Park, Avalon Gardens, Baldwin Hills, Baldwin Village, Baldwin Vista, Chesterfield Square, Crenshaw, Exposition Park, Gardena Boulevard, Gramercy Park, Hacienda Village, Harbor City, Harbor Gateway, Hyde Park, Imperial Courts, Jefferson Park, Jordon Downs, Leimert Park, Los Angeles, Nickerson Gardens, Parkside Manor, San Pedro, South Park- 51st and Menlo, Terminal Island, Union Square, University Park, Vermont Knolls, Vermont Park, View Heights, Village Green, Watts, West Adams, Wilmington",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 33.749478,
+      "lng": -118.280966,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 86,
+        "withCoords": 86,
+        "active": 5,
+        "recent": 81
+      },
+      "probedAt": "2026-06-29T03:00:47.757Z"
+    },
+    {
+      "agencyId": "19105",
+      "agencyName": "LAFD - Valley [CA]",
+      "display2": "Arleta, Cahuenga Pass, Canoga Park, Chatsworth, Encino, Granada Hills, La Tuna Canyon, Lake Balboa, Lake View Terrace, Los Angeles, North Hills, North Hollywood, Northridge, Pacoima, Panorama City, Porter Ranch, Reseda, Sepulveda, Shadow Hills, Sherman Oaks, Studio City, Sun Valley, Sunland, Sylmar, Tarzana, Toluca Lake, Toluca Woods, Tujunga, Universal City, Valley Glen, Valley Village, Van Nuys, West Hills, West Toluca, West Van Nuys, Winnetka, Woodland Hills",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.159979,
+      "lng": -118.469599,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 80,
+        "withCoords": 80,
+        "active": 2,
+        "recent": 78
+      },
+      "probedAt": "2026-06-29T03:00:48.128Z"
+    },
+    {
+      "agencyId": "LAFDW",
+      "agencyName": "LAFD - West [CA]",
+      "display2": "Argyle, Arlington Heights, Bel Air, Benedict Canyon, Beverly Crest, Beverly Glen, Beverlywood, Brentwood Neighborhood, Brookside Park, Cahuenga Pass, Carthay Circle, Century City, Cheviot Hills, Country Club Park, Crestview, East Hollywood, Glen Ridge, Hancock Park, Hobart, Hollywood, Hollywood Hills, La Brea, Larchmont Village, Little Armenia, Los Angeles, Los Feliz, Manchester Square, Mar Vista, Melrose District, Miracle Mile, Mount Olympus, Oakwood, Pacific Palisades, Palms, Park La Brea, Playa Del Rey, Playa Vista, Rancho Park, Roscomare Valley, Rustic Canyon, San Vicente, Sawtelle, Sierra Vista, South Carthay, Spaulding Square, Sunset Strip, Venice, Vine\\/Willoughby, Wellington Square, West Los Angeles, Westchester, Westwood, Wilshire Center, Wilshire Vista, Windsor Square",
+      "state": "CA",
+      "city": "Los Angeles",
+      "region": "West",
+      "lat": 34.03631,
+      "lng": -118.377625,
+      "matchedQueries": [
+        "Los Angeles"
+      ],
+      "metros": [
+        "Los Angeles"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 46,
+        "withCoords": 46,
+        "active": 3,
+        "recent": 43
+      },
+      "probedAt": "2026-06-29T03:00:48.502Z"
+    },
+    {
+      "agencyId": "X1012",
+      "agencyName": "Miami Beach Fire [FL]",
+      "display2": "Miami Beach",
+      "state": "FL",
+      "city": "Miami",
+      "region": "Southeast",
+      "lat": 25.790673,
+      "lng": -80.13007,
+      "matchedQueries": [
+        "Miami"
+      ],
+      "metros": [
+        "Miami"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 54,
+        "withCoords": 54,
+        "active": 1,
+        "recent": 53
+      },
+      "probedAt": "2026-06-29T03:00:36.235Z"
+    },
+    {
+      "agencyId": "40200",
+      "agencyName": "Milwaukee Fire [WI]",
+      "display2": "Milwaukee, West Milwaukee",
+      "state": "WI",
+      "city": "Milwaukee",
+      "region": "Midwest",
+      "lat": 43.032528,
+      "lng": -87.9080366,
+      "matchedQueries": [
+        "Milwaukee",
+        "Milwaukee Fire"
+      ],
+      "metros": [
+        "Milwaukee"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:39.341Z"
+    },
+    {
+      "agencyId": "40220",
+      "agencyName": "South Milwaukee Fire [WI]",
+      "display2": "South Milwaukee",
+      "state": "WI",
+      "city": "Milwaukee",
+      "region": "Midwest",
+      "lat": 42.9084696339,
+      "lng": -87.8521583064,
+      "matchedQueries": [
+        "Milwaukee",
+        "Milwaukee Fire"
+      ],
+      "metros": [
+        "Milwaukee"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 21,
+        "withCoords": 21,
+        "active": 0,
+        "recent": 21
+      },
+      "probedAt": "2026-06-29T03:00:39.712Z"
+    },
+    {
+      "agencyId": "71000",
+      "agencyName": "Norfolk Fire-Rescue [VA]",
+      "display2": "Norfolk",
+      "state": "VA",
+      "city": "Norfolk",
+      "region": "Northeast",
+      "lat": 36.85078,
+      "lng": -76.285977,
+      "matchedQueries": [
+        "Norfolk"
+      ],
+      "metros": [
+        "Norfolk"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:32.326Z"
+    },
+    {
+      "agencyId": "EMS1264",
+      "agencyName": "Virginia Beach EMS [VA]",
+      "display2": "Virginia Beach",
+      "state": "VA",
+      "city": "Norfolk",
+      "region": "Northeast",
+      "lat": 36.852949,
+      "lng": -75.978319,
+      "matchedQueries": [
+        "Virginia Beach"
+      ],
+      "metros": [
+        "Norfolk"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 110,
+        "withCoords": 110,
+        "active": 10,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:32.730Z"
+    },
+    {
+      "agencyId": "PID210",
+      "agencyName": "Tri-County Fire EMS [NE]",
+      "display2": "Douglas County, Omaha, Sarpy County, Washington County",
+      "state": "NE",
+      "city": "Omaha",
+      "region": "Midwest",
+      "lat": 0,
+      "lng": 0,
+      "matchedQueries": [
+        "Omaha"
+      ],
+      "metros": [
+        "Omaha"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 1,
+        "withCoords": 1,
+        "active": 0,
+        "recent": 1
+      },
+      "probedAt": "2026-06-29T03:00:40.875Z"
+    },
+    {
+      "agencyId": "65060",
+      "agencyName": "Orange County Fire [FL]",
+      "display2": "Unincorporated Orlando",
+      "state": "FL",
+      "city": "Orlando",
+      "region": "Southeast",
+      "lat": 28.60001,
+      "lng": -81.338706,
+      "matchedQueries": [
+        "Orlando"
+      ],
+      "metros": [
+        "Orlando"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 110,
+        "withCoords": 110,
+        "active": 10,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:34.726Z"
+    },
+    {
+      "agencyId": "PID136",
+      "agencyName": "Orlando Airport Fire [FL]",
+      "display2": "Orlando, Orlando Airport",
+      "state": "FL",
+      "city": "Orlando",
+      "region": "Southeast",
+      "lat": 0,
+      "lng": 0,
+      "matchedQueries": [
+        "Orlando"
+      ],
+      "metros": [
+        "Orlando"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 27,
+        "withCoords": 27,
+        "active": 1,
+        "recent": 26
+      },
+      "probedAt": "2026-06-29T03:00:35.489Z"
+    },
+    {
+      "agencyId": "07212",
+      "agencyName": "Orlando FD [FL]",
+      "display2": "Orlando",
+      "state": "FL",
+      "city": "Orlando",
+      "region": "Southeast",
+      "lat": 28.5383355,
+      "lng": -81.3792365,
+      "matchedQueries": [
+        "Orlando"
+      ],
+      "metros": [
+        "Orlando"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 106,
+        "withCoords": 106,
+        "active": 6,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:35.108Z"
+    },
+    {
+      "agencyId": "17022",
+      "agencyName": "Seminole County Fire [FL]",
+      "display2": "Orlando Sanford International Airport",
+      "state": "FL",
+      "city": "Orlando",
+      "region": "Southeast",
+      "lat": 28.8028612,
+      "lng": -81.269453,
+      "matchedQueries": [
+        "Orlando"
+      ],
+      "metros": [
+        "Orlando"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:35.873Z"
+    },
+    {
+      "agencyId": "EMS1110",
+      "agencyName": "Allegheny County EMS [PA]",
+      "display2": "East Pittsburgh, Pittsburgh",
+      "state": "PA",
+      "city": "Pittsburgh",
+      "region": "Northeast",
+      "lat": 40.440597,
+      "lng": -79.995934,
+      "matchedQueries": [
+        "Pittsburgh",
+        "Allegheny"
+      ],
+      "metros": [
+        "Pittsburgh"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:30.801Z"
+    },
+    {
+      "agencyId": "EMS1685",
+      "agencyName": "Somerset County 911 [PA]",
+      "display2": "Allegheny",
+      "state": "PA",
+      "city": "Pittsburgh",
+      "region": "Northeast",
+      "lat": 40.008411,
+      "lng": -79.0780831,
+      "matchedQueries": [
+        "Allegheny"
+      ],
+      "metros": [
+        "Pittsburgh"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 27,
+        "withCoords": 27,
+        "active": 2,
+        "recent": 25
+      },
+      "probedAt": "2026-06-29T03:00:31.180Z"
+    },
+    {
+      "agencyId": "00144",
+      "agencyName": "Gresham Fire [OR]",
+      "display2": "Portland",
+      "state": "OR",
+      "city": "Portland",
+      "region": "West",
+      "lat": 45.500148,
+      "lng": -122.430244,
+      "matchedQueries": [
+        "Portland"
+      ],
+      "metros": [
+        "Portland"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 35,
+        "withCoords": 35,
+        "active": 0,
+        "recent": 35
+      },
+      "probedAt": "2026-06-29T03:00:53.813Z"
+    },
+    {
+      "agencyId": "00291",
+      "agencyName": "Portland F&R [OR]",
+      "display2": "Burlington, Portland",
+      "state": "OR",
+      "city": "Portland",
+      "region": "West",
+      "lat": 45.5234515,
+      "lng": -122.6762071,
+      "matchedQueries": [
+        "Portland",
+        "Portland Fire"
+      ],
+      "metros": [
+        "Portland"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 101,
+        "withCoords": 101,
+        "active": 1,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:54.216Z"
+    },
+    {
+      "agencyId": "EMS1209",
+      "agencyName": "Wake County [NC]",
+      "display2": "Raleigh",
+      "state": "NC",
+      "city": "Raleigh",
+      "region": "Southeast",
+      "lat": 35.7777799784,
+      "lng": -78.6427089222,
+      "matchedQueries": [
+        "Raleigh",
+        "Wake County"
+      ],
+      "metros": [
+        "Raleigh"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 109,
+        "withCoords": 109,
+        "active": 9,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:33.916Z"
+    },
+    {
+      "agencyId": "76000",
+      "agencyName": "City of Richmond [VA]",
+      "display2": "Richmond",
+      "state": "VA",
+      "city": "Richmond",
+      "region": "Northeast",
+      "lat": 37.5407246,
+      "lng": -77.4360481,
+      "matchedQueries": [
+        "Richmond",
+        "Richmond Fire"
+      ],
+      "metros": [
+        "Richmond"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:31.950Z"
+    },
+    {
+      "agencyId": "57060",
+      "agencyName": "Elkhorn Fire [CA]",
+      "display2": "Rural West Sacramento",
+      "state": "CA",
+      "city": "Sacramento",
+      "region": "West",
+      "lat": 38.673167,
+      "lng": -121.646233,
+      "matchedQueries": [
+        "Sacramento"
+      ],
+      "metros": [
+        "Sacramento"
+      ],
+      "status": "EMPTY",
+      "counts": {
+        "total": 0,
+        "withCoords": 0,
+        "active": 0,
+        "recent": 0
+      },
+      "probedAt": "2026-06-29T03:00:51.148Z"
+    },
+    {
+      "agencyId": "34090",
+      "agencyName": "MetroFire Sacramento [CA]",
+      "display2": "Anatolia, Antelope, Arcade, Arden, Carmichael, Citrus Heights, Dry Creek, Elverta, Fair Oaks, Florin, Foothill Farms, Gold River, Mather, McClellan, Michigan Bar, Mills Station, North Highlands, Orangevale, Rancho Cordova, Rancho Murieta, Rio Linda, Rosemont, Sloughhouse",
+      "state": "CA",
+      "city": "Sacramento",
+      "region": "West",
+      "lat": 38.569606,
+      "lng": -121.296267,
+      "matchedQueries": [
+        "Sacramento"
+      ],
+      "metros": [
+        "Sacramento"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 105,
+        "withCoords": 105,
+        "active": 5,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:51.918Z"
+    },
+    {
+      "agencyId": "34080",
+      "agencyName": "Sacramento FD [CA]",
+      "display2": "Del Paso Heights, East Sacramento, Fruitridge, Gardenland, Natomas, Robla, Sacramento",
+      "state": "CA",
+      "city": "Sacramento",
+      "region": "West",
+      "lat": 38.581589,
+      "lng": -121.494377,
+      "matchedQueries": [
+        "Sacramento",
+        "Sacramento Fire"
+      ],
+      "metros": [
+        "Sacramento"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:51.538Z"
+    },
+    {
+      "agencyId": "57065",
+      "agencyName": "West Sacramento Fire [CA]",
+      "display2": "West Sacramento",
+      "state": "CA",
+      "city": "Sacramento",
+      "region": "West",
+      "lat": 38.580449,
+      "lng": -121.530238,
+      "matchedQueries": [
+        "Sacramento",
+        "Sacramento Fire"
+      ],
+      "metros": [
+        "Sacramento"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 28,
+        "withCoords": 28,
+        "active": 0,
+        "recent": 28
+      },
+      "probedAt": "2026-06-29T03:00:52.297Z"
+    },
+    {
+      "agencyId": "37047",
+      "agencyName": "San Diego County FD [CA]",
+      "display2": "San Diego Country Estates",
+      "state": "CA",
+      "city": "San Diego",
+      "region": "West",
+      "lat": 32.83358,
+      "lng": -117.129801,
+      "matchedQueries": [
+        "San Diego"
+      ],
+      "metros": [
+        "San Diego"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 70,
+        "withCoords": 70,
+        "active": 5,
+        "recent": 65
+      },
+      "probedAt": "2026-06-29T03:00:52.684Z"
+    },
+    {
+      "agencyId": "37140",
+      "agencyName": "San Diego FR [CA]",
+      "display2": "Carmel Valley, Clairemont Mesa, Cortez Hill, East Village, Gaslamp Quarter, Hillcrest, La Jolla, Linda Vista, Mira Mesa, Mission Beach, Mission Hills, Ocean Beach, Pacific Beach, Point Loma, Rancho Bernardo, Rancho Penasquitos, San Carlos, San Diego, Scripps Ranch",
+      "state": "CA",
+      "city": "San Diego",
+      "region": "West",
+      "lat": 32.715327,
+      "lng": -117.157253,
+      "matchedQueries": [
+        "San Diego",
+        "San Diego Fire"
+      ],
+      "metros": [
+        "San Diego"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 122,
+        "withCoords": 122,
+        "active": 22,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:53.073Z"
+    },
+    {
+      "agencyId": "37165",
+      "agencyName": "San Miguel Fire [CA]",
+      "display2": "Rancho San Diego",
+      "state": "CA",
+      "city": "San Diego",
+      "region": "West",
+      "lat": 32.794784,
+      "lng": -116.962541,
+      "matchedQueries": [
+        "San Diego"
+      ],
+      "metros": [
+        "San Diego"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 34,
+        "withCoords": 34,
+        "active": 1,
+        "recent": 33
+      },
+      "probedAt": "2026-06-29T03:00:53.442Z"
+    },
+    {
+      "agencyId": "EMS1384",
+      "agencyName": "San Francisco EMS [CA]",
+      "display2": "San Francisco",
+      "state": "CA",
+      "city": "San Francisco",
+      "region": "West",
+      "lat": 37.774888,
+      "lng": -122.418888,
+      "matchedQueries": [
+        "San Francisco"
+      ],
+      "metros": [
+        "San Francisco"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 107,
+        "withCoords": 107,
+        "active": 7,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:48.901Z"
+    },
+    {
+      "agencyId": "41000",
+      "agencyName": "San Mateo County PSC [CA]",
+      "display2": "South San Francisco",
+      "state": "CA",
+      "city": "San Francisco",
+      "region": "West",
+      "lat": 37.485233,
+      "lng": -122.23638,
+      "matchedQueries": [
+        "San Francisco"
+      ],
+      "metros": [
+        "San Francisco"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 102,
+        "withCoords": 102,
+        "active": 2,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:49.288Z"
+    },
+    {
+      "agencyId": "43060",
+      "agencyName": "Palo Alto FD [CA]",
+      "display2": "Unincorporated Santa Clara County",
+      "state": "CA",
+      "city": "San Jose",
+      "region": "West",
+      "lat": 37.44188,
+      "lng": -122.143014,
+      "matchedQueries": [
+        "Santa Clara"
+      ],
+      "metros": [
+        "San Jose"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 18,
+        "withCoords": 18,
+        "active": 1,
+        "recent": 17
+      },
+      "probedAt": "2026-06-29T03:00:50.033Z"
+    },
+    {
+      "agencyId": "43070",
+      "agencyName": "San Jose FD [CA]",
+      "display2": "San Jose",
+      "state": "CA",
+      "city": "San Jose",
+      "region": "West",
+      "lat": 37.3393857,
+      "lng": -121.8949555,
+      "matchedQueries": [
+        "San Jose",
+        "San Jose Fire"
+      ],
+      "metros": [
+        "San Jose"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 104,
+        "withCoords": 104,
+        "active": 4,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:49.670Z"
+    },
+    {
+      "agencyId": "43080",
+      "agencyName": "Santa Clara Co FD [CA]",
+      "display2": "Campbell, Cupertino, Los Altos, Los Altos Hills, Los Gatos, Monte Sereno, Saratoga, Unincorporated Santa Clara County",
+      "state": "CA",
+      "city": "San Jose",
+      "region": "West",
+      "lat": 37.354106,
+      "lng": -121.955235,
+      "matchedQueries": [
+        "Santa Clara"
+      ],
+      "metros": [
+        "San Jose"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:50.418Z"
+    },
+    {
+      "agencyId": "43090",
+      "agencyName": "Santa Clara Fire [CA]",
+      "display2": "Santa Clara",
+      "state": "CA",
+      "city": "San Jose",
+      "region": "West",
+      "lat": 37.3541,
+      "lng": -121.955232,
+      "matchedQueries": [
+        "Santa Clara"
+      ],
+      "metros": [
+        "San Jose"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 26,
+        "withCoords": 26,
+        "active": 1,
+        "recent": 25
+      },
+      "probedAt": "2026-06-29T03:00:50.787Z"
+    },
+    {
+      "agencyId": "17D02",
+      "agencyName": "Burien [WA]",
+      "display2": "Burien, North Highline",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.4668384,
+      "lng": -122.3405305,
+      "matchedQueries": [
+        "King County"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 27,
+        "withCoords": 27,
+        "active": 2,
+        "recent": 25
+      },
+      "probedAt": "2026-06-29T03:00:55.351Z"
+    },
+    {
+      "agencyId": "17D45",
+      "agencyName": "Eastside Batt 6 [WA]",
+      "display2": "King County Fire Dist. 45",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.7423218,
+      "lng": -121.9856781,
+      "matchedQueries": [
+        "King County"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 2,
+        "withCoords": 2,
+        "active": 0,
+        "recent": 2
+      },
+      "probedAt": "2026-06-29T03:00:56.106Z"
+    },
+    {
+      "agencyId": "17D10",
+      "agencyName": "Eastside Batt 7\\/8 [WA]",
+      "display2": "King County Dist. 10, King County Dist. 36, King County Dist. 38",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.5301011,
+      "lng": -122.0326191,
+      "matchedQueries": [
+        "King County"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 23,
+        "withCoords": 23,
+        "active": 1,
+        "recent": 22
+      },
+      "probedAt": "2026-06-29T03:00:55.726Z"
+    },
+    {
+      "agencyId": "17D27",
+      "agencyName": "Fall City FD [WA]",
+      "display2": "Fall City",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.5758849981,
+      "lng": -121.913484763,
+      "matchedQueries": [
+        "King County"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 4,
+        "withCoords": 4,
+        "active": 0,
+        "recent": 4
+      },
+      "probedAt": "2026-06-29T03:00:56.487Z"
+    },
+    {
+      "agencyId": "17M13",
+      "agencyName": "Redmond FD [WA]",
+      "display2": "King County Fire District 34, Northeast King County Medic One",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.6739881,
+      "lng": -122.121512,
+      "matchedQueries": [
+        "King County"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 26,
+        "withCoords": 26,
+        "active": 0,
+        "recent": 26
+      },
+      "probedAt": "2026-06-29T03:00:56.872Z"
+    },
+    {
+      "agencyId": "17M15",
+      "agencyName": "Seattle FD [WA]",
+      "display2": "Seattle",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.606208,
+      "lng": -122.331856,
+      "matchedQueries": [
+        "Seattle",
+        "Seattle Fire"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 107,
+        "withCoords": 107,
+        "active": 7,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:54.626Z"
+    },
+    {
+      "agencyId": "17D50",
+      "agencyName": "Skykomish Fire [WA]",
+      "display2": "King County Fire District 50",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.7092746,
+      "lng": -121.3601014,
+      "matchedQueries": [
+        "King County"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "EMPTY",
+      "counts": {
+        "total": 0,
+        "withCoords": 0,
+        "active": 0,
+        "recent": 0
+      },
+      "probedAt": "2026-06-29T03:00:57.236Z"
+    },
+    {
+      "agencyId": "17D20",
+      "agencyName": "Skyway #20 [WA]",
+      "display2": "Seattle",
+      "state": "WA",
+      "city": "Seattle",
+      "region": "West",
+      "lat": 47.6062095,
+      "lng": -122.3320708,
+      "matchedQueries": [
+        "Seattle",
+        "King County"
+      ],
+      "metros": [
+        "Seattle"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 5,
+        "withCoords": 5,
+        "active": 0,
+        "recent": 5
+      },
+      "probedAt": "2026-06-29T03:00:54.991Z"
+    },
+    {
+      "agencyId": "32D10",
+      "agencyName": "Spokane County FD10 [WA]",
+      "display2": "Airway Heights, Deep Creek, Highland, Kalispel, Lyons, West Plains",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.644613,
+      "lng": -117.593274,
+      "matchedQueries": [
+        "Spokane"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 5,
+        "withCoords": 5,
+        "active": 0,
+        "recent": 5
+      },
+      "probedAt": "2026-06-29T03:00:57.616Z"
+    },
+    {
+      "agencyId": "32D13",
+      "agencyName": "Spokane County FD13 [WA]",
+      "display2": "Newman Lake, Unincorporated Spokane County",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.744347,
+      "lng": -117.068819,
+      "matchedQueries": [
+        "Spokane"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 1,
+        "withCoords": 1,
+        "active": 0,
+        "recent": 1
+      },
+      "probedAt": "2026-06-29T03:00:57.977Z"
+    },
+    {
+      "agencyId": "32D03",
+      "agencyName": "Spokane County FD3 [WA]",
+      "display2": "Amber, Babb, Dynamite, East Cheney, Espanola, Four Lakes, Freedom, Geib, Geiger Heights, Lakeland Village, Marshall, Medical Lake, Mock, North Pine, Plaza, Rodna, Scribner, Silver Lake, South Cheney, Southwest Spokane County, Spangle, Tyler",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.48739,
+      "lng": -117.575759,
+      "matchedQueries": [
+        "Spokane"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 9,
+        "withCoords": 9,
+        "active": 0,
+        "recent": 9
+      },
+      "probedAt": "2026-06-29T03:00:58.351Z"
+    },
+    {
+      "agencyId": "32D04",
+      "agencyName": "Spokane County FD4 [WA]",
+      "display2": "Buckeye, Chattaroy, Colbert, Deer Park, Denison, Elk, Grays Landing, Green Bluff, Hamann Corner, Hazard, Milan, North Spokane County, North Vista Mobile Home Park, Peone, Pocahontas Bay, T Bridge Corner",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.889617,
+      "lng": -117.357717,
+      "matchedQueries": [
+        "Spokane"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 12,
+        "withCoords": 12,
+        "active": 0,
+        "recent": 12
+      },
+      "probedAt": "2026-06-29T03:00:58.726Z"
+    },
+    {
+      "agencyId": "32D08",
+      "agencyName": "Spokane County FD8 [WA]",
+      "display2": "Duncan, Glenrose, Mica, Moran, Ponderosa, Saltese, Valleyford",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.531842,
+      "lng": -117.239091,
+      "matchedQueries": [
+        "Spokane"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 3,
+        "withCoords": 3,
+        "active": 0,
+        "recent": 3
+      },
+      "probedAt": "2026-06-29T03:00:59.087Z"
+    },
+    {
+      "agencyId": "32D09",
+      "agencyName": "Spokane County FD9 [WA]",
+      "display2": "Dartford, Fairwood, Mead, Nine Mile Falls, Orchard Prairie, Seven Mile, Town and Country",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.76648,
+      "lng": -117.355268,
+      "matchedQueries": [
+        "Spokane"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 23,
+        "withCoords": 23,
+        "active": 0,
+        "recent": 23
+      },
+      "probedAt": "2026-06-29T03:00:59.451Z"
+    },
+    {
+      "agencyId": "32M10",
+      "agencyName": "Spokane FD [WA]",
+      "display2": "Hayford, Hazelwood, Hillyard, Parkwater, Spokane, West Spokane",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.6587802,
+      "lng": -117.4260466,
+      "matchedQueries": [
+        "Spokane",
+        "Spokane Fire"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 103,
+        "withCoords": 103,
+        "active": 3,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:59.828Z"
+    },
+    {
+      "agencyId": "32D01",
+      "agencyName": "Spokane Valley FD [WA]",
+      "display2": "Austin Neighborhood, Chester, Dishman, East Farms, East Spokane, Green Acres, Hutton Settlement, Irwin, Liberty Lake, Millwood, Moab, Opportunity, Orchard Avenue, Orchard Park, Otis Orchards, Pasadena Park, Spokane Valley, Trentwood, Velox, Vera, Veradale, Yardley",
+      "state": "WA",
+      "city": "Spokane",
+      "region": "West",
+      "lat": 47.673227,
+      "lng": -117.239374,
+      "matchedQueries": [
+        "Spokane"
+      ],
+      "metros": [
+        "Spokane"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 73,
+        "withCoords": 73,
+        "active": 0,
+        "recent": 73
+      },
+      "probedAt": "2026-06-29T03:01:00.213Z"
+    },
+    {
+      "agencyId": "EMS1329",
+      "agencyName": "Ramsey County [MN]",
+      "display2": "Arden Hills, Falcon Heights, Gem Lake, Lauderdale, Little Canada, Maplewood, Mounds View, New Brighton, North Oaks, North St. Paul, Roseville, Shoreview, St. Paul, Vadnais Heights, White Bear Lake, White Bear Township",
+      "state": "MN",
+      "city": "St Paul",
+      "region": "Midwest",
+      "lat": 44.9547296,
+      "lng": -93.0885264,
+      "matchedQueries": [
+        "Ramsey County"
+      ],
+      "metros": [
+        "St Paul"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 105,
+        "withCoords": 105,
+        "active": 5,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:40.111Z"
+    },
+    {
+      "agencyId": "11223",
+      "agencyName": "Greater Tucson   [AZ]",
+      "display2": "Marana, Oro Valley, South Tucson, Tucson",
+      "state": "AZ",
+      "city": "Tucson",
+      "region": "Southwest",
+      "lat": 32.22167,
+      "lng": -110.92655,
+      "matchedQueries": [
+        "Tucson"
+      ],
+      "metros": [
+        "Tucson"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 105,
+        "withCoords": 105,
+        "active": 5,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:42.023Z"
+    },
+    {
+      "agencyId": "11165",
+      "agencyName": "Tucson Rural\\/Metro [AZ]",
+      "display2": "Catalina Foothills, Sahuarita, Tucson, Unincorporated Pima County",
+      "state": "AZ",
+      "city": "Tucson",
+      "region": "Southwest",
+      "lat": 32.221579,
+      "lng": -110.926624,
+      "matchedQueries": [
+        "Tucson",
+        "Pima County"
+      ],
+      "metros": [
+        "Tucson"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 38,
+        "withCoords": 38,
+        "active": 1,
+        "recent": 37
+      },
+      "probedAt": "2026-06-29T03:00:42.390Z"
+    },
+    {
+      "agencyId": "EMS1205",
+      "agencyName": "DC Fire and EMS [DC]",
+      "display2": "Washington",
+      "state": "DC",
+      "city": "Washington",
+      "region": "Northeast",
+      "lat": 38.907245,
+      "lng": -77.036566,
+      "matchedQueries": [
+        "DC Fire"
+      ],
+      "metros": [
+        "Washington"
+      ],
+      "status": "LIVE",
+      "counts": {
+        "total": 118,
+        "withCoords": 118,
+        "active": 18,
+        "recent": 100
+      },
+      "probedAt": "2026-06-29T03:00:31.566Z"
+    }
+  ]
+}

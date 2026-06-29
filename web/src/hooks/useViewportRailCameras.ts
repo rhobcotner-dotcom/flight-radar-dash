@@ -55,7 +55,7 @@ export function useViewportRailCameras(
           setCameras(null);
           setError(err instanceof Error ? err.message : 'Rail cam fetch failed');
         });
-    }, 250);
+    }, 60);
 
     return () => {
       window.clearTimeout(timer);

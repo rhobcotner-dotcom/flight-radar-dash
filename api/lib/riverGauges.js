@@ -1,4 +1,5 @@
 import { distanceMiles } from '../../lib/geo.js';
+import { enrichRiverGaugeOccupancy } from './occupancyEnrichment.js';
 
 const USGS_IV = 'https://waterservices.usgs.gov/nwis/iv/';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -81,10 +82,15 @@ export async function fetchRiverGauges(lat, lon, radiusMiles = 85) {
   }
 
   const rows = [...gaugeMap.values()]
-    .map((gauge) => ({
-      ...gauge,
-      distanceMiles: Math.round(distanceMiles(lat, lon, gauge.lat, gauge.lon) * 10) / 10,
-    }))
+    .map((gauge) =>
+      enrichRiverGaugeOccupancy(
+        {
+          ...gauge,
+          distanceMiles: Math.round(distanceMiles(lat, lon, gauge.lat, gauge.lon) * 10) / 10,
+        },
+        {}
+      )
+    )
     .filter((gauge) => gauge.distanceMiles <= radiusMiles)
     .sort((a, b) => a.distanceMiles - b.distanceMiles);
 

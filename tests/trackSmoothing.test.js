@@ -17,15 +17,14 @@ test('predictNextPosition uses speed and heading when history is sparse', () => 
   assert.ok(next.lon > samples[0].lon);
 });
 
-test('TrackSmoothingEngine interpolates toward predicted endpoint', () => {
+test('TrackSmoothingEngine blends toward the reported fix then dead-reckons', () => {
   const engine = new TrackSmoothingEngine();
   engine.register('a', 38.79, -90.6, { speedMph: 360, headingDeg: 90 }, 10_000, 'aircraft', 0);
-  const mid = engine.getPosition('a', 5_000);
-  const end = engine.getPosition('a', 10_000);
-  assert.ok(mid);
-  assert.ok(end);
-  assert.ok(mid.lat !== 38.79 || mid.lon !== -90.6);
-  assert.ok(end.lat !== mid.lat || end.lon !== mid.lon);
+  const midBlend = engine.getPosition('a', 225);
+  const afterBlend = engine.getPosition('a', 2_000);
+  assert.ok(midBlend);
+  assert.ok(afterBlend);
+  assert.ok(afterBlend.lon > -90.6);
 });
 
 test('beacon profile keeps freight/crossing markers pinned without dead reckoning', () => {
@@ -87,4 +86,19 @@ test('TrackSmoothingEngine keeps dead reckoning after segment duration', () => {
   assert.ok(atEnd);
   assert.ok(later);
   assert.ok(later.lat !== atEnd.lat || later.lon !== atEnd.lon);
+});
+
+test('TrackSmoothingEngine ignores duplicate refreshes with no movement', () => {
+  const engine = new TrackSmoothingEngine();
+  engine.register('a', 38.79, -90.6, { speedMph: 360, headingDeg: 90 }, 10_000, 'aircraft', 0);
+  const beforeDuplicate = engine.getPosition('a', 2_000);
+  engine.register('a', 38.79, -90.6, { speedMph: 360, headingDeg: 90 }, 10_000, 'aircraft', 2_100);
+  const afterDuplicate = engine.getPosition('a', 2_200);
+  assert.ok(beforeDuplicate);
+  assert.ok(afterDuplicate);
+  const jumpMiles = Math.hypot(
+    (afterDuplicate.lat - beforeDuplicate.lat) * 69,
+    (afterDuplicate.lon - beforeDuplicate.lon) * 69
+  );
+  assert.ok(jumpMiles < 0.05, `duplicate refresh should not snap, got ~${jumpMiles.toFixed(3)} mi`);
 });

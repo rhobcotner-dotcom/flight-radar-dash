@@ -99,9 +99,24 @@ const DEFAULT_WARM = {
 
 let responseCache = new Map();
 let nationwidePool = { fetchedAt: 0, partial: false, cameras: [], sourceCounts: {}, sources: [] };
+/** Full US inventory count from the last successful nationwide fetch (survives regional partial pools). */
+let lastFullCatalogCount = 0;
 let verifiedPool = { fetchedAt: 0, cameras: [] };
 let fullPoolWarmPromise = null;
 let verifiedPoolWarmPromise = null;
+
+/** Published US traffic camera inventory floor for tracking banner (Jun 2026 audit ~41.4k). */
+export const US_CAMERA_CATALOG_BASELINE = 41_000;
+
+/** Nationwide catalog total for banners — not the regional pool loaded for the current map view. */
+export function resolveNationwideCameraCatalogCount(pool, cachedFullCount = lastFullCatalogCount) {
+  const measured = !pool.partial
+    ? pool.cameras.length
+    : cachedFullCount > 0
+      ? cachedFullCount
+      : 0;
+  return Math.max(US_CAMERA_CATALOG_BASELINE, measured);
+}
 
 export function bboxFromPoint(lat, lon, radiusMiles = 50) {
   return boundingBox(lat, lon, radiusMiles);
@@ -347,6 +362,7 @@ function startFullPoolWarm() {
       sourceCounts: direct.sourceCounts,
       sources: direct.sources,
     };
+    lastFullCatalogCount = nationwidePool.cameras.length;
     clearResponseCache();
     verifiedPool = { fetchedAt: 0, cameras: [] };
     verifiedPoolWarmPromise = null;
@@ -500,11 +516,13 @@ export function primeCameraPoolAtPoint(lat, lon) {
 }
 
 export function getCameraPoolStatus() {
+  const catalogCount = resolveNationwideCameraCatalogCount(nationwidePool);
   return {
     partial: nationwidePool.partial,
     poolCount: nationwidePool.cameras.length,
+    catalogCount,
     verifiedCount: verifiedPool.cameras.length,
-    warming: nationwidePool.partial || !verifiedPool.cameras.length,
+    warming: !catalogCount || nationwidePool.partial || !verifiedPool.cameras.length,
     fetchedAt: nationwidePool.fetchedAt ? new Date(nationwidePool.fetchedAt).toISOString() : null,
   };
 }

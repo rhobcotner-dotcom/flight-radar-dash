@@ -23,7 +23,8 @@ export function viewportFromArea(
   };
 }
 
-function zoomTier(zoom: number) {
+/** Keep in sync with lib/viewportCacheKey.js */
+export function zoomTier(zoom: number) {
   if (zoom <= 4) return 4;
   if (zoom <= 6) return 6;
   if (zoom <= 8) return 8;
@@ -33,13 +34,8 @@ function zoomTier(zoom: number) {
 
 export function stableViewportKey(bounds: MapViewportBounds) {
   const tier = zoomTier(bounds.zoom);
-  return [
-    bounds.west.toFixed(1),
-    bounds.south.toFixed(1),
-    bounds.east.toFixed(1),
-    bounds.north.toFixed(1),
-    String(tier),
-  ].join(':');
+  const fmt = (value: number) => value.toFixed(2);
+  return [fmt(bounds.west), fmt(bounds.south), fmt(bounds.east), fmt(bounds.north), String(tier)].join(':');
 }
 
 export function viewportSearchParams(
@@ -55,4 +51,14 @@ export function viewportSearchParams(
   params.set('north', bounds.north.toFixed(4));
   params.set('zoom', String(Math.round(bounds.zoom)));
   return params;
+}
+
+export function pointInViewportBounds(
+  lat: number,
+  lon: number,
+  bounds: MapViewportBounds | null
+) {
+  if (!bounds) return true;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+  return lat >= bounds.south && lat <= bounds.north && lon >= bounds.west && lon <= bounds.east;
 }

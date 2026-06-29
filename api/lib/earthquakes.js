@@ -1,4 +1,5 @@
 import { distanceMiles } from '../../lib/geo.js';
+import { enrichEarthquakeOccupancy } from './occupancyEnrichment.js';
 
 const USGS_FEED = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -27,7 +28,7 @@ export async function fetchEarthquakes(lat, lon, radiusMiles = 500) {
       if (!Array.isArray(coords) || coords.length < 2) return null;
       const [eventLon, eventLat, depthKm] = coords;
       const props = feature?.properties || {};
-      return {
+      return enrichEarthquakeOccupancy({
         id: feature.id || props.code,
         lat: eventLat,
         lon: eventLon,
@@ -37,7 +38,7 @@ export async function fetchEarthquakes(lat, lon, radiusMiles = 500) {
         depthKm: depthKm ?? null,
         url: props.url || null,
         distanceMiles: Math.round(distanceMiles(lat, lon, eventLat, eventLon) * 10) / 10,
-      };
+      });
     })
     .filter(Boolean)
     .filter((event) => event.distanceMiles <= radiusMiles)

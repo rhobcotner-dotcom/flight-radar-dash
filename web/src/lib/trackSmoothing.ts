@@ -24,7 +24,12 @@ const MAX_JUMP_MILES: Record<TrackSmoothingProfile, number> = {
   beacon: 2,
 };
 
-const MIN_AIRCRAFT_MOTION_MPH = 120;
+const MAX_SAMPLES = 5;
+const MIN_BLEND_MS = 450;
+const MAX_BLEND_MS = 2_400;
+const BLEND_MS_PER_MILE = 90;
+const MIN_FIX_INTERVAL_MS = 750;
+const MIN_FIX_MOVE_MILES = 0.002;
 
 function distanceMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -59,11 +64,8 @@ interface TrackRecord {
   hint: TrackMotionHint;
   profile: TrackSmoothingProfile;
   intervalMs: number;
+  lastRegisterAt: number;
 }
-
-const MAX_SAMPLES = 5;
-const MIN_SEGMENT_MS = 1_000;
-const MAX_VISUAL_CORRECTION_MILES = 18;
 
 function isFiniteCoord(lat: number, lon: number) {
   return Number.isFinite(lat) && Number.isFinite(lon);
@@ -113,8 +115,7 @@ export function predictNextPosition(
   }
 
   const cappedHint = capMotionHint(hint, profile);
-  const maxMiles =
-    PROFILE_MAX_SPEED_MPH[profile] * Math.max(horizonMs / 3_600_000, 0);
+  const maxMiles = PROFILE_MAX_SPEED_MPH[profile] * Math.max(horizonMs / 3_600_000, 0);
 
   const history = velocityFromSamples(samples);
   const historyLat = history ? last.lat + history.latPerMs * horizonMs : last.lat;
@@ -171,49 +172,18 @@ function extrapolateFromPoint(
   return { lat, lon };
 }
 
-function motionTarget(
-  startLat: number,
-  startLon: number,
-  samples: PositionSample[],
-  hint: TrackMotionHint,
-  intervalMs: number,
-  profile: TrackSmoothingProfile
-) {
-  const predicted = predictNextPosition(samples, hint, intervalMs, profile);
-  if (distanceMiles(startLat, startLon, predicted.lat, predicted.lon) > 0.0001) {
-    return predicted;
-  }
-
-  const extended = predictNextPosition(samples, hint, intervalMs * 2, profile);
-  if (distanceMiles(startLat, startLon, extended.lat, extended.lon) > 0.0001) {
-    return extended;
-  }
-
-  const cappedHint = capMotionHint(hint, profile);
-  const speedMph = cappedHint.speedMph ?? 0;
-  const headingDeg = cappedHint.headingDeg;
-  if (
-    profile !== 'beacon' &&
-    speedMph > 0 &&
-    headingDeg != null &&
-    Number.isFinite(headingDeg)
-  ) {
-    const miles = Math.max(
-      speedMph * (intervalMs / 3_600_000),
-      profile === 'aircraft' ? MIN_AIRCRAFT_MOTION_MPH * (intervalMs / 3_600_000) : 0.02
-    );
-    return offsetLatLon(startLat, startLon, miles, headingDeg);
-  }
-
-  return predicted;
+function blendDurationMs(driftMiles: number, profile: TrackSmoothingProfile) {
+  if (profile === 'beacon') return 0;
+  if (driftMiles <= MIN_FIX_MOVE_MILES) return MIN_BLEND_MS;
+  return Math.min(MAX_BLEND_MS, Math.max(MIN_BLEND_MS, driftMiles * BLEND_MS_PER_MILE));
 }
 
+/** Linear blend — constant correction velocity feels smoother than ease-in-out on a map. */
 export function interpolateSegment(segment: TrackSegment, now: number) {
   const rawProgress = Math.min(1, Math.max(0, (now - segment.startTime) / segment.durationMs));
-  const progress = rawProgress < 0.5 ? 2 * rawProgress * rawProgress : 1 - (-2 * rawProgress + 2) ** 2 / 2;
   return {
-    lat: segment.fromLat + (segment.toLat - segment.fromLat) * progress,
-    lon: segment.fromLon + (segment.toLon - segment.fromLon) * progress,
+    lat: segment.fromLat + (segment.toLat - segment.fromLat) * rawProgress,
+    lon: segment.fromLon + (segment.toLon - segment.fromLon) * rawProgress,
     progress: rawProgress,
   };
 }
@@ -250,47 +220,60 @@ export class TrackSmoothingEngine {
       hint: {},
       profile: 'aircraft',
       intervalMs,
+      lastRegisterAt: 0,
     };
-    const currentVisual = this.getPosition(id, now);
     const previous = record.samples[record.samples.length - 1];
     const jumpMiles =
       previous != null ? distanceMiles(previous.lat, previous.lon, lat, lon) : 0;
 
+    if (
+      previous &&
+      jumpMiles < MIN_FIX_MOVE_MILES &&
+      now - record.lastRegisterAt < MIN_FIX_INTERVAL_MS
+    ) {
+      record.hint = hint;
+      record.profile = profile;
+      record.intervalMs = intervalMs;
+      record.lastRegisterAt = now;
+      this.tracks.set(id, record);
+      return;
+    }
+
     record.hint = hint;
     record.profile = profile;
     record.intervalMs = intervalMs;
+    record.lastRegisterAt = now;
 
     if (profile === 'beacon' || jumpMiles > MAX_JUMP_MILES[profile]) {
       record.samples = [{ lat, lon, time: now }];
-    } else {
-      record.samples.push({ lat, lon, time: now });
-      if (record.samples.length > MAX_SAMPLES) {
-        record.samples.splice(0, record.samples.length - MAX_SAMPLES);
-      }
-    }
-
-    if (profile === 'beacon') {
       record.segment = {
         fromLat: lat,
         fromLon: lon,
         toLat: lat,
         toLon: lon,
         startTime: now,
-        durationMs: intervalMs,
+        durationMs: Math.max(intervalMs, 1),
       };
       this.tracks.set(id, record);
       return;
     }
 
-    const start = this.segmentStart(lat, lon, currentVisual, profile);
-    const target = motionTarget(start.lat, start.lon, record.samples, hint, intervalMs, profile);
+    record.samples.push({ lat, lon, time: now });
+    if (record.samples.length > MAX_SAMPLES) {
+      record.samples.splice(0, record.samples.length - MAX_SAMPLES);
+    }
+
+    const currentVisual = this.getPosition(id, now) ?? { lat, lon };
+    const driftMiles = distanceMiles(currentVisual.lat, currentVisual.lon, lat, lon);
+    const durationMs = blendDurationMs(driftMiles, profile);
+
     record.segment = {
-      fromLat: start.lat,
-      fromLon: start.lon,
-      toLat: target.lat,
-      toLon: target.lon,
+      fromLat: currentVisual.lat,
+      fromLon: currentVisual.lon,
+      toLat: lat,
+      toLon: lon,
       startTime: now,
-      durationMs: Math.max(MIN_SEGMENT_MS, intervalMs),
+      durationMs: Math.max(durationMs, 1),
     };
     this.tracks.set(id, record);
   }
@@ -329,24 +312,6 @@ export class TrackSmoothingEngine {
     );
     if (!isFiniteCoord(extrapolated.lat, extrapolated.lon)) return pos;
     return extrapolated;
-  }
-
-  private segmentStart(
-    lat: number,
-    lon: number,
-    currentVisual: { lat: number; lon: number } | null,
-    profile: TrackSmoothingProfile
-  ) {
-    if (!currentVisual || profile === 'beacon' || !isFiniteCoord(currentVisual.lat, currentVisual.lon)) {
-      return { lat, lon };
-    }
-
-    const driftMiles = distanceMiles(currentVisual.lat, currentVisual.lon, lat, lon);
-    if (driftMiles > MAX_VISUAL_CORRECTION_MILES) {
-      return { lat, lon };
-    }
-
-    return { lat: currentVisual.lat, lon: currentVisual.lon };
   }
 }
 

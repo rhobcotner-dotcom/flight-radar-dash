@@ -1,3 +1,5 @@
+import { enrichMetarOccupancy } from './occupancyEnrichment.js';
+
 const METAR_API = 'https://aviationweather.gov/api/data/metar';
 const TAF_API = 'https://aviationweather.gov/api/data/taf';
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
@@ -98,10 +100,12 @@ export async function fetchMetarStations(siteIds = DEFAULT_SITES) {
   const stations = (Array.isArray(metarBody) ? metarBody : [])
     .map(normalizeMetar)
     .filter(Boolean)
-    .map((station) => ({
-      ...station,
-      taf: tafById.get(station.icaoId) || null,
-    }))
+    .map((station) =>
+      enrichMetarOccupancy({
+        ...station,
+        taf: tafById.get(station.icaoId) || null,
+      })
+    )
     .sort((a, b) => a.icaoId.localeCompare(b.icaoId));
 
   const payload = {

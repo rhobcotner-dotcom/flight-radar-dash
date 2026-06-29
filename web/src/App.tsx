@@ -16,6 +16,7 @@ import { useHighlight } from './hooks/useHighlight';
 import { useFunMode } from './hooks/useFunMode';
 import { useTrackingStats } from './hooks/useTrackingStats';
 import { TrackingBanner } from './components/TrackingBanner';
+import type { EmergencyFocusRequest, EmergencyRecentItem } from './lib/emergencyRecent';
 
 export default function App() {
   const { area, setArea, queryString } = useAreaSettings();
@@ -29,10 +30,12 @@ export default function App() {
     b52Flights,
     inViewCount,
     loading,
+    viewportLoading,
     error,
     dataWarning,
     fetchedAt,
     hasLoaded,
+    viewportFlightsReady,
     autoRefreshSeconds,
     positionRefreshSeq,
     setAutoRefreshSeconds,
@@ -43,7 +46,7 @@ export default function App() {
     [flights, area.radiusMiles]
   );
   const { trains, counts, freightHints, fetchedAt: trainsFetchedAt, refreshSeconds: trainRefreshSeconds } =
-    useTrains(queryString, true, 10, viewportBounds ?? viewportFromArea(area));
+    useTrains(queryString, hasLoaded, 10, viewportBounds ?? viewportFromArea(area));
   const { weather } = useWeather(area.lat, area.lon);
   const {
     toasts,
@@ -54,7 +57,7 @@ export default function App() {
     area,
     flights: homeFlights,
     weather,
-    enabled: true,
+    enabled: hasLoaded,
   });
   const {
     toasts: b52Toasts,
@@ -75,7 +78,7 @@ export default function App() {
     lat: area.lat,
     lon: area.lon,
     refreshKey: fetchedAt,
-    enabled: true,
+    enabled: hasLoaded,
     toastsEnabled: alertsEnabled,
     soundEnabled,
   });
@@ -110,7 +113,11 @@ export default function App() {
     [dismissB52Toast, dismissHearingToast, dismissWeatherToast, fun.dismissFunToast]
   );
   const { highlightedId, setHighlight, clearHighlightNow, mapHandlers, listHandlers } = useHighlight();
-  const trackingStats = useTrackingStats(hasLoaded);
+  const { stats: trackingStats, loading: trackingStatsLoading } = useTrackingStats(hasLoaded);
+  const [emergencyFocusRequest, setEmergencyFocusRequest] = useState<EmergencyFocusRequest | null>(null);
+  const handleEmergencySelect = useCallback((item: EmergencyRecentItem) => {
+    setEmergencyFocusRequest({ item, seq: Date.now() });
+  }, []);
 
   return (
     <div
@@ -128,12 +135,15 @@ export default function App() {
           mapHandlers={mapHandlers}
           clearHighlightNow={clearHighlightNow}
           mapFetchedAt={fetchedAt}
+          flightsLoaded={viewportFlightsReady}
+          viewportLoading={viewportLoading}
           inViewCount={inViewCount}
           onViewportChange={setViewportBounds}
           autoRefreshSeconds={autoRefreshSeconds}
           positionRefreshSeq={positionRefreshSeq}
           trainsFetchedAt={trainsFetchedAt}
           trainRefreshSeconds={trainRefreshSeconds}
+          emergencyFocusRequest={emergencyFocusRequest}
         />
       </div>
 
@@ -153,8 +163,11 @@ export default function App() {
                     : undefined
                 }
               >
+                {viewportLoading ? 'Updating map view… · ' : ''}
                 Updated {new Date(fetchedAt).toLocaleTimeString()}
               </span>
+            ) : viewportLoading ? (
+              <span className="map-topbar-status">Updating map view…</span>
             ) : null}
             <label className="auto-refresh-select auto-refresh-select-compact">
               <span className="sr-only">Auto refresh interval</span>
@@ -209,7 +222,11 @@ export default function App() {
         b52AlertStats={b52AlertStats}
       />
 
-      <TrackingBanner stats={trackingStats} />
+      <TrackingBanner
+        stats={trackingStats}
+        loading={trackingStatsLoading}
+        onSelectEmergency={handleEmergencySelect}
+      />
     </div>
   );
 }

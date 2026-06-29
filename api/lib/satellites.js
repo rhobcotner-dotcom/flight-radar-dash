@@ -9,6 +9,7 @@ import {
   propagate,
   twoline2satrec,
 } from 'satellite.js';
+import { enrichSatelliteOccupancy } from './occupancyEnrichment.js';
 
 const USER_AGENT = 'flight-radar-dash/1.0 (personal home dashboard)';
 const FETCH_TIMEOUT_MS = 15000;
@@ -190,7 +191,7 @@ export async function fetchOverheadSatellites(area, options = {}) {
     count: trimmed.length,
     groups: TLE_GROUPS,
     source: 'celestrak-tle + satellite.js (SGP4)',
-    satellites: trimmed,
+    satellites: trimmed.map((satellite) => enrichSatelliteOccupancy(satellite)),
   };
 
   overheadCache.set(cacheKey, { fetchedAt: nowMs, payload });

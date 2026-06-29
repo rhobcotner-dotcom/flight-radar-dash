@@ -18,7 +18,7 @@ import {
 } from '../lib/stormCellCameras';
 import type { TrafficCameraPayload } from '../lib/mapLayers';
 import type { WeatherConditions } from '../types';
-import { isMapDeadSpaceClick, isStormRadarClick } from '../lib/mapClick';
+import { isMapDeadSpaceClick, isMapPopupOpen, isStormRadarClick } from '../lib/mapClick';
 import { weatherHoverHtml } from '../lib/weatherFormat';
 import { resolveMapPlaceLabel } from '../lib/mapLocation';
 import { StormBriefingPopup } from './StormBriefingPopup';
@@ -171,7 +171,7 @@ export function StormCellClick({
     openBriefingPositionRef.current = null;
     setBriefing(null);
     lastCameraIdsRef.current = '';
-    if (map.isPopupOpen()) {
+    if (isMapPopupOpen(map)) {
       map.closePopup();
     }
   }, [map]);
@@ -389,7 +389,7 @@ export function StormCellClick({
 
       if (!isMapDeadSpaceClick(event)) return;
 
-      const dismissingPopup = map.isPopupOpen();
+      const dismissingPopup = isMapPopupOpen(map);
       const dismissingWeather = weatherTooltipRef.current && map.hasLayer(weatherTooltipRef.current);
       const dismissingBriefing = openBriefingKeyRef.current != null;
 
