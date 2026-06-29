@@ -1,5 +1,7 @@
 /** Drop emergency map callouts older than this (dispatch / alert effective time). */
 export const EMERGENCY_CALLOUT_MAX_AGE_MS = 4 * 60 * 60 * 1000;
+/** Hide EMS incidents this long after they are marked closed. */
+export const EMERGENCY_CLOSED_MAX_AGE_MS = 60 * 60 * 1000;
 
 export function parseEmergencyObservedMs(value) {
   if (value == null || value === '') return null;
@@ -18,6 +20,23 @@ export function isEmergencyCalloutFresh(observedMs, now = Date.now()) {
 
 export function incidentObservedMs(incident) {
   return parseEmergencyObservedMs(incident?.observedAt);
+}
+
+export function incidentClosedMs(incident) {
+  return parseEmergencyObservedMs(incident?.closedAt);
+}
+
+export function isEmergencyIncidentFresh(incident, now = Date.now()) {
+  const observedMs = incidentObservedMs(incident);
+  if (!Number.isFinite(observedMs)) return false;
+  if (now - observedMs > EMERGENCY_CALLOUT_MAX_AGE_MS) return false;
+
+  const closedMs = incidentClosedMs(incident);
+  if (Number.isFinite(closedMs) && now - closedMs > EMERGENCY_CLOSED_MAX_AGE_MS) {
+    return false;
+  }
+
+  return true;
 }
 
 export function nwsAlertObservedMs(props = {}) {
@@ -40,7 +59,7 @@ export function wildfireIncidentObservedMs(incident = {}) {
 }
 
 export function filterFreshIncidents(incidents) {
-  return (incidents || []).filter((incident) => isEmergencyCalloutFresh(incidentObservedMs(incident)));
+  return (incidents || []).filter((incident) => isEmergencyIncidentFresh(incident));
 }
 
 export function filterFreshGeoFeatures(features, observedMsForProps) {

@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   EMERGENCY_CALLOUT_MAX_AGE_MS,
+  EMERGENCY_CLOSED_MAX_AGE_MS,
   applyEmergencyMapFreshness,
   filterFreshIncidents,
   isEmergencyCalloutFresh,
+  isEmergencyIncidentFresh,
   parseEmergencyObservedMs,
 } from '../api/lib/emergencyFreshness.js';
 
@@ -35,6 +37,37 @@ test('filterFreshIncidents drops stale EMS callouts', () => {
     incidents.map((row) => row.id),
     ['a']
   );
+});
+
+test('isEmergencyIncidentFresh drops incidents closed more than one hour ago', () => {
+  const now = Date.parse('2026-06-29T12:00:00.000Z');
+  assert.equal(
+    isEmergencyIncidentFresh(
+      {
+        id: 'recent-close',
+        observedAt: '2026-06-29T10:00:00.000Z',
+        closedAt: '2026-06-29T11:30:00.000Z',
+      },
+      now
+    ),
+    true
+  );
+  assert.equal(
+    isEmergencyIncidentFresh(
+      {
+        id: 'old-close',
+        observedAt: '2026-06-29T08:00:00.000Z',
+        closedAt: '2026-06-29T10:30:00.000Z',
+      },
+      now
+    ),
+    false
+  );
+  assert.equal(
+    isEmergencyIncidentFresh({ id: 'still-open', observedAt: '2026-06-29T11:00:00.000Z' }, now),
+    true
+  );
+  assert.equal(EMERGENCY_CLOSED_MAX_AGE_MS, 60 * 60 * 1000);
 });
 
 test('applyEmergencyMapFreshness filters map payload and updates summary counts', () => {
