@@ -2,6 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MapViewportBounds } from '../lib/mapViewport';
 import { stableViewportKey, viewportSearchParams } from '../lib/mapViewport';
 
+export interface EmergencyDispatchUnit {
+  id: string;
+  status?: string | null;
+  statusLabel?: string | null;
+  clearedAt?: string | null;
+}
+
+export interface EmergencyDetailRow {
+  label: string;
+  value: string;
+}
+
 export interface EmergencyEntityProperties {
   entityKind?: string;
   emergencyLabel?: string | null;
@@ -30,8 +42,17 @@ export interface EmergencyIncident extends EmergencyEntityProperties {
   agency?: string | null;
   agencyName?: string | null;
   title?: string | null;
+  type?: string | null;
   address?: string | null;
   observedAt?: string | null;
+  closedAt?: string | null;
+  status?: string | null;
+  alarmLevel?: string | null;
+  priority?: string | null;
+  incidentNumber?: string | null;
+  units?: EmergencyDispatchUnit[] | null;
+  locationNotes?: string[] | null;
+  details?: EmergencyDetailRow[] | null;
 }
 
 export interface EmergencyServicesPayload {

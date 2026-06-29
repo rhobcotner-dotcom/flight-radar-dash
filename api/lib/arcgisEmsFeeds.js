@@ -16,6 +16,35 @@ function pickField(props, fields) {
   return null;
 }
 
+function buildArcgisDetails(props, feed, primary = {}) {
+  const used = new Set(
+    Object.values(primary)
+      .filter(Boolean)
+      .map((value) => String(value).trim().toLowerCase())
+  );
+  const details = [];
+  const add = (label, fields) => {
+    const value = pickField(props, fields);
+    if (!value) return;
+    const key = value.toLowerCase();
+    if (used.has(key)) return;
+    details.push({ label, value });
+    used.add(key);
+  };
+
+  for (const row of feed.detailFields || []) {
+    add(row.label || row.field, [row.field]);
+  }
+
+  add('Priority', ['PriorityDescription', 'priority', 'Priority', 'priority_description']);
+  add('Subtype', ['incidentsubtype', 'incident_subtype', 'subtype']);
+  add('Problem', ['ProblemDescription', 'problem']);
+  add('Incident #', ['MasterIncidentNumber', 'incident_number', 'incident', 'IncidentNumber']);
+  add('Dispatch status', feed.statusFields || ['status', 'dispatch_status', 'type']);
+
+  return details;
+}
+
 function parseObservedMs(value, type) {
   if (value == null) return null;
   if (type === 'epochMs') {
@@ -62,6 +91,10 @@ function normalizeArcgisFeature(feature, feed) {
   const address = pickField(props, feed.addressFields);
   const observedAt = props[feed.orderField] ?? null;
   const observedMs = parseObservedMs(observedAt, feed.orderFieldType);
+  const status = pickField(props, feed.statusFields) || 'Active';
+  const priority = pickField(props, ['PriorityDescription', 'priority', 'Priority']);
+  const incidentNumber = pickField(props, ['MasterIncidentNumber', 'incident_number', 'incident', 'IncidentNumber']);
+  const details = buildArcgisDetails(props, feed, { title, address, status, priority, incidentNumber });
 
   return enrichEmsIncident({
     id: `${feed.id}:${props.OBJECTID || props.objectid || props.MasterIncidentNumber || props.incident || `${coords.lat}:${coords.lon}`}`,
@@ -75,7 +108,10 @@ function normalizeArcgisFeature(feature, feed) {
     title,
     type: pickField(props, feed.typeFields) || title,
     address,
-    status: pickField(props, feed.statusFields) || 'Active',
+    status,
+    priority,
+    incidentNumber,
+    details,
     observedAt: observedMs ? new Date(observedMs).toISOString() : observedAt,
     entityKind: 'ems-incident',
   });

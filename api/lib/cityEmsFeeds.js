@@ -33,6 +33,7 @@ function parseNycIncident(row, feed) {
     city: feed.city,
     agency: feed.agency,
     source: feed.id,
+    sourceType: 'socrata-open-data',
     timingClass: feed.timingClass,
     title,
     type: title,
@@ -40,6 +41,8 @@ function parseNycIncident(row, feed) {
     alarmLevel,
     status: row.incident_close_datetime ? 'Closed' : 'Active',
     observedAt: row.incident_datetime || null,
+    closedAt: row.incident_close_datetime || null,
+    incidentNumber: row.starfire_incident_id ? String(row.starfire_incident_id) : null,
     entityKind: 'ems-incident',
     geocodeNote: borough ? `Borough centroid · ${borough}` : null,
   });
@@ -67,12 +70,14 @@ function parseCensusGeocodedIncident(row, feed, geo) {
     city: feed.city,
     agency: feed.agency,
     source: feed.id,
+    sourceType: 'socrata-open-data',
     timingClass: feed.timingClass,
     title,
     type: title,
     address: rawAddress,
     status: 'Dispatched',
     observedAt: row[feed.orderField] || row.datetime || row.date || null,
+    incidentNumber: row.incident_number ? String(row.incident_number) : row.id ? String(row.id) : null,
     entityKind: 'ems-incident',
     geocodeNote: feed.geocodeNote || 'Census Bureau geocoded (not GPS dispatch coordinates)',
   });
@@ -85,6 +90,8 @@ function parseGenericIncident(row, feed) {
 
   const title = String(row.type || row.incident_type || row.description || row.emergency_dispatch_code || 'Fire/EMS').trim();
   const address = String(row.address || row.location || row.alarm_box_location || '').trim();
+  const priority = String(row.priority || row.emergency_priority || '').trim() || null;
+  const alarmLevel = String(row.alarm_level || row.highest_alarm_level || '').trim() || null;
 
   return enrichEmsIncident({
     id: `${feed.id}:${row.incident_number || row.id || `${lat}:${lon}:${row[feed.orderField]}`}`,
@@ -93,12 +100,17 @@ function parseGenericIncident(row, feed) {
     city: feed.city,
     agency: feed.agency,
     source: feed.id,
+    sourceType: 'socrata-open-data',
     timingClass: feed.timingClass,
     title,
     type: title,
     address,
-    status: 'Dispatched',
+    priority,
+    alarmLevel,
+    status: row.status || row.incident_status || 'Dispatched',
     observedAt: row[feed.orderField] || row.datetime || null,
+    closedAt: row.closed_at || row.incident_close_datetime || null,
+    incidentNumber: row.incident_number ? String(row.incident_number) : row.id ? String(row.id) : null,
     entityKind: 'ems-incident',
   });
 }

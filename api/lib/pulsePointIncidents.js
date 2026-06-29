@@ -64,6 +64,49 @@ function responseCategory(raw) {
   return MEDICAL_CALL_TYPES.has(String(raw || '').trim()) ? 'medical' : 'fire';
 }
 
+const DISPATCH_STATUS_LABELS = {
+  AR: 'On scene',
+  OS: 'On scene',
+  ER: 'En route',
+  DP: 'Dispatched',
+  TR: 'Transport',
+  AQ: 'Available',
+  CL: 'Cleared',
+  UT: 'Unavailable',
+};
+
+function dispatchStatusLabel(code) {
+  const key = String(code || '').trim().toUpperCase();
+  return DISPATCH_STATUS_LABELS[key] || key || 'Responding';
+}
+
+function normalizeUnits(row) {
+  if (!Array.isArray(row.Unit)) return [];
+  return row.Unit.map((unit) => ({
+    id: String(unit.UnitID || '').trim(),
+    status: String(unit.PulsePointDispatchStatus || '').trim(),
+    statusLabel: dispatchStatusLabel(unit.PulsePointDispatchStatus),
+    clearedAt: unit.UnitClearedDateTime || null,
+  })).filter((unit) => unit.id);
+}
+
+function pulsePointLocationNotes(row) {
+  const notes = [];
+  if (String(row.AddressTruncated) === '1') notes.push('Address truncated for privacy');
+  if (String(row.PublicLocation) === '0') notes.push('Exact location not public');
+  if (String(row.IsShareable) === '0') notes.push('Limited public share');
+  return notes;
+}
+
+function pulsePointIncidentStatus(row, units) {
+  if (row.ClosedDateTime) return 'Closed';
+  if (units.some((unit) => ['AR', 'OS'].includes(String(unit.status || '').toUpperCase()))) {
+    return 'Units on scene';
+  }
+  if (units.length) return 'Units responding';
+  return 'Active';
+}
+
 function isAgencyTemporarilyDisabled(agencyId) {
   const health = agencyHealth.get(agencyId);
   if (!health?.disabledUntil) return false;
@@ -101,6 +144,7 @@ function normalizeIncident(row, agencyConfig) {
   const address = String(row.FullDisplayAddress || row.MedicalEmergencyDisplayAddress || '').trim();
   const category = responseCategory(callType);
   const label = agencyLabel(agencyConfig);
+  const units = normalizeUnits(row);
 
   const incident = enrichEmsIncident({
     id: `pulsepoint:${row.AgencyID}:${row.ID}`,
@@ -114,8 +158,12 @@ function normalizeIncident(row, agencyConfig) {
     title,
     type: title,
     address,
-    status: Array.isArray(row.Unit) && row.Unit.length ? 'Units en route' : 'Active',
+    status: pulsePointIncidentStatus(row, units),
     observedAt: row.CallReceivedDateTime || null,
+    closedAt: row.ClosedDateTime || null,
+    incidentNumber: String(row.ID || '').trim() || null,
+    units,
+    locationNotes: pulsePointLocationNotes(row),
     entityKind: 'ems-incident',
     pulsePointCallType: callType,
     responseCategory: category,

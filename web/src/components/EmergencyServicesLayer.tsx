@@ -2,29 +2,11 @@ import { CircleMarker, GeoJSON, Popup, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { PathOptions } from 'leaflet';
 import type { EmergencyEntityProperties, EmergencyIncident, EmergencyServicesPayload } from '../hooks/useEmergencyServices';
+import { formatEmergencyPopupHtml, formatEmsIncidentPopupHtml } from '../lib/emergencyPopup';
 import { PulsePointClusterLayer } from './PulsePointClusterLayer';
 
 function formatEmergencyPopup(props: EmergencyEntityProperties) {
-  const timing = props.emergencyTimingClass
-    ? props.emergencyTimingClass === 'real-time'
-      ? 'Live feed'
-      : props.emergencyTimingClass === 'delayed'
-        ? 'Delayed feed'
-        : 'Administrative / static'
-    : 'Source unknown';
-  return `
-    <div class="emergency-popup">
-      <strong>${props.emergencyName || props.emergencyLabel || 'Emergency'}</strong>
-      <div>${props.emergencyLabel || ''}</div>
-      <div class="muted">${props.emergencyStatus || ''}${props.emergencySeverity ? ` · ${props.emergencySeverity}` : ''}</div>
-      ${props.containmentPct != null ? `<div>Containment: ${props.containmentPct}%</div>` : ''}
-      ${props.acres != null ? `<div>Acres: ${Math.round(Number(props.acres)).toLocaleString()}</div>` : ''}
-      ${props.cause ? `<div>Cause: ${props.cause}</div>` : ''}
-      ${props.countyName ? `<div>Area: ${props.countyName}</div>` : ''}
-      ${props.geocodeNote ? `<div class="muted">${props.geocodeNote}</div>` : ''}
-      <div class="muted">${timing} · ${props.emergencySource || 'unknown source'}</div>
-    </div>
-  `;
+  return formatEmergencyPopupHtml(props);
 }
 
 function wildfirePerimeterStyle(feature?: GeoJSON.Feature) {
@@ -117,8 +99,8 @@ function PointMarkers({
             <Tooltip direction="top" opacity={0.95} className="map-layer-tooltip">
               {incident.emergencyLabel || incident.title || kind}
             </Tooltip>
-            <Popup maxWidth={320}>
-              <div dangerouslySetInnerHTML={{ __html: formatEmergencyPopup(incident) }} />
+            <Popup maxWidth={340}>
+              <div dangerouslySetInnerHTML={{ __html: formatEmsIncidentPopupHtml(incident) }} />
             </Popup>
           </CircleMarker>
         );

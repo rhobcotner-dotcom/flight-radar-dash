@@ -2439,6 +2439,13 @@ body {
   line-height: 1.45;
 }
 
+.leaflet-popup-content .emergency-popup-label {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .leaflet-popup-content .metar-raw,
 .leaflet-popup-content .metar-taf .metar-raw {
   margin-top: 0.35rem;

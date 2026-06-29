@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { EmergencyFocusRequest } from '../lib/emergencyRecent';
-import { formatEmergencyPopupHtml } from '../lib/emergencyPopup';
+import { formatEmergencyPopupHtml, formatEmsIncidentPopupHtml } from '../lib/emergencyPopup';
+import type { EmergencyIncident } from '../hooks/useEmergencyServices';
 
 function styleForCategory(category: string): L.PathOptions {
   switch (category) {
@@ -32,7 +33,16 @@ export function EmergencyMapFocus({ request }: { request: EmergencyFocusRequest 
     if (!request?.item) return undefined;
 
     const { item } = request;
-    const popupHtml = formatEmergencyPopupHtml(item.properties || { emergencyName: item.title });
+    const popupHtml =
+      item.category === 'ems'
+        ? formatEmsIncidentPopupHtml({
+            ...(item.properties || {}),
+            id: item.id,
+            lat: item.lat ?? 0,
+            lon: item.lon ?? 0,
+            title: item.title,
+          } as EmergencyIncident)
+        : formatEmergencyPopupHtml(item.properties || { emergencyName: item.title });
 
     const openFocusedPopup = () => {
       const layer = layerRef.current;
