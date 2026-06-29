@@ -51,7 +51,7 @@ const TARGET_METROS = [
   { region: 'Midwest', city: 'Minneapolis', state: 'MN', queries: ['Minneapolis', 'Minneapolis Fire', 'Hennepin'] },
   { region: 'Midwest', city: 'St Paul', state: 'MN', queries: ['St Paul', 'Saint Paul Fire', 'Ramsey County'] },
   { region: 'Midwest', city: 'Kansas City', state: 'MO', queries: ['Kansas City', 'KCFD', 'Jackson County MO'] },
-  { region: 'Midwest', city: 'St Louis', state: 'MO', queries: ['St Louis', 'Saint Louis Fire'] },
+  { region: 'Midwest', city: 'St Louis', state: 'MO', queries: ['St Louis', 'Saint Louis', 'Saint Louis Fire', 'Missouri Fire', 'Affton', 'Mehlville', 'Pattonville', 'West Co', 'Metro West', 'Richmond Heights', '095'] },
   { region: 'Midwest', city: 'Omaha', state: 'NE', queries: ['Omaha', 'Omaha Fire', 'Douglas County NE'] },
   { region: 'Midwest', city: 'Des Moines', state: 'IA', queries: ['Des Moines', 'Des Moines Fire'] },
   { region: 'Southwest', city: 'Dallas', state: 'TX', queries: ['Dallas', 'Dallas Fire', 'DFR'] },

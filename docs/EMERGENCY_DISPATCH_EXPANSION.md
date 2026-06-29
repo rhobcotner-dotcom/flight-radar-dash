@@ -191,7 +191,7 @@ All use existing `pulsePointIncidents.js` enrichment; health group **`pulsepoint
 | **MI** | Detroit ArcGIS 911 layer stale; PulsePoint MI agencies probe **0 active** |
 | **NM** | No PulsePoint or ArcGIS live CAD found (Albuquerque GIS unreachable) |
 
-**St. Louis MO** remains without local dispatch despite MO coverage elsewhere (KC PulsePoint only).
+**St. Louis remains dark** for City FD, Kirkwood, Jennings, and Metro East IL — see `docs/STL_COVERAGE_PROBE.md`.
 
 ---
 

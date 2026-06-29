@@ -59,7 +59,7 @@ Silent failures (HTTP 200 but zero useful entities) are logged server-side as `[
 | **Montgomery Co PA 911** | Suburban Philadelphia | **LIVE** | dispatch timestamps | ArcGIS FeatureServer |
 | **Flagler County FL** | Northeast Florida | **LIVE** | active incident points | ArcGIS FeatureServer |
 | **Dallas Fire** | Dallas | **LIVE partial** | Census geocode ~19% | Block geocoder or address dataset |
-| **PulsePoint** (111 agencies) | 68 US metros | **LIVE** | ~60s cache, 150ms stagger | `?group=pulsepoint` health; +30 dark-state agencies 2026-06-29 |
+| **PulsePoint** (136 agencies) | 68+ US metros incl. **St Louis County** | **LIVE** | ~60s cache, 150ms stagger | STL: 25 county FPD agencies wired 2026-06-29 |
 | **Chicago, LA, Houston, Phoenix, Philly, SA, SD, SJ, Austin, JAX, Columbus, Indy, Charlotte** | — | **DISABLED** | Researched 2026-06 | See `config/emergency-city-feeds.json` gap notes |
 
 NWS alert types now classified: **AMBER**, **911 outage**, **civil emergency**, **law enforcement**, plus watch/warning/emergency/advisory. CAP **severity × urgency × certainty** matrix drives popout level.
@@ -84,11 +84,12 @@ NWS alert types now classified: **AMBER**, **911 outage**, **civil emergency**, 
 ## Dark spots — honest summary
 
 1. **GTFS-RT occupancy outside MBTA/SEPTA/RTD** — most US agencies reachable but **do not export** `occupancy_status`; many former public `.pb` URLs are **dead**.
-2. **City EMS / dispatch dots** — **117 wired incident sources** (3 Socrata + 3 ArcGIS + 111 PulsePoint) across **38 states** and **68 metros** with map dots. Five states still dark (MA, RI, CT, MI, NM) — see `docs/EMERGENCY_DISPATCH_EXPANSION.md`.
+2. **City EMS / dispatch dots** — **142 wired incident sources** (3 Socrata + 3 ArcGIS + 136 PulsePoint) across **38 states** and **68+ metros** with map dots. Five states still dark (MA, RI, CT, MI, NM) — see `docs/EMERGENCY_DISPATCH_EXPANSION.md`.
 3. **FEMA geometry** — county eligibility ≠ damage footprint; no open live structure-damage polygon feed identified.
 4. **IPAWS / NWS** — alerts without polygon/circle still invisible on map.
 5. **Vessel load** — inferred from draft ratios, not vessel-specific DWT.
-6. **Test suite** — 5 pre-existing integration failures (511 cameras, satellites, flightGroundLevel import) unrelated to new layers.
+6. **St. Louis local dispatch** — **25 county FPD PulsePoint agencies wired** (2 live at probe); City FD, Kirkwood, Jennings, and Metro East IL still **GAP** — see `docs/STL_COVERAGE_PROBE.md`.
+7. **Test suite** — 5 pre-existing integration failures (511 cameras, satellites, flightGroundLevel import) unrelated to new layers.
 
 ---
 
@@ -99,10 +100,10 @@ NWS alert types now classified: **AMBER**, **911 outage**, **civil emergency**, 
 - `config/feed-registry.json` — platform probe registry
 - `docs/EMERGENCY_CITY_COVERAGE.md` — multi-angle national incident audit (ArcGIS, PulsePoint, NFIRS, counties)
 - `docs/EMERGENCY_DISPATCH_EXPANSION.md` — 2026-06-29 seven-angle dark-state sweep (+16 states via PulsePoint)
-- `scripts/discover-emergency-dispatch-expansion.mjs` — repeatable multi-angle discovery
+- `docs/STL_COVERAGE_PROBE.md` — St. Louis metro deep dispatch probe (2026-06-29)
 - `config/emergency-city-feeds.json` — Socrata city EMS config + gaps
 - `config/emergency-arcgis-feeds.json` — ArcGIS CAD/911 feeds
-- `config/emergency-pulsepoint-agencies.json` — 111 PulsePoint agencies (81 + 30 dark-state expansion 2026-06-29)
+- `config/emergency-pulsepoint-agencies.json` — 136 PulsePoint agencies (incl. 25 St Louis County FPDs, 2026-06-29)
 - `config/emergency-pulsepoint-discovery.json` — full probe audit
 
 ---

@@ -1,0 +1,1357 @@
+{
+  "scannedAt": "2026-06-29T03:18:57.838Z",
+  "summary": {
+    "byAngle": {
+      "pulsepoint": 35,
+      "arcgis-portal": 6,
+      "cad-embed": 24,
+      "open-data": 4,
+      "other": 2,
+      "other-gis": 1
+    },
+    "byClass": {
+      "EMPTY": 23,
+      "LIVE": 12,
+      "fail": 3,
+      "http": 3,
+      "ok": 1,
+      "GAP": 27,
+      "PARTIAL": 3
+    },
+    "livePulsePoint": 12,
+    "emptyPulsePointMoIl": 22,
+    "liveArcgis": 0
+  },
+  "livePulsePoint": [
+    {
+      "angle": "pulsepoint",
+      "query": "Kirkwood",
+      "agencyId": "EMS1584",
+      "display1": "Lancaster County 911 [PA]",
+      "display2": "Kirkwood",
+      "lat": 40.1634279,
+      "lng": -76.3949614,
+      "state": "PA",
+      "activeCount": 12,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "INV",
+        "address": "HEDGEROW LN, MANHEIM TOWNSHIP, PA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "07090",
+      "display1": "Contra Costa FPD [CA]",
+      "display2": "Clayton",
+      "lat": 37.9479786,
+      "lng": -122.0607963,
+      "state": "CA",
+      "activeCount": 23,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "FARM BUREAU RD, CONCORD, CA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "EMS1180",
+      "display1": "Gold Cross [WI]",
+      "display2": "Clayton",
+      "lat": 44.202145,
+      "lng": -88.446467,
+      "state": "WI",
+      "activeCount": 2,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "TC",
+        "address": "WEST COLLEGE AVENUE & SOUTH DOUGLAS STREET, APPLETON, WI"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "EMS1001",
+      "display1": "Gundersen Tri-State [WI]",
+      "display2": "Clayton",
+      "lat": 43.8013556,
+      "lng": -91.2395807,
+      "state": "WI",
+      "activeCount": 2,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "US HIGHWAY 14 61, LA CROSSE, WI"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "EMS1304",
+      "display1": "Kent County  [DE]",
+      "display2": "Clayton",
+      "lat": 39.158163,
+      "lng": -75.524393,
+      "state": "DE",
+      "activeCount": 2,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "SYCAMORE DR, FREDERICA, DE"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Hazelwood",
+      "agencyId": "32M10",
+      "display1": "Spokane FD [WA]",
+      "display2": "Hazelwood",
+      "lat": 47.6587802,
+      "lng": -117.4260466,
+      "state": "WA",
+      "activeCount": 3,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "N LINCOLN ST, SPOKANE, WA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maplewood",
+      "agencyId": "EMS1329",
+      "display1": "Ramsey County [MN]",
+      "display2": "Maplewood",
+      "lat": 44.9547296,
+      "lng": -93.0885264,
+      "state": "MN",
+      "activeCount": 5,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "7TH ST E, ST PAUL, MN"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Belleville",
+      "agencyId": "13030",
+      "display1": "Dane County EMS\\/Fire [WI]",
+      "display2": "Belleville",
+      "lat": 43.073043,
+      "lng": -89.401224,
+      "state": "WI",
+      "activeCount": 4,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "GAS",
+        "address": "5529 GRASSLAND TRL, MIDDLETON, WI"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "EMS1078",
+      "display1": "Burlington County [NJ]",
+      "display2": "Chesterfield",
+      "lat": 40.020586,
+      "lng": -74.792255,
+      "state": "NJ",
+      "activeCount": 8,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "COLUMBIA AVE, CINNAMINSON TWP, NJ"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "EMS1402",
+      "display1": "Chesterfield Co [VA]",
+      "display2": "Bellwood, Bensley, Bon Air, Chester, Chesterfield, Ettrick, Matoaca, Midlothian, Rockwood, Woodlake Manchester",
+      "lat": 37.3770935,
+      "lng": -77.5049863,
+      "state": "VA",
+      "activeCount": 3,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "LEE ST, VIRGINIA STATE UNIVERSITY, VA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "LAFDS",
+      "display1": "LAFD - South [CA]",
+      "display2": "Chesterfield Square",
+      "lat": 33.749478,
+      "lng": -118.280966,
+      "state": "CA",
+      "activeCount": 3,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "GF",
+        "address": "11548 S VERMONT AVE, LOS ANGELES, CA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Arnold",
+      "agencyId": "24000",
+      "display1": "Anne Arundel CFD [MD]",
+      "display2": "Arnold",
+      "lat": 39.057461,
+      "lng": -76.648591,
+      "state": "MD",
+      "activeCount": 6,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "MELVIN RD, ANNAPOLIS, MD"
+      }
+    }
+  ],
+  "emptyPulsePoint": [
+    {
+      "angle": "pulsepoint",
+      "query": "Saint Louis",
+      "agencyId": "09520",
+      "display1": "Northeast Amb\\/Fire [MO]",
+      "display2": "Saint Louis",
+      "lat": 38.708327,
+      "lng": -90.300886,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Saint Louis",
+      "agencyId": "09523",
+      "display1": "Shrewsbury Fire [MO]",
+      "display2": "Saint Louis",
+      "lat": 38.586949,
+      "lng": -90.330141,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Affton",
+      "agencyId": "09539",
+      "display1": "Affton Fire [MO]",
+      "display2": "Affton, St. Louis",
+      "lat": 38.550549,
+      "lng": -90.333206,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Mehlville",
+      "agencyId": "09504",
+      "display1": "Mehlville Fire [MO]",
+      "display2": "Concord Village, Green Park, Lakeshire, Lemay, Mattese, Oakville, Sappington, Sunset Hills",
+      "lat": 38.508343,
+      "lng": -90.322924,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Florissant",
+      "agencyId": "09530",
+      "display1": "Black Jack Fire [MO]",
+      "display2": "Florissant",
+      "lat": 38.78913,
+      "lng": -90.32274,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Florissant",
+      "agencyId": "09531",
+      "display1": "Florissant Vly Fire [MO]",
+      "display2": "Florissant",
+      "lat": 38.789064,
+      "lng": -90.322373,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "09525",
+      "display1": "Clayton Fire  [MO]",
+      "display2": "Clayton",
+      "lat": 38.642512,
+      "lng": -90.323717,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Creve Coeur",
+      "agencyId": "09510",
+      "display1": "Creve Coeur Fire [MO]",
+      "display2": "Creve Coeur",
+      "lat": 38.66086,
+      "lng": -90.422611,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Creve Coeur",
+      "agencyId": "09521",
+      "display1": "Monarch Fire [MO]",
+      "display2": "Creve Coeur",
+      "lat": 38.663089,
+      "lng": -90.576983,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maryland Heights",
+      "agencyId": "09527",
+      "display1": "Maryland Heights FPD [MO]",
+      "display2": "Maryland Heights",
+      "lat": 38.713117,
+      "lng": -90.429789,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maryland Heights",
+      "agencyId": "0950x",
+      "display1": "Pattonville Fire [MO]",
+      "display2": "Maryland Heights",
+      "lat": 38.755527,
+      "lng": -90.485683,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Hazelwood",
+      "agencyId": "09540",
+      "display1": "Hazelwood Fire [MO]",
+      "display2": "Hazelwood",
+      "lat": 38.771429,
+      "lng": -90.370843,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Hazelwood",
+      "agencyId": "09501",
+      "display1": "Robertson Fire  [MO]",
+      "display2": "Hazelwood",
+      "lat": 38.77741,
+      "lng": -90.405012,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maplewood",
+      "agencyId": "09511",
+      "display1": "Maplewood Fire  [MO]",
+      "display2": "Maplewood",
+      "lat": 38.612583,
+      "lng": -90.324682,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "University City",
+      "agencyId": "09533",
+      "display1": "University City Fire [MO]",
+      "display2": "University City",
+      "lat": 0,
+      "lng": 0,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "09507",
+      "display1": "Metro West Fire  [MO]",
+      "display2": "Chesterfield",
+      "lat": 38.582831,
+      "lng": -90.662875,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Ballwin",
+      "agencyId": "09514",
+      "display1": "West Co Fire\\/EMS [MO]",
+      "display2": "Ballwin",
+      "lat": 38.596974,
+      "lng": -90.509172,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Fenton",
+      "agencyId": "09528",
+      "display1": "Fenton Fire [MO]",
+      "display2": "Fenton",
+      "lat": 38.512652,
+      "lng": -90.442955,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Ladue",
+      "agencyId": "09506",
+      "display1": "Ladue Fire [MO]",
+      "display2": "LADUE",
+      "lat": 38.649778,
+      "lng": -90.380677,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Valley Park",
+      "agencyId": "09502",
+      "display1": "Valley Park Fire [MO]",
+      "display2": "Valley Park",
+      "lat": 38.549203,
+      "lng": -90.492485,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Spanish Lake",
+      "agencyId": "09505",
+      "display1": "Spanish Lake Fire [MO]",
+      "display2": "Spanish Lake , St. Louis",
+      "lat": 38.787815,
+      "lng": -90.215917,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Riverview",
+      "agencyId": "09544",
+      "display1": "North County Fire [MO]",
+      "display2": "Riverview",
+      "lat": 38.744505,
+      "lng": -90.207954,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    }
+  ],
+  "liveArcgis": [],
+  "findings": [
+    {
+      "angle": "pulsepoint",
+      "query": "St Louis",
+      "agencyId": "EMS1591",
+      "display1": "St Louis County  [MN]",
+      "display2": "Alborn, Arnold, Aurora, Babbitt, Biwabik, Britt, Brookston, Buhl, Chisholm, Cook, Cotton, Duluth, Eagles Nest, Ellsburg Township, Ely, Eveleth, Fayal Township, Floodwood, Gilbert, Hermantown, Hibbing, Hoyt Lakes, Iron Junction, Kinney, Leonidas, McKinley, Meadowlands, Mountain Iron, Orr, Proctor, Soudan, Tower, Virginia, Winton",
+      "lat": 46.7866719,
+      "lng": -92.1004852,
+      "state": "MN",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Saint Louis",
+      "agencyId": "09520",
+      "display1": "Northeast Amb\\/Fire [MO]",
+      "display2": "Saint Louis",
+      "lat": 38.708327,
+      "lng": -90.300886,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Saint Louis",
+      "agencyId": "09523",
+      "display1": "Shrewsbury Fire [MO]",
+      "display2": "Saint Louis",
+      "lat": 38.586949,
+      "lng": -90.330141,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Affton",
+      "agencyId": "09539",
+      "display1": "Affton Fire [MO]",
+      "display2": "Affton, St. Louis",
+      "lat": 38.550549,
+      "lng": -90.333206,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Mehlville",
+      "agencyId": "09504",
+      "display1": "Mehlville Fire [MO]",
+      "display2": "Concord Village, Green Park, Lakeshire, Lemay, Mattese, Oakville, Sappington, Sunset Hills",
+      "lat": 38.508343,
+      "lng": -90.322924,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Florissant",
+      "agencyId": "09530",
+      "display1": "Black Jack Fire [MO]",
+      "display2": "Florissant",
+      "lat": 38.78913,
+      "lng": -90.32274,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Florissant",
+      "agencyId": "09531",
+      "display1": "Florissant Vly Fire [MO]",
+      "display2": "Florissant",
+      "lat": 38.789064,
+      "lng": -90.322373,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Kirkwood",
+      "agencyId": "EMS1584",
+      "display1": "Lancaster County 911 [PA]",
+      "display2": "Kirkwood",
+      "lat": 40.1634279,
+      "lng": -76.3949614,
+      "state": "PA",
+      "activeCount": 12,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "INV",
+        "address": "HEDGEROW LN, MANHEIM TOWNSHIP, PA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "09525",
+      "display1": "Clayton Fire  [MO]",
+      "display2": "Clayton",
+      "lat": 38.642512,
+      "lng": -90.323717,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "07090",
+      "display1": "Contra Costa FPD [CA]",
+      "display2": "Clayton",
+      "lat": 37.9479786,
+      "lng": -122.0607963,
+      "state": "CA",
+      "activeCount": 23,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "FARM BUREAU RD, CONCORD, CA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "EMS1180",
+      "display1": "Gold Cross [WI]",
+      "display2": "Clayton",
+      "lat": 44.202145,
+      "lng": -88.446467,
+      "state": "WI",
+      "activeCount": 2,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "TC",
+        "address": "WEST COLLEGE AVENUE & SOUTH DOUGLAS STREET, APPLETON, WI"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "EMS1001",
+      "display1": "Gundersen Tri-State [WI]",
+      "display2": "Clayton",
+      "lat": 43.8013556,
+      "lng": -91.2395807,
+      "state": "WI",
+      "activeCount": 2,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "US HIGHWAY 14 61, LA CROSSE, WI"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Clayton",
+      "agencyId": "EMS1304",
+      "display1": "Kent County  [DE]",
+      "display2": "Clayton",
+      "lat": 39.158163,
+      "lng": -75.524393,
+      "state": "DE",
+      "activeCount": 2,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "SYCAMORE DR, FREDERICA, DE"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Creve Coeur",
+      "agencyId": "09510",
+      "display1": "Creve Coeur Fire [MO]",
+      "display2": "Creve Coeur",
+      "lat": 38.66086,
+      "lng": -90.422611,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Creve Coeur",
+      "agencyId": "09521",
+      "display1": "Monarch Fire [MO]",
+      "display2": "Creve Coeur",
+      "lat": 38.663089,
+      "lng": -90.576983,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maryland Heights",
+      "agencyId": "09527",
+      "display1": "Maryland Heights FPD [MO]",
+      "display2": "Maryland Heights",
+      "lat": 38.713117,
+      "lng": -90.429789,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maryland Heights",
+      "agencyId": "0950x",
+      "display1": "Pattonville Fire [MO]",
+      "display2": "Maryland Heights",
+      "lat": 38.755527,
+      "lng": -90.485683,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Hazelwood",
+      "agencyId": "09540",
+      "display1": "Hazelwood Fire [MO]",
+      "display2": "Hazelwood",
+      "lat": 38.771429,
+      "lng": -90.370843,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Hazelwood",
+      "agencyId": "09501",
+      "display1": "Robertson Fire  [MO]",
+      "display2": "Hazelwood",
+      "lat": 38.77741,
+      "lng": -90.405012,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Hazelwood",
+      "agencyId": "32M10",
+      "display1": "Spokane FD [WA]",
+      "display2": "Hazelwood",
+      "lat": 47.6587802,
+      "lng": -117.4260466,
+      "state": "WA",
+      "activeCount": 3,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "N LINCOLN ST, SPOKANE, WA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maplewood",
+      "agencyId": "09511",
+      "display1": "Maplewood Fire  [MO]",
+      "display2": "Maplewood",
+      "lat": 38.612583,
+      "lng": -90.324682,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Maplewood",
+      "agencyId": "EMS1329",
+      "display1": "Ramsey County [MN]",
+      "display2": "Maplewood",
+      "lat": 44.9547296,
+      "lng": -93.0885264,
+      "state": "MN",
+      "activeCount": 5,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "7TH ST E, ST PAUL, MN"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "University City",
+      "agencyId": "09533",
+      "display1": "University City Fire [MO]",
+      "display2": "University City",
+      "lat": 0,
+      "lng": 0,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Belleville",
+      "agencyId": "13030",
+      "display1": "Dane County EMS\\/Fire [WI]",
+      "display2": "Belleville",
+      "lat": 43.073043,
+      "lng": -89.401224,
+      "state": "WI",
+      "activeCount": 4,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "GAS",
+        "address": "5529 GRASSLAND TRL, MIDDLETON, WI"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "EMS1078",
+      "display1": "Burlington County [NJ]",
+      "display2": "Chesterfield",
+      "lat": 40.020586,
+      "lng": -74.792255,
+      "state": "NJ",
+      "activeCount": 8,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "COLUMBIA AVE, CINNAMINSON TWP, NJ"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "EMS1402",
+      "display1": "Chesterfield Co [VA]",
+      "display2": "Bellwood, Bensley, Bon Air, Chester, Chesterfield, Ettrick, Matoaca, Midlothian, Rockwood, Woodlake Manchester",
+      "lat": 37.3770935,
+      "lng": -77.5049863,
+      "state": "VA",
+      "activeCount": 3,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "LEE ST, VIRGINIA STATE UNIVERSITY, VA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "LAFDS",
+      "display1": "LAFD - South [CA]",
+      "display2": "Chesterfield Square",
+      "lat": 33.749478,
+      "lng": -118.280966,
+      "state": "CA",
+      "activeCount": 3,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "GF",
+        "address": "11548 S VERMONT AVE, LOS ANGELES, CA"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Chesterfield",
+      "agencyId": "09507",
+      "display1": "Metro West Fire  [MO]",
+      "display2": "Chesterfield",
+      "lat": 38.582831,
+      "lng": -90.662875,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Ballwin",
+      "agencyId": "09514",
+      "display1": "West Co Fire\\/EMS [MO]",
+      "display2": "Ballwin",
+      "lat": 38.596974,
+      "lng": -90.509172,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Fenton",
+      "agencyId": "09528",
+      "display1": "Fenton Fire [MO]",
+      "display2": "Fenton",
+      "lat": 38.512652,
+      "lng": -90.442955,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Arnold",
+      "agencyId": "24000",
+      "display1": "Anne Arundel CFD [MD]",
+      "display2": "Arnold",
+      "lat": 39.057461,
+      "lng": -76.648591,
+      "state": "MD",
+      "activeCount": 6,
+      "classification": "LIVE",
+      "note": null,
+      "sample": {
+        "type": "ME",
+        "address": "MELVIN RD, ANNAPOLIS, MD"
+      }
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Ladue",
+      "agencyId": "09506",
+      "display1": "Ladue Fire [MO]",
+      "display2": "LADUE",
+      "lat": 38.649778,
+      "lng": -90.380677,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Valley Park",
+      "agencyId": "09502",
+      "display1": "Valley Park Fire [MO]",
+      "display2": "Valley Park",
+      "lat": 38.549203,
+      "lng": -90.492485,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Spanish Lake",
+      "agencyId": "09505",
+      "display1": "Spanish Lake Fire [MO]",
+      "display2": "Spanish Lake , St. Louis",
+      "lat": 38.787815,
+      "lng": -90.215917,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "pulsepoint",
+      "query": "Riverview",
+      "agencyId": "09544",
+      "display1": "North County Fire [MO]",
+      "display2": "Riverview",
+      "lat": 38.744505,
+      "lng": -90.207954,
+      "state": "MO",
+      "activeCount": 0,
+      "classification": "EMPTY",
+      "note": null,
+      "sample": null
+    },
+    {
+      "angle": "arcgis-portal",
+      "label": "St Louis County GIS",
+      "url": "https://gis.stlouisco.com/arcgis/rest/services",
+      "status": "fail",
+      "message": "fetch failed"
+    },
+    {
+      "angle": "arcgis-portal",
+      "label": "St Louis City GIS",
+      "url": "https://stlouis-mo.gov/gis/rest/services",
+      "status": "http",
+      "code": 404
+    },
+    {
+      "angle": "arcgis-portal",
+      "label": "St Louis City GIS alt",
+      "url": "https://services2.arcgis.com/8MUN8uU2L0O5p4j0/arcgis/rest/services",
+      "status": "ok",
+      "matches": []
+    },
+    {
+      "angle": "arcgis-portal",
+      "label": "St Clair County IL",
+      "url": "https://gis.co.st-clair.il.us/arcgis/rest/services",
+      "status": "http",
+      "code": 404
+    },
+    {
+      "angle": "arcgis-portal",
+      "label": "Madison County IL",
+      "url": "https://gis.co.madison.il.us/arcgis/rest/services",
+      "status": "http",
+      "code": 404
+    },
+    {
+      "angle": "arcgis-portal",
+      "label": "Belleville IL",
+      "url": "https://gis.belleville.net/arcgis/rest/services",
+      "status": "fail",
+      "message": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Affton",
+      "url": "https://www.afftonfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Affton",
+      "url": "https://afftonfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Mehlville",
+      "url": "https://www.mehlvillefire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Mehlville",
+      "url": "https://mehlvillefire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Pattonville",
+      "url": "https://www.pattonvillefire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Pattonville",
+      "url": "https://pattonvillefire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Florissant Valley",
+      "url": "https://www.florissantvalleyfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Robertson",
+      "url": "https://www.robertsonfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Jennings",
+      "url": "https://www.jenningsfd.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "University City",
+      "url": "https://www.ucityfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Maplewood",
+      "url": "https://www.maplewoodfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Clayton",
+      "url": "https://www.claytonfire.org/",
+      "httpStatus": 200,
+      "finalUrl": "https://www.claytonfire.org/",
+      "classification": "GAP",
+      "note": "No public CAD/incident page detected"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Kirkwood",
+      "url": "https://www.kirkwoodfire.org/",
+      "httpStatus": 200,
+      "finalUrl": "https://www.kirkwoodmo.org/government/departments/fire",
+      "classification": "GAP",
+      "note": "No public CAD/incident page detected"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Ladue",
+      "url": "https://www.laduefire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Creve Coeur",
+      "url": "https://www.ccfire.org/",
+      "httpStatus": 200,
+      "finalUrl": "https://www.ccfire.org/",
+      "classification": "GAP",
+      "note": "No public CAD/incident page detected"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Creve Coeur",
+      "url": "https://www.crevecoeurfire.org/",
+      "httpStatus": 200,
+      "finalUrl": "https://www.crevecoeurfire.org/",
+      "classification": "PARTIAL",
+      "note": "Possible CAD embed keywords in HTML"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Monarch",
+      "url": "https://www.monarchfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Maryland Heights",
+      "url": "https://www.marylandheights.com/departments/fire-department",
+      "httpStatus": 404,
+      "finalUrl": "https://www.marylandheights.com/departments/fire-department",
+      "classification": "GAP",
+      "note": "HTTP 404"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Hazelwood",
+      "url": "https://www.hazelwoodmo.org/fire",
+      "httpStatus": 404,
+      "finalUrl": "https://www.hazelwoodmo.org/fire",
+      "classification": "GAP",
+      "note": "HTTP 404"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Black Jack",
+      "url": "https://www.blackjackfire.org/",
+      "httpStatus": 200,
+      "finalUrl": "https://www.blackjackfire.org/",
+      "classification": "PARTIAL",
+      "note": "Possible CAD embed keywords in HTML"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Spanish Lake",
+      "url": "https://www.spanishlakefire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Riverview",
+      "url": "https://www.riverviewfire.org/",
+      "httpStatus": 200,
+      "finalUrl": "https://riverviewfire.org/",
+      "classification": "GAP",
+      "note": "No public CAD/incident page detected"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "Valley Park",
+      "url": "https://www.valleyparkfire.org/",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "cad-embed",
+      "district": "St Louis City FD",
+      "url": "https://www.stlouis-mo.gov/government/departments/fire/",
+      "httpStatus": 404,
+      "finalUrl": "https://www.stlouis-mo.gov/government/departments/fire/",
+      "classification": "GAP",
+      "note": "HTTP 404"
+    },
+    {
+      "angle": "open-data",
+      "name": "St Louis County open data",
+      "url": "https://data.stlouisco.com/api/views/metadata/v1",
+      "httpStatus": 404,
+      "classification": "GAP",
+      "note": "HTTP 404",
+      "sample": "<!DOCTYPE html> <html lang=\"en\"> <head> <meta charset=\"utf-8\"> <title>Error</title> </head> <body> <pre>Cannot GET /api/views/metadata/v1</pre> </body> </html> "
+    },
+    {
+      "angle": "open-data",
+      "name": "STL Data",
+      "url": "https://www.stldata.org/api/views",
+      "classification": "GAP",
+      "note": "fetch failed"
+    },
+    {
+      "angle": "open-data",
+      "name": "Missouri data.mo.gov STL",
+      "url": "https://data.mo.gov/api/views?q=fire",
+      "httpStatus": 200,
+      "classification": "PARTIAL",
+      "note": "Portal mentions dispatch/incident datasets — manual catalog review needed",
+      "sample": "[ { \"id\" : \"cae7-z4c6\", \"name\" : \"Lodging Active\", \"assetType\" : \"dataset\", \"averageRating\" : 0, \"createdAt\" : 1782315467, \"diciBackend\" : false, \"displayType\" : \"table\", \"downloadCoun"
+    },
+    {
+      "angle": "open-data",
+      "name": "St Louis City Socrata",
+      "url": "https://www.stlouis-mo.gov/data.cfm",
+      "httpStatus": 404,
+      "classification": "GAP",
+      "note": "HTTP 404",
+      "sample": " <html> <head> <meta charset=\"UTF-8\"> <meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\" /> <meta name=\"viewport\" content=\"width=device-width, initial-sc"
+    },
+    {
+      "angle": "other",
+      "name": "SEMA Missouri",
+      "url": "https://sema.dps.mo.gov/",
+      "httpStatus": 200,
+      "finalUrl": "https://sema.dps.mo.gov/",
+      "classification": "GAP",
+      "note": "No public CAD/incident page detected"
+    },
+    {
+      "angle": "other",
+      "name": "MSHP crash report",
+      "url": "https://www.mshp.dps.mo.gov/MSHPWeb/PatrolDivision/Traffic/CrashReports",
+      "httpStatus": 404,
+      "finalUrl": "https://www.mshp.dps.mo.gov/MSHPWeb/PatrolDivision/Traffic/CrashReports",
+      "classification": "GAP",
+      "note": "HTTP 404"
+    },
+    {
+      "angle": "other-gis",
+      "name": "MSHP GIS",
+      "url": "https://gis.modot.mo.gov/arcgis/rest/services",
+      "status": "fail",
+      "message": "fetch failed"
+    }
+  ]
+}
